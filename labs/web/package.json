@@ -1,0 +1,9 @@
+{
+  "name": "trading-post-vulnerable",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Deliberately vulnerable app for the Web Dungeon (attack) and Secure Coding (fix). NEVER deploy on the public internet outside an isolated lab.",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "dependencies": { "express": "^4.18.2", "cookie-parser": "^1.4.6", "better-sqlite3": "^11.0.0" }
+}

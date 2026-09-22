@@ -1,0 +1,4 @@
+/* Arcweave — Arcane Library (violet/gold). */
+[data-house="arcweave"] { --house-accent: #b98cf0; --house-glow: rgba(185,140,240,0.5); --house-bg: #120a1c; }
+[data-house="arcweave"] .bk-dashboard, [data-house="arcweave"].bk-dashboard { background: radial-gradient(circle at 50% 0%, #221139, #120a1c); }
+[data-house="arcweave"] .hub-brand { color: var(--house-accent); }

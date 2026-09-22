@@ -1,0 +1,4 @@
+/* Emberkeep — Forge & Furnace (orange/gold). */
+[data-house="emberkeep"] { --house-accent: #ff9a3c; --house-glow: rgba(255,154,60,0.5); --house-bg: #160b06; }
+[data-house="emberkeep"] .bk-dashboard, [data-house="emberkeep"].bk-dashboard { background: radial-gradient(circle at 50% 0%, #2a1207, #160b06); }
+[data-house="emberkeep"] .hub-brand { color: var(--house-accent); }

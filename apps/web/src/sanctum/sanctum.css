@@ -1,0 +1,87 @@
+/* BreachKeep Sanctum look (pre-sorting). All classes prefixed sn- to avoid
+   collisions with the hub shell (mirrors the intro module's im- prefix). */
+:root {
+  --sn-bg: #0a0e17;
+  --sn-panel: #121826;
+  --sn-ink: #e7ecf5;
+  --sn-accent: #ff8a3a;
+  --sn-accent-2: #6ea0ff;
+  --sn-danger: #e0533a;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--sn-bg); color: var(--sn-ink);
+  font-family: system-ui, -apple-system, sans-serif; }
+
+.bk-loading { display: grid; place-items: center; min-height: 100vh; color: var(--sn-accent-2); }
+
+.sn-landing, .sn-enter, .sn-onboarding, .sn-ceremony {
+  position: relative; min-height: 100vh; display: grid; place-items: center; overflow: hidden;
+}
+.sn-particles { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; }
+
+.sn-code-card, .sn-auth-card, .sn-onboard-card {
+  position: relative; z-index: 1; background: rgba(18,24,38,0.86);
+  border: 1px solid rgba(110,160,255,0.18); border-radius: 14px;
+  padding: 2.4rem 2rem; width: min(92vw, 400px); text-align: center;
+  backdrop-filter: blur(8px); animation: sn-card-in 0.5s ease both;
+}
+@keyframes sn-card-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+.sn-title { font-size: 2rem; margin: 0 0 0.3rem; letter-spacing: 0.04em; }
+.sn-sub { color: rgba(231,236,245,0.6); margin: 0 0 1.4rem; font-size: 0.95rem; }
+.sn-input, .sn-code-input {
+  width: 100%; padding: 0.8rem 1rem; margin-bottom: 0.8rem; border-radius: 8px;
+  background: #0c1220; border: 1px solid rgba(110,160,255,0.2); color: var(--sn-ink); font-size: 1rem;
+}
+.sn-code-input { text-align: center; letter-spacing: 0.3em; text-transform: uppercase; }
+.sn-enter-btn { width: 100%; padding: 0.8rem; border: 0; border-radius: 8px; cursor: pointer;
+  background: linear-gradient(135deg, var(--sn-accent), #ff5a1f); color: #1a0e06; font-weight: 700; font-size: 1rem; }
+.sn-ghost-btn { width: 100%; margin-top: 0.6rem; padding: 0.7rem; border-radius: 8px; cursor: pointer;
+  background: transparent; border: 1px solid rgba(110,160,255,0.25); color: var(--sn-ink); }
+.sn-error { color: var(--sn-danger); font-size: 0.88rem; margin-bottom: 0.6rem; }
+.sn-shake { animation: sn-shake 0.4s; }
+@keyframes sn-shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+.sn-tabs { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+.sn-tabs button { flex: 1; padding: 0.5rem; border: 1px solid rgba(110,160,255,0.2); background: transparent;
+  color: var(--sn-ink); border-radius: 8px; cursor: pointer; }
+.sn-tabs button.active { background: rgba(110,160,255,0.16); }
+.sn-or { color: rgba(231,236,245,0.4); margin: 0.8rem 0 0.6rem; font-size: 0.85rem; }
+.sn-google { display: flex; justify-content: center; }
+.sn-resend { margin-top: 1rem; display: flex; gap: 0.4rem; }
+.sn-resend-input { flex: 1; padding: 0.5rem; border-radius: 6px; background: #0c1220;
+  border: 1px solid rgba(110,160,255,0.2); color: var(--sn-ink); font-size: 0.85rem; }
+.sn-resend-btn { padding: 0.5rem 0.8rem; border: 0; border-radius: 6px; cursor: pointer; }
+.sn-resend-ok { font-size: 0.82rem; color: var(--sn-accent-2); }
+
+/* sorting ceremony */
+.sn-ceremony-text, .sn-ceremony-house { position: relative; z-index: 1; text-align: center; }
+.sn-ceremony-house { font-size: 3rem; letter-spacing: 0.1em; animation: sn-card-in 0.6s ease both; }
+
+/* caged, dulled gates */
+.sn-caged { filter: saturate(0.35) brightness(0.6); position: relative; pointer-events: none; }
+.sn-cage-bars { position: absolute; inset: 0; z-index: 2; border-radius: 10px;
+  background-image: repeating-linear-gradient(90deg, rgba(20,24,32,0.9) 0 4px, transparent 4px 22px); }
+.sn-intro-glow { animation: sn-glow 2.4s ease-in-out infinite; }
+@keyframes sn-glow { 0%,100%{ box-shadow: 0 0 0 rgba(255,138,58,0); } 50%{ box-shadow: 0 0 24px rgba(255,138,58,0.5); } }
+
+/* stone gate svg */
+.sn-stone-gate { width: 70px; height: 92px; }
+.sn-arch { fill: #2a3242; stroke: #46506a; stroke-width: 2; }
+.sn-door-leaf { fill: #1c2230; stroke: #46506a; stroke-width: 1.5; }
+.sn-lock-seal { fill: var(--sn-accent); }
+.sn-gate-unlocking .sn-door-left { animation: sn-door-open-l 0.8s forwards; }
+.sn-gate-unlocking .sn-door-right { animation: sn-door-open-r 0.8s forwards; }
+@keyframes sn-door-open-l { to { transform: translateX(-18px); opacity: 0.2; } }
+@keyframes sn-door-open-r { to { transform: translateX(18px); opacity: 0.2; } }
+
+/* portal warp */
+.sn-warp { position: fixed; inset: 0; z-index: 50; background: #000; }
+.sn-warp-video { width: 100%; height: 100%; object-fit: cover; }
+.sn-warp-flash { position: absolute; inset: 0; background: #fff; opacity: 0; animation: sn-flash 0.3s 1.2s; }
+@keyframes sn-flash { 50% { opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}

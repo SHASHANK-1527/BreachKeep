@@ -1,0 +1,104 @@
+import { test, before, after } from 'node:test'
+import assert from 'node:assert/strict'
+import { MongoMemoryServer } from 'mongodb-memory-server'
+import mongoose from 'mongoose'
+
+// minimal env for modules that read process.env at import time
+process.env.JWT_SECRET = 'test-jwt-secret'
+process.env.FLAG_HMAC_SECRET = 'test-flag-secret'
+process.env.COMMON_ACCESS_CODE = 'COMMON1'
+process.env.ADMIN_LANDING_CODE = 'ADMINGO'
+process.env.ADMIN_SECRET_PATH = '/secret-xyz'
+process.env.NODE_ENV = 'test'
+
+const { flagFor, checkFlag, randomAlphanumeric, safeEqual } = await import('../src/utils/flags.js')
+const User = (await import('../src/models/User.js')).default
+const AccessConfig = (await import('../src/models/AccessConfig.js')).default
+
+let mongod
+before(async () => {
+  mongod = await MongoMemoryServer.create()
+  await mongoose.connect(mongod.getUri())
+})
+after(async () => { await mongoose.disconnect(); await mongod.stop() })
+
+test('HMAC flags are per-student and stable', () => {
+  const a = flagFor('userA', 'terminal-1')
+  const a2 = flagFor('userA', 'terminal-1')
+  const b = flagFor('userB', 'terminal-1')
+  assert.equal(a, a2, 'same student+room -> same flag')
+  assert.notEqual(a, b, 'different students -> different flags')
+  assert.ok(a.startsWith('BK{'))
+})
+
+test("checkFlag rejects another student's flag", () => {
+  const aFlag = flagFor('userA', 'terminal-1')
+  assert.equal(checkFlag('userA', 'terminal-1', aFlag), true)
+  assert.equal(checkFlag('userB', 'terminal-1', aFlag), false, 'copied flag must fail')
+  assert.equal(checkFlag('userA', 'terminal-1', 'BK{wrong}'), false)
+})
+
+test('randomAlphanumeric avoids ambiguous chars', () => {
+  for (let i = 0; i < 50; i++) {
+    const c = randomAlphanumeric(8)
+    assert.equal(c.length, 8)
+    assert.ok(!/[O01IL]/.test(c), `no ambiguous chars in ${c}`)
+  }
+})
+
+test('safeEqual is correct', () => {
+  assert.equal(safeEqual('abc', 'abc'), true)
+  assert.equal(safeEqual('abc', 'abd'), false)
+  assert.equal(safeEqual('abc', 'abcd'), false)
+})
+
+test('safe() never leaks secrets', async () => {
+  const u = await User.create({
+    username: 'neo', email: 'neo@example.com', password: 'HASH',
+    verificationCode: '123456', sessionCode: 'DAILY123',
+  })
+  const safe = u.safe()
+  assert.ok(!('password' in safe))
+  assert.ok(!('verificationCode' in safe))
+  assert.ok(!('sessionCode' in safe))
+  assert.equal(safe.email, 'neo@example.com')
+})
+
+test('AccessConfig singleton defaults', async () => {
+  const cfg = await AccessConfig.get()
+  assert.equal(cfg.commonCodeEnabled, true)
+  assert.equal(cfg.rosterGateEnabled, true)
+  const again = await AccessConfig.get()
+  assert.equal(cfg._id, again._id, 'singleton reused')
+})
+
+test('house sorting stays balanced and idempotent', async () => {
+  const { assignHouse } = await import('../src/controllers/houseController.js')
+  // create 40 intro-complete users, assign each
+  const mk = () => {
+    let status, body
+    return { user: null,
+      res: { status(c){status=c;return this}, json(b){body=b;return this}, get code(){return status}, get body(){return body} } }
+  }
+  for (let i = 0; i < 40; i++) {
+    const u = await User.create({ username: `u${i}`, email: `u${i}@x.com`, verified: true, introComplete: true })
+    const res = { _c: 200, status(c){this._c=c;return this}, json(b){this._b=b;return this} }
+    await assignHouse({ user: u }, res)
+    assert.ok(['rimeguard','emberkeep','arcweave','voltgrid'].includes(res._b.house))
+    // idempotent second call
+    const res2 = { _c: 200, status(c){this._c=c;return this}, json(b){this._b=b;return this} }
+    await assignHouse({ user: await User.findById(u._id) }, res2)
+    assert.equal(res2._b.house, res._b.house, 'second assign returns same house')
+  }
+  const agg = await User.aggregate([{ $match: { house: { $ne: null } } }, { $group: { _id: '$house', n: { $sum: 1 } } }])
+  const counts = agg.map((a) => a.n)
+  assert.ok(Math.max(...counts) - Math.min(...counts) <= 1, `balanced: ${JSON.stringify(counts)}`)
+})
+
+test('house assign refused before intro complete', async () => {
+  const { assignHouse } = await import('../src/controllers/houseController.js')
+  const u = await User.create({ username: 'early', email: 'early@x.com', verified: true, introComplete: false })
+  const res = { _c: 200, status(c){this._c=c;return this}, json(b){this._b=b;return this} }
+  await assignHouse({ user: u }, res)
+  assert.equal(res._c, 409, 'must refuse before intro complete')
+})

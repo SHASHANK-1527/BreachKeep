@@ -1,0 +1,4 @@
+/* Rimeguard — Frozen Fortress (ice-blue). */
+[data-house="rimeguard"] { --house-accent: #7fb4e6; --house-glow: rgba(127,180,230,0.5); --house-bg: #0a121c; }
+[data-house="rimeguard"] .bk-dashboard, [data-house="rimeguard"].bk-dashboard { background: radial-gradient(circle at 50% 0%, #12233a, #0a121c); }
+[data-house="rimeguard"] .hub-brand { color: var(--house-accent); }

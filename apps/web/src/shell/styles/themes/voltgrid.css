@@ -1,0 +1,4 @@
+/* Voltgrid — Neon Cybercity (teal/magenta). */
+[data-house="voltgrid"] { --house-accent: #2ee6c8; --house-glow: rgba(46,230,200,0.5); --house-bg: #08161a; }
+[data-house="voltgrid"] .bk-dashboard, [data-house="voltgrid"].bk-dashboard { background: radial-gradient(circle at 50% 0%, #0c2a30, #08161a); }
+[data-house="voltgrid"] .hub-brand { color: var(--house-accent); }

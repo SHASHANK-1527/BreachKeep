@@ -1,0 +1,9 @@
+FROM breachkeep/base
+# Room: First Steps — flag file placed in one subdir among decoys.
+USER root
+RUN mkdir -p /home/student/vault/inner /home/student/decoy1 /home/student/decoy2 && \
+    chown -R student:student /home/student
+USER student
+# The flag comes in as BK_FLAG at run time; write it into place on start.
+COPY --chown=student:student entrypoint.sh /home/student/entrypoint.sh
+CMD ["bash", "/home/student/entrypoint.sh"]

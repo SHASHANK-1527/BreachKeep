@@ -1,0 +1,42 @@
+# Local battle-testing stack. Production uses Atlas for Mongo (see infra/deploy/DEPLOY.md).
+services:
+  mongo:
+    image: mongo:7
+    ports: ["27017:27017"]
+    volumes: ["mongo_data:/data/db"]
+
+  api:
+    build: ./apps/api
+    env_file: [.env]
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/breachkeep
+    depends_on: [mongo]
+    ports: ["5000:5000"]
+
+  provisioner:
+    build: ./apps/provisioner
+    env_file: [.env]
+    # the provisioner needs the Docker socket to manage challenge containers
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./labs:/labs:ro
+    # NOT exposed to the host in prod; internal network only
+    expose: ["6000"]
+
+  web-build:
+    build: ./apps/web
+    command: sh -c "npm run build && npm run build:landing"
+    volumes: ["web_dist:/app/dist"]
+
+  nginx:
+    image: nginx:1.27-alpine
+    depends_on: [api, provisioner, web-build]
+    ports: ["8080:80"]
+    volumes:
+      - ./infra/nginx/breachkeep.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./infra/nginx/proxy_common.conf:/etc/nginx/proxy_common.conf:ro
+      - web_dist:/usr/share/nginx/html
+
+volumes:
+  mongo_data:
+  web_dist:
