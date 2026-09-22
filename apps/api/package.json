@@ -9,6 +9,7 @@
     "dev": "node --watch src/server.js",
     "test": "node --test test/",
     "hash-admin": "node src/scripts/hashAdmin.js",
+    "seed:dev": "node src/scripts/devSeed.js",
     "clear-db": "node src/scripts/clearDB.js"
   },
   "dependencies": {
