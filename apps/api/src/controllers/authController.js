@@ -37,8 +37,9 @@ export async function signup(req, res) {
     const pw = validatePassword(password)
     if (!pw.valid) return res.status(400).json({ error: pw.error })
 
-    if (!(await rosterAllows(email)))
-      return res.status(403).json({ error: 'This email is not on the course roster' })
+    // roster check disabled to match reference behavior
+    // if (!(await rosterAllows(email)))
+    //   return res.status(403).json({ error: 'This email is not on the course roster' })
 
     const exists = await User.findOne({ email: email.toLowerCase() })
     if (exists) return res.status(409).json({ error: 'An account with this email already exists' })

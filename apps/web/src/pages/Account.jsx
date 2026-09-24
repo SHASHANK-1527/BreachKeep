@@ -20,6 +20,7 @@ export default function Account() {
       <label>Username
         <input value={username} onChange={(e) => setUsername(e.target.value)} />
       </label>
+      <button className="sn-ghost-btn" onClick={logout}>Log out</button>
       <button onClick={saveName}>Save</button>
       {msg && <span className="bk-msg">{msg}</span>}
       <hr />

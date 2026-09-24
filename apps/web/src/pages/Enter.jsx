@@ -14,8 +14,9 @@ export default function Enter() {
   const { setUser, refresh } = useAuth()
   const [tab, setTab] = useState('login')
   const [form, setForm] = useState({ username: '', email: '', password: '' })
-  const [stage, setStage] = useState('form') // 'form' | 'verify'
+  const [stage, setStage] = useState('form') // 'form' | 'verify' | 'session'
   const [vcode, setVcode] = useState('')
+  const [sessionCode, setSessionCode] = useState('')
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
 
@@ -31,9 +32,14 @@ export default function Enter() {
   const doLogin = async () => {
     setErr(''); setBusy(true)
     try {
-      const { user } = await api.post('/auth/login', { email: form.email, password: form.password })
-      setUser(user)
-      nav(user.house ? '/dashboard' : '/onboarding')
+      const res = await api.post('/auth/login', { email: form.email, password: form.password })
+      const data = res.data || {}
+      if (data.requiresSessionCode) {
+        setStage('session')
+      } else {
+        setUser(data.user || res.user)
+        nav(data.user?.house ? '/dashboard' : '/onboarding')
+      }
     } catch (e) { setErr(e.data?.error || 'Login failed') } finally { setBusy(false) }
   }
 
@@ -43,6 +49,16 @@ export default function Enter() {
       await api.post('/auth/signup', form)
       setStage('verify')
     } catch (e) { setErr(e.data?.error || 'Signup failed') } finally { setBusy(false) }
+  }
+
+  const doSession = async () => {
+    setErr(''); setBusy(true)
+    try {
+      const res = await api.post('/auth/verify-session', { email: form.email, sessionCode })
+      const data = res.data || {}
+      setUser(data.user || res.user)
+      nav(data.user?.house ? '/dashboard' : '/onboarding')
+    } catch (e) { setErr(e.data?.error || 'Session verification failed') } finally { setBusy(false) }
   }
 
   const doVerify = async () => {
@@ -59,7 +75,14 @@ export default function Enter() {
       <ParticleField mode="portal" />
       <div className="sn-auth-card">
         <h1 className="sn-title">BreachKeep</h1>
-        {stage === 'verify' ? (
+        {stage === 'session' ? (
+          <>
+            <p className="sn-sub">Enter the daily session code sent to {form.email}.</p>
+            <input className="sn-code-input" value={sessionCode} onChange={(e) => setSessionCode(e.target.value)} placeholder="6-digit session code" maxLength={8} />
+            {err && <div className="sn-error">{err}</div>}
+            <button className="sn-enter-btn" onClick={doSession} disabled={busy}>Verify Session</button>
+          </>
+        ) : stage === 'verify' ? (
           <>
             <p className="sn-sub">Enter the 6-digit code sent to {form.email}.</p>
             <input className="sn-code-input" value={vcode} onChange={(e) => setVcode(e.target.value)} placeholder="______" />
