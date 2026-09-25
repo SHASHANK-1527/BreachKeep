@@ -20,13 +20,22 @@ export default function Dashboard() {
   const [assignedHouse, setAssignedHouse] = useState(null)
 
   const load = useCallback(async () => {
-    const status = await api.get('/intro/status')
+    let status
+    try {
+      status = await api.get('/intro/status')
+    } catch {
+      // Session is gone (account deleted, cookie expired, logged out in another
+      // tab). Without this the rejection left phase stuck on 'loading' forever.
+      sessionStorage.removeItem('bk_has_access')
+      nav('/enter', { replace: true })
+      return
+    }
     const prog = await api.get('/progress').catch(() => ({ solved: [], unlocked: [] }))
     setProgress(prog)
     if (!status.introComplete) { setPhase('A'); return }
     if (status.introComplete && !user?.sorted) { setPhase('B'); return }
     setPhase('C')
-  }, [user?.sorted])
+  }, [user?.sorted, nav])
 
   useEffect(() => { load() }, [load])
 

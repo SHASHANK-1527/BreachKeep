@@ -3,6 +3,8 @@ import jwt from 'jsonwebtoken'
 import AccessConfig from '../models/AccessConfig.js'
 import Roster from '../models/Roster.js'
 import DungeonState from '../models/DungeonState.js'
+import User from '../models/User.js'
+import Progress from '../models/Progress.js'
 import { labClient } from '../utils/labClient.js'
 import { houseCounts as _houseCounts } from './houseController.js'
 import { cookieOpts } from '../config/env.js'
@@ -35,19 +37,116 @@ export async function adminWhere(req, res) {
 export async function adminState(req, res) {
   const cfg = await AccessConfig.get()
   const dungeons = await DungeonState.find().select('dungeonId live -_id')
-  const agg = await import('../models/User.js').then(async ({ default: User }) => {
-    const rows = await User.aggregate([
-      { $match: { house: { $ne: null } } },
-      { $group: { _id: '$house', n: { $sum: 1 } } },
-    ])
-    return Object.fromEntries(rows.map((r) => [r._id, r.n]))
-  })
+  const agg = await User.aggregate([
+    { $match: { house: { $ne: null } } },
+    { $group: { _id: '$house', n: { $sum: 1 } } },
+  ])
   return res.json({
     commonCodeEnabled: cfg.commonCodeEnabled,
     rosterGateEnabled: cfg.rosterGateEnabled,
     dungeons,
-    houseCounts: agg,
+    houseCounts: Object.fromEntries(agg.map((r) => [r._id, r.n])),
   })
+}
+
+// ---- students ----
+
+// Escape user input before building a RegExp, so a query like "a(" cannot
+// throw or match everything.
+function escapeRegex(s) {
+  return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+const STUDENT_FIELDS = '-password -googleId -sessionCode -sessionCodeExpires -resetToken -resetTokenExpires'
+
+// GET /api/admin/students?q=
+export async function adminStudents(req, res) {
+  const q = String(req.query.q || '').trim()
+  const filter = q
+    ? { $or: [{ username: new RegExp(escapeRegex(q), 'i') }, { email: new RegExp(escapeRegex(q), 'i') }] }
+    : {}
+
+  const users = await User.find(filter).select(STUDENT_FIELDS).sort({ createdAt: -1 }).limit(300)
+
+  // Attach solve counts in one aggregation instead of N per-user queries.
+  const solvedBy = await Progress.aggregate([
+    { $match: { userId: { $in: users.map((u) => u._id) } } },
+    { $group: { _id: '$userId', n: { $sum: 1 } } },
+  ])
+  const nBy = new Map(solvedBy.map((r) => [String(r._id), r.n]))
+
+  return res.json({
+    total: users.length,
+    students: users.map((u) => ({
+      id: u._id.toString(),
+      username: u.username,
+      email: u.email,
+      house: u.house,
+      sorted: u.sorted,
+      introComplete: u.introComplete,
+      verified: u.verified,
+      hasGoogle: !!u.googleId,
+      solved: nBy.get(String(u._id)) || 0,
+      createdAt: u.createdAt,
+    })),
+  })
+}
+
+// GET /api/admin/students/:id
+export async function adminStudentDetail(req, res) {
+  const user = await User.findById(req.params.id).select(STUDENT_FIELDS)
+  if (!user) return res.status(404).json({ error: 'Student not found' })
+  const progress = await Progress.find({ userId: user._id }).sort({ solvedAt: 1 })
+  return res.json({
+    student: {
+      id: user._id.toString(),
+      username: user.username,
+      email: user.email,
+      house: user.house,
+      sorted: user.sorted,
+      introComplete: user.introComplete,
+      verified: user.verified,
+      hasGoogle: !!user.googleId,
+      createdAt: user.createdAt,
+    },
+    progress: progress.map((p) => ({ roomId: p.roomId, solvedAt: p.solvedAt })),
+  })
+}
+
+// POST /api/admin/students/:id/house  { house }
+export async function adminAssignHouse(req, res) {
+  const { house } = req.body
+  if (!house || !['rimeguard', 'emberkeep', 'arcweave', 'voltgrid'].includes(house))
+    return res.status(400).json({ error: 'house must be rimeguard, emberkeep, arcweave or voltgrid' })
+
+  const user = await User.findById(req.params.id)
+  if (!user) return res.status(404).json({ error: 'Student not found' })
+
+  user.house = house
+  user.sorted = true
+  // Sorting normally implies the intro was done; keep the two consistent.
+  user.introComplete = true
+  await user.save()
+  return res.json({ ok: true, house, sorted: true, introComplete: true })
+}
+
+// POST /api/admin/students/:id/reset-progress
+export async function adminResetProgress(req, res) {
+  const user = await User.findById(req.params.id)
+  if (!user) return res.status(404).json({ error: 'Student not found' })
+  const { deletedCount } = await Progress.deleteMany({ userId: user._id })
+  user.introRooms = []
+  user.introComplete = false
+  await user.save()
+  return res.json({ ok: true, removed: deletedCount })
+}
+
+// POST /api/admin/students/:id/delete
+export async function adminDeleteStudent(req, res) {
+  const user = await User.findById(req.params.id)
+  if (!user) return res.status(404).json({ error: 'Student not found' })
+  await Promise.all([Progress.deleteMany({ userId: user._id }), user.deleteOne()])
+  return res.json({ ok: true })
 }
 
 // POST /api/admin/common-code  { enabled }
@@ -66,6 +165,42 @@ export async function setRosterGate(req, res) {
   cfg.updatedAt = new Date()
   await cfg.save()
   return res.json({ ok: true, rosterGateEnabled: cfg.rosterGateEnabled })
+}
+
+// GET /api/admin/roster
+export async function getRoster(req, res) {
+  const emails = await Roster.find().select('email -_id').sort({ email: 1 })
+  return res.json({ total: emails.length, emails: emails.map((e) => e.email) })
+}
+
+// POST /api/admin/roster-remove  { emails: [] }
+export async function removeFromRoster(req, res) {
+  const emails = (req.body.emails || []).map((e) => String(e).toLowerCase().trim()).filter(Boolean)
+  if (!emails.length) return res.status(400).json({ error: 'No emails given' })
+  const { deletedCount } = await Roster.deleteMany({ email: { $in: emails } })
+  return res.json({ ok: true, removed: deletedCount })
+}
+
+// GET /api/admin/overview
+export async function adminOverview(req, res) {
+  const [students, verified, sorted, live, solved, unsorted] = await Promise.all([
+    User.countDocuments({}),
+    User.countDocuments({ verified: true }),
+    User.countDocuments({ sorted: true }),
+    DungeonState.countDocuments({ live: true }),
+    Progress.countDocuments({}),
+    User.countDocuments({ sorted: false }),
+  ])
+
+  const houseAgg = await User.aggregate([
+    { $match: { house: { $ne: null } } },
+    { $group: { _id: '$house', n: { $sum: 1 } } },
+  ])
+
+  return res.json({
+    students, verified, sorted, unsorted, live, solved,
+    houses: Object.fromEntries(houseAgg.map((r) => [r._id, r.n])),
+  })
 }
 
 // POST /api/admin/roster  { emails: [], mode: 'replace'|'append' }

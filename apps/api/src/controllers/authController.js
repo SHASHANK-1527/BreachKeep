@@ -1,6 +1,8 @@
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
+import crypto from 'crypto'
 import User from '../models/User.js'
+import Progress from '../models/Progress.js'
 import Roster from '../models/Roster.js'
 import AccessConfig from '../models/AccessConfig.js'
 import { isValidEmailDomain } from '../utils/emailValidate.js'
@@ -186,8 +188,8 @@ export async function forgotPassword(req, res) {
     // Always return same message (anti-enumeration)
     if (!user) return res.json({ ok: true, message: 'If that email has an account, a reset link has been sent.' })
     const resetToken = crypto.randomBytes(32).toString('hex')
-    user.resetPasswordToken = resetToken
-    user.resetPasswordExpires = new Date(Date.now() + 60 * 60 * 1000) // 1 hour
+    user.resetToken = resetToken
+    user.resetTokenExpires = new Date(Date.now() + 60 * 60 * 1000) // 1 hour
     await user.save()
     try { await sendPasswordResetEmail(user.email, resetToken) } catch (e) { console.error('reset email error:', e.message) }
     return res.json({ ok: true, message: 'If that email has an account, a reset link has been sent.' })
@@ -204,13 +206,13 @@ export async function resetPassword(req, res) {
     const pw = validatePassword(newPassword)
     if (!pw.valid) return res.status(400).json({ error: pw.error })
     const user = await User.findOne({
-      resetPasswordToken: token,
-      resetPasswordExpires: { $gt: new Date() },
+      resetToken: token,
+      resetTokenExpires: { $gt: new Date() },
     })
     if (!user) return res.status(400).json({ error: 'Invalid or expired reset token' })
     user.password = await bcrypt.hash(newPassword, 12)
-    user.resetPasswordToken = undefined
-    user.resetPasswordExpires = undefined
+    user.resetToken = undefined
+    user.resetTokenExpires = undefined
     await user.save()
     return res.json({ ok: true, message: 'Password reset successful. Please log in with your new password.' })
   } catch (e) {
@@ -226,8 +228,18 @@ export async function updateAvatar(req, res) {
 }
 
 export async function deleteAccount(req, res) {
-  await req.user.deleteOne()
+  const userId = req.user._id
+
+  // Remove everything owned by this account before the user row itself.
+  // Progress rows are per-student activity; leaving them behind would keep a
+  // deleted student's solve history in the database.
+  await Promise.all([
+    Progress.deleteMany({ userId }),
+    req.user.deleteOne(),
+  ])
+
   res.clearCookie('bk_session', cookieOpts())
+  res.clearCookie('bk_gate', cookieOpts())
   return res.json({ ok: true })
 }
 
