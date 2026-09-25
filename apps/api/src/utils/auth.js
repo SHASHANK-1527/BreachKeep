@@ -1,9 +1,14 @@
 export function validatePassword(password) {
   if (password.length < 8) return { valid: false, error: 'Password must be at least 8 characters long' }
-  if (!/[0-9]/.test(password)) return { valid: false, error: 'Password must contain at least 1 number' }
-  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) return { valid: false, error: 'Password must contain at least 1 symbol' }
-  if (!/[a-zA-Z]/.test(password)) return { valid: false, error: 'Password must contain letters' }
+  if (!/[0-9]/.test(password)) return { valid: false, error: 'Password must contain at least one number' }
+  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) return { valid: false, error: 'Password must contain at least one symbol' }
+  if (!/[a-zA-Z]/.test(password)) return { valid: false, error: 'Password must contain at least one letter' }
   return { valid: true }
+}
+
+export function validateEmail(email) {
+  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  return re.test(email)
 }
 
 export function getTodayIST() {
