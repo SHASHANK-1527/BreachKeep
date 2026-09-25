@@ -41,9 +41,23 @@ app.use('/api/admin', adminRoutes)
 app.use('/api', (req, res) => res.status(404).end())
 
 async function start() {
-  await mongoose.connect(process.env.MONGODB_URI)
-  console.log('[db] connected')
-  startDailyCodeJob()
+  if (process.env.TEST_MODE === 'true') {
+    if (process.env.MONGODB_URI) {
+      try {
+        await mongoose.connect(process.env.MONGODB_URI)
+        console.log('[db] connected (test mode)')
+        startDailyCodeJob()
+      } catch (err) {
+        console.warn('[db] Connection failed in TEST_MODE, continuing without DB:', err.message)
+      }
+    } else {
+      console.log('[db] Skipping DB connection (TEST_MODE enabled with no MONGODB_URI)')
+    }
+  } else {
+    await mongoose.connect(process.env.MONGODB_URI)
+    console.log('[db] connected')
+    startDailyCodeJob()
+  }
   app.listen(env.port, () => console.log(`[api] listening on :${env.port}`))
 }
 

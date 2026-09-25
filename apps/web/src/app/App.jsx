@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './AuthContext.jsx'
 import { GateProvider } from './GateContext.jsx'
+import Landing from '../pages/Landing.jsx'
 import Enter from '../pages/Enter.jsx'
 import Dashboard from '../pages/Dashboard.jsx'
 import Onboarding from '../pages/Onboarding.jsx'
@@ -60,43 +61,12 @@ function Header({ user, onLogout }) {
 
 function AppRoutes() {
   const { user, loading, logout } = useAuth()
-  const [accessCode, setAccessCode] = useState('')
-  const [accessError, setAccessError] = useState('')
   const [hasAccess, setHasAccess] = useState(() => sessionStorage.getItem('bk_has_access') === 'true')
-
-  const handleAccessSubmit = async (e) => {
-    e.preventDefault()
-    setAccessError('')
-    try {
-      const data = await api.post('/auth/verify-access-code', { code: accessCode })
-      if (data.ok) {
-        setHasAccess(true)
-        sessionStorage.setItem('bk_has_access', 'true')
-        window.location.href = data.next || '/enter'
-      } else {
-        setAccessError('Access Denied')
-      }
-    } catch (e2) {
-      setAccessError(e2.data?.error || 'Invalid access code')
-    }
-  }
 
   // Show landing only if NOT logged in AND no gate access
   if (!loading && !user && !hasAccess) {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0403', color: '#e9d9d1', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '2rem' }}>
-        <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', zIndex: 10 }}>
-          <form onSubmit={handleAccessSubmit} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <input type="text" placeholder="Access Code" value={accessCode} onChange={e => setAccessCode(e.target.value)} style={{ background: '#160806', border: '1px solid rgba(255,122,0,0.3)', padding: '0.4rem 0.8rem', borderRadius: '4px', color: '#ffdca8', fontSize: '0.85rem', outline: 'none' }} />
-            <button type="submit" style={{ background: '#ff5a1f', color: '#fff', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '4px', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem' }}>Enter</button>
-          </form>
-          {accessError && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem', textAlign: 'right' }}>{accessError}</p>}
-        </div>
-        <div style={{ textAlign: 'center', maxWidth: '500px' }}>
-          <h1 style={{ fontFamily: "'Cinzel Decorative', serif", color: '#ff5a1f', fontSize: '2.5rem', marginBottom: '1rem', letterSpacing: '0.1em' }}>BreachKeep</h1>
-          <p style={{ color: '#e9d9d1', opacity: 0.8, fontSize: '1.1rem', lineHeight: '1.6' }}>Enter the access code in top right corner to access the website and proceed further</p>
-        </div>
-      </div>
+      <Landing onSuccess={() => setHasAccess(true)} />
     )
   }
 

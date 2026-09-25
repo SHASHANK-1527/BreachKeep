@@ -4,7 +4,7 @@ import ParticleField from '../sanctum/ParticleField.jsx'
 import { useSfx } from '../sanctum/useSfx.js'
 
 // Public landing. ONLY the access-code box + animations. No links to inner pages.
-export default function Landing() {
+export default function Landing({ onSuccess }) {
   const [code, setCode] = useState('')
   const [err, setErr] = useState('')
   const [busy, setBusy] = useState(false)
@@ -17,9 +17,13 @@ export default function Landing() {
     try {
       const res = await api.post('/auth/verify-access-code', { code: code.trim() })
       sfx.warp()
+      sessionStorage.setItem('bk_has_access', 'true')
       if (res.redirect) { window.location.assign(res.redirect); return }
-      // gate cookie is set; the app bundle now serves /enter
-      window.location.assign(res.next || '/enter')
+      if (onSuccess) {
+        onSuccess()
+      } else {
+        window.location.assign(res.next || '/enter')
+      }
     } catch (e2) {
       setErr(e2.data?.error || 'Invalid access code')
       setShowResend(true)

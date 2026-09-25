@@ -16,7 +16,12 @@ export function AuthProvider({ children }) {
 
   useEffect(() => { refresh() }, [refresh])
 
-  const logout = async () => { await api.post('/auth/logout'); setUser(null); sessionStorage.removeItem('bk_has_access') }
+  const logout = async () => {
+    await api.post('/auth/logout')
+    setUser(null)
+    sessionStorage.removeItem('bk_has_access')
+    localStorage.removeItem('bk_test_user')
+  }
 
   return <AuthCtx.Provider value={{ user, setUser, loading, refresh, logout }}>{children}</AuthCtx.Provider>
 }
