@@ -9,6 +9,7 @@ import Account from '../pages/Account.jsx'
 import ResetPassword from '../pages/ResetPassword.jsx'
 import AdminPanel from '../pages/admin/AdminPanel.jsx'
 import IntroductionModule from '../features/introduction-module/IntroductionModule.jsx'
+import CodeEntryView from '../components/CodeEntryView.jsx'
 
 import { useState } from 'react'
 import { api } from './api.js'
@@ -84,19 +85,12 @@ function AppRoutes() {
   // Show landing only if NOT logged in AND no gate access
   if (!loading && !user && !hasAccess) {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0403', color: '#e9d9d1', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '2rem' }}>
-        <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', zIndex: 10 }}>
-          <form onSubmit={handleAccessSubmit} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <input type="text" placeholder="Access Code" value={accessCode} onChange={e => setAccessCode(e.target.value)} style={{ background: '#160806', border: '1px solid rgba(255,122,0,0.3)', padding: '0.4rem 0.8rem', borderRadius: '4px', color: '#ffdca8', fontSize: '0.85rem', outline: 'none' }} />
-            <button type="submit" style={{ background: '#ff5a1f', color: '#fff', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '4px', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem' }}>Enter</button>
-          </form>
-          {accessError && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem', textAlign: 'right' }}>{accessError}</p>}
-        </div>
-        <div style={{ textAlign: 'center', maxWidth: '500px' }}>
-          <h1 style={{ fontFamily: "'Cinzel Decorative', serif", color: '#ff5a1f', fontSize: '2.5rem', marginBottom: '1rem', letterSpacing: '0.1em' }}>BreachKeep</h1>
-          <p style={{ color: '#e9d9d1', opacity: 0.8, fontSize: '1.1rem', lineHeight: '1.6' }}>Enter the access code in top right corner to access the website and proceed further</p>
-        </div>
-      </div>
+      <CodeEntryView
+        onSuccess={() => {
+          setHasAccess(true)
+          sessionStorage.setItem('bk_has_access', 'true')
+        }}
+      />
     )
   }
 
@@ -105,11 +99,16 @@ function AppRoutes() {
     return <div className="bk-loading" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0403', color: '#ff5a1f' }}>Loading…</div>
   }
 
+  const loc = useLocation()
+  // Atmospheric pages render their own chrome (banner + avatar). The dashboard
+  // is one too now — the old fixed header would stack on top of it.
+  const isAtmosphericPage = loc.pathname === '/onboarding' || loc.pathname.startsWith('/dashboard') || loc.pathname === '/enter'
+
   // User is logged in OR has gate access - show full app with header
   return (
     <>
-      <Header user={user} onLogout={logout} />
-      <main style={{ paddingTop: '56px', minHeight: '100vh' }}>
+      {!isAtmosphericPage && <Header user={user} onLogout={logout} />}
+      <main style={{ paddingTop: isAtmosphericPage ? '0' : '56px', minHeight: '100vh' }}>
         <Routes>
           <Route path={ADMIN_PATH} element={<AdminPanel />} />
           <Route

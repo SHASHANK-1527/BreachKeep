@@ -1,52 +1,54 @@
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom'
+import TopAvatar from '../../components/TopAvatar.jsx'
+import FloatingLeaves from '../../components/FloatingLeaves.jsx'
+import { SCENES, GATE_SPOTS } from './questMapScenes.js'
 
-const OPEN_ROOMS = [
-  {
-    to: 'build-tool',
-    glyph: '▦',
-    title: 'The build tool',
-    desc: (
-      <>
-        A locked-down file called <code className="im-code">vault</code> sits in the leaked files. The
-        terminal can reveal what's hidden inside it — a taste of the Terminal dungeon.
-      </>
-    ),
-  },
-  {
-    to: 'hidden-page',
-    glyph: '◈',
-    title: "The page that shouldn't exist",
-    desc: "Acme's own site tells crawlers to stay away from something. Naturally, you don't.",
-  },
-  {
-    to: 'guestbook',
-    glyph: '✎',
-    title: 'The guestbook',
-    desc: 'Somewhere, an admin still reads every comment posted here. Make that a problem for them.',
-  },
-];
-
-
+/**
+ * Introduction page — the immersive quest trail. No footer, no modal: every
+ * gate on the map is tappable and takes you straight into that scene's task.
+ */
 export default function RoomGrid() {
+  const nav = useNavigate()
+
   return (
-    <div className="im-module">
-      <h1 className="im-h1">What's on the drive</h1>
-      <p className="im-lead">
-        Three scenes are open right now. Jump between them any time — nothing needs to be
-        finished in one sitting. Finish all three and return to the hub — you'll be sorted into a house.
-      </p>
-      <div className="im-rooms">
-        {OPEN_ROOMS.map((r) => (
-          <Link className="im-room" to={r.to} key={r.to}>
-            <div className="im-room-top">
-              <div className="im-glyph">{r.glyph}</div>
-              <div className="im-tag">Open</div>
-            </div>
-            <h3 className="im-room-title">{r.title}</h3>
-            <p className="im-room-desc">{r.desc}</p>
-          </Link>
-        ))}
+    <div className="bk-questmap-page bk-intro-page">
+      <FloatingLeaves count={12} />
+      <TopAvatar />
+
+      {/* Ornate Header Banner (Top-center) */}
+      <div className="bk-ornate-banner">
+        <span className="bk-diamond-accent">◇</span>
+        <span className="bk-ornate-banner-text">INTRODUCTION</span>
+        <span className="bk-diamond-accent">◇</span>
+      </div>
+
+      {/* Immersive trail: tap a gate to enter its task */}
+      <div className="qm-map qm-map-immersive">
+        <img src="/assets/introduction-bg.png" alt="" className="qm-map-bg qm-map-bg-plain" draggable="false" />
+
+        {/* Vignette so the trail fades into the night at top and bottom */}
+        <div className="qm-vignette" aria-hidden="true" />
+
+        {SCENES.map((s, i) => {
+          const spot = GATE_SPOTS[i]
+          return (
+            <button
+              key={s.to}
+              type="button"
+              className="qm-gate qm-gate-live qm-gate-tappable"
+              style={{ left: `${spot.left}%`, top: `${spot.top}%` }}
+              onClick={() => nav(s.to)}
+              aria-label={`Scene ${s.num}: ${s.title} — enter task`}
+              title={`${s.title} — tap to enter`}
+            >
+              <img src={s.gate} alt="" className="qm-gate-img" draggable="false" />
+              <span className="qm-gate-glow" aria-hidden="true" />
+              <span className="qm-gate-num">{s.num}</span>
+              <span className="qm-gate-tooltip">{s.title}</span>
+            </button>
+          )
+        })}
       </div>
     </div>
-  );
+  )
 }

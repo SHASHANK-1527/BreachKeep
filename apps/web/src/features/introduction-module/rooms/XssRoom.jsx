@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { reportComplete } from '../reportComplete.js';
 import RoomShell from '../components/RoomShell';
 
 function Hint({ children }) {
@@ -54,7 +53,6 @@ export default function XssRoom() {
     const lower = val.toLowerCase();
     const hasScript = lower.includes('<script');
     const hasCookie = lower.includes('cookie');
-    if (hasScript && hasCookie) reportComplete('guestbook');
     setComments((c) => [...c, { user: 'you', text: val }]);
     setInput('');
 

@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { api } from '../app/api.js'
 import { useAuth } from '../app/AuthContext.jsx'
 import HubShell from '../shell/HubShell.jsx'
-import IntroButton from '../shell/IntroButton.jsx'
-import CagedGates from '../shell/CagedGates.jsx'
+import QuestMapHub from '../shell/QuestMapHub.jsx'
 import SortingCeremony from '../shell/SortingCeremony.jsx'
 import ParticleField from '../sanctum/ParticleField.jsx'
 
@@ -56,20 +55,18 @@ export default function Dashboard() {
   return (
     <div className="bk-dashboard" data-house={user?.house || undefined}>
       <ParticleField mode="cavern" />
-      <HubShell user={user}>
-        {phase === 'A' && (
-          <>
-            <IntroButton onClick={() => nav('/dashboard/introduction')} />
-            <CagedGates />
-          </>
-        )}
-        {phase === 'C' && (
-          <div className="bk-gates">
-            {/* real GateCards come from the hub shell, unlocked per progress */}
-            {progress.unlocked.length === 0 && <p className="bk-note">No dungeons are live yet. Check back before class.</p>}
-          </div>
-        )}
-      </HubShell>
+      {phase === 'A' ? (
+        <QuestMapHub user={user} />
+      ) : (
+        <HubShell user={user}>
+          {phase === 'C' && (
+            <div className="bk-gates">
+              {/* real GateCards come from the hub shell, unlocked per progress */}
+              {progress.unlocked.length === 0 && <p className="bk-note">No dungeons are live yet. Check back before class.</p>}
+            </div>
+          )}
+        </HubShell>
+      )}
     </div>
   )
 }
