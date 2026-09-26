@@ -7,6 +7,8 @@ import IntroButton from '../shell/IntroButton.jsx'
 import CagedGates from '../shell/CagedGates.jsx'
 import SortingCeremony from '../shell/SortingCeremony.jsx'
 import ParticleField from '../sanctum/ParticleField.jsx'
+import StoneGate from '../sanctum/StoneGate.jsx'
+import ThemeStage from '../shell/styles/themes/ThemeStage.jsx'
 
 // State machine:
 //  A) introComplete=false            -> intro button + caged, dulled gates
@@ -62,6 +64,48 @@ export default function Dashboard() {
     return <SortingCeremony house={assignedHouse} onStart={runCeremony} />
   }
 
+  if (phase === 'C' && user?.house) {
+    return (
+      <div className="bk-dashboard" data-house={user.house}>
+        <ThemeStage house={user.house}>
+          <HubShell user={user}>
+            <div className="bk-gates">
+              {progress.unlocked.length === 0 ? (
+                <div className="bk-no-dungeons-card thaw-in">
+                  <h3 style={{ margin: '0 0 0.5rem', color: 'var(--house-accent, #ffdca8)', letterSpacing: '0.06em' }}>
+                    Chambers Awaiting Trial
+                  </h3>
+                  <p className="bk-note" style={{ margin: 0 }}>
+                    No dungeons are live yet. Check back before class.
+                  </p>
+                </div>
+              ) : (
+                <div className="unlocked-gates-grid">
+                  {progress.unlocked.map((dungeonId) => (
+                    <div
+                      key={dungeonId}
+                      className="gate-card active-gate thaw-in"
+                      onClick={() => nav(`/dungeons/${dungeonId}`)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => { if (e.key === 'Enter') nav(`/dungeons/${dungeonId}`) }}
+                    >
+                      <StoneGate status={progress.solved.includes(dungeonId) ? 'open' : 'unlocking'} />
+                      <span className="gate-name">{dungeonId}</span>
+                      <span className="gate-status-pill">
+                        {progress.solved.includes(dungeonId) ? 'Conquered' : 'Enter Chamber'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </HubShell>
+        </ThemeStage>
+      </div>
+    )
+  }
+
   return (
     <div className="bk-dashboard" data-house={user?.house || undefined}>
       <ParticleField mode="cavern" />
@@ -74,7 +118,6 @@ export default function Dashboard() {
         )}
         {phase === 'C' && (
           <div className="bk-gates">
-            {/* real GateCards come from the hub shell, unlocked per progress */}
             {progress.unlocked.length === 0 && <p className="bk-note">No dungeons are live yet. Check back before class.</p>}
           </div>
         )}

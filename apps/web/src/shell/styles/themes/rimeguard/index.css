@@ -1,0 +1,79 @@
+:root {
+  /* Rimeguard Cyber eLabs Design Tokens */
+  --bg-dark: #03070c;
+  --bg-deep: #050b12;
+  --surface-card: rgba(7, 18, 27, 0.88);
+  --surface-card-hover: rgba(10, 26, 38, 0.95);
+  --surface-card-locked: rgba(6, 12, 18, 0.75);
+  
+  --border-subtle: rgba(111, 214, 255, 0.16);
+  --border-active: rgba(111, 214, 255, 0.42);
+  --border-strong: rgba(111, 214, 255, 0.8);
+
+  --accent-cyan: #6fd6ff;
+  --accent-glow: rgba(111, 214, 255, 0.35);
+  --accent-btn: #00dfa2;
+  --accent-btn-glow: rgba(0, 223, 162, 0.45);
+
+  --text-pure: #ffffff;
+  --text-bright: #f0f9ff;
+  --text-muted: #8ba2b5;
+  --text-dim: #4b6375;
+
+  --font-serif: 'Cinzel', 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'Manrope', -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --radius-card: 16px;
+  --radius-pill: 9999px;
+  --radius-sm: 8px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  width: 100%;
+  min-height: 100%;
+  background-color: var(--bg-dark);
+  color: var(--text-bright);
+  font-family: var(--font-body);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-dark);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(111, 214, 255, 0.2);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-cyan);
+}
+
+/* Thaw In Animation */
+@keyframes thawIn {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+
+.thaw-in {
+  animation: thawIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

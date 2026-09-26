@@ -1,0 +1,37 @@
+/* Unified styling for theme stages and overlay hub */
+.bk-theme-stage-wrapper {
+  position: relative;
+  width: 100%;
+  min-height: calc(100vh - 56px);
+  overflow-x: hidden;
+}
+
+/* Ensure viewport stages fill properly under fixed navigation bar */
+.arcweave-viewport-stage,
+.emberkeep-viewport-stage,
+.rimeguard-viewport-stage,
+.voltgrid-viewport-stage {
+  min-height: calc(100vh - 56px);
+  height: auto;
+  position: relative;
+  overflow: visible;
+}
+
+.theme-stage-overlay {
+  position: relative;
+  z-index: 30;
+  width: 100%;
+  min-height: calc(100vh - 56px);
+  padding: 85px 1.5rem 3rem;
+  box-sizing: border-box;
+  pointer-events: auto;
+  user-select: auto;
+}
+
+@media (max-width: 768px) {
+  .theme-stage-overlay {
+    padding-top: 70px;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
