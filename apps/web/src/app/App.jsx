@@ -29,6 +29,8 @@ function RequireSession({ children }) {
 function Header({ user, onLogout }) {
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
+  const loc = useLocation()
+  const isAccount = loc.pathname === '/account'
 
   useEffect(() => {
     if (!open) return
@@ -45,6 +47,161 @@ function Header({ user, onLogout }) {
   if (!user) return null
 
   const initial = (user.username || '?')[0].toUpperCase()
+
+  if (isAccount) {
+    return (
+      <header style={{
+        position: 'fixed',
+        top: 0, left: 0, right: 0,
+        height: 58,
+        background: 'rgba(165, 195, 225, 0.22)',
+        backdropFilter: 'blur(14px)',
+        WebkitBackdropFilter: 'blur(14px)',
+        borderBottom: '1.5px solid rgba(255, 255, 255, 0.38)',
+        boxShadow: '0 8px 30px rgba(7, 18, 38, 0.25)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 1.5rem',
+        zIndex: 100,
+        color: '#0f172a',
+        fontFamily: 'var(--font-inter)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <Link
+            to="/dashboard"
+            className="bk-code-btn"
+            style={{
+              padding: '0.4rem 1.1rem',
+              fontSize: '0.85rem',
+              textDecoration: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              fontWeight: 500,
+            }}
+          >
+            ← Dashboard
+          </Link>
+          <span style={{
+            fontSize: '0.92rem',
+            fontWeight: 700,
+            color: '#0f1626',
+            letterSpacing: '0.06em',
+            fontFamily: 'var(--font-cinzel)',
+          }}>
+            {user.username} · {user.house ? user.house.toUpperCase() : 'UNSORTED'}
+          </span>
+        </div>
+
+        <div style={{ position: 'relative' }} ref={ref}>
+          <button
+            onClick={() => setOpen((v) => !v)}
+            aria-haspopup="menu"
+            aria-expanded={open}
+            aria-label="Account menu"
+            className="bk-code-btn"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.55rem',
+              padding: '0.25rem 0.85rem 0.25rem 0.35rem',
+              borderRadius: '999px',
+              fontSize: '0.88rem',
+            }}
+          >
+            <span style={{
+              width: 28, height: 28, borderRadius: '50%', overflow: 'hidden',
+              background: '#cbd5e1', display: 'grid', placeItems: 'center',
+              fontWeight: 700, fontSize: '0.85rem', color: '#0f1626', flexShrink: 0,
+            }}>
+              {user.avatar
+                ? <img src={user.avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : initial}
+            </span>
+            <span style={{ maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {user.username}
+            </span>
+            <span style={{ fontSize: '0.65rem', opacity: 0.7 }}>▾</span>
+          </button>
+
+          {open && (
+            <div
+              role="menu"
+              style={{
+                position: 'absolute', top: 'calc(100% + 8px)', right: 0, minWidth: 220,
+                background: 'rgba(225, 235, 245, 0.96)',
+                backdropFilter: 'blur(16px)',
+                WebkitBackdropFilter: 'blur(16px)',
+                border: '1.5px solid rgba(255, 255, 255, 0.6)',
+                borderRadius: 14, padding: '0.45rem',
+                boxShadow: '0 16px 40px rgba(7, 18, 38, 0.3)',
+                animation: 'none',
+                color: '#0f172a',
+              }}
+            >
+              <div style={{ padding: '0.6rem 0.75rem', borderBottom: '1px solid rgba(15, 22, 38, 0.1)' }}>
+                <div style={{ fontWeight: 600, color: '#0f1626', fontSize: '0.92rem' }}>{user.username}</div>
+                <div style={{ color: '#475569', fontSize: '0.75rem', marginTop: 2, wordBreak: 'break-all' }}>{user.email}</div>
+                <div style={{
+                  marginTop: 6, display: 'inline-block', fontSize: '0.68rem', letterSpacing: '0.08em',
+                  textTransform: 'uppercase', fontWeight: 600, color: '#0f1626',
+                  background: 'rgba(15, 22, 38, 0.08)', border: '1px solid rgba(15, 22, 38, 0.15)',
+                  borderRadius: 999, padding: '2px 8px',
+                }}>
+                  {user.house || 'unsorted'}
+                </div>
+              </div>
+
+              <Link
+                to="/dashboard"
+                onClick={() => setOpen(false)}
+                role="menuitem"
+                style={{
+                  display: 'block', padding: '0.55rem 0.75rem', borderRadius: 8,
+                  color: '#0f172a', fontSize: '0.88rem', textDecoration: 'none', fontWeight: 500,
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(15, 22, 38, 0.06)')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+              >
+                Dashboard
+              </Link>
+              <Link
+                to="/account"
+                onClick={() => setOpen(false)}
+                role="menuitem"
+                style={{
+                  display: 'block', padding: '0.55rem 0.75rem', borderRadius: 8,
+                  color: '#0f172a', fontSize: '0.88rem', textDecoration: 'none', fontWeight: 500,
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(15, 22, 38, 0.06)')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+              >
+                Account Settings
+              </Link>
+
+              <div style={{ height: 1, background: 'rgba(15, 22, 38, 0.1)', margin: '0.35rem 0' }} />
+
+              <button
+                onClick={() => { setOpen(false); onLogout() }}
+                role="menuitem"
+                style={{
+                  display: 'block', width: '100%', textAlign: 'left',
+                  padding: '0.55rem 0.75rem', borderRadius: 8,
+                  background: 'transparent', border: 'none', color: '#dc2626',
+                  fontSize: '0.88rem', fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(239, 68, 68, 0.08)')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+              >
+                Log out
+              </button>
+            </div>
+          )}
+        </div>
+      </header>
+    )
+  }
 
   return (
     <header style={{
