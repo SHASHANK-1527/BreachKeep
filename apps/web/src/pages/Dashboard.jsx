@@ -6,9 +6,11 @@ import HubShell from '../shell/HubShell.jsx'
 import QuestMapHub from '../shell/QuestMapHub.jsx'
 import SortingCeremony from '../shell/SortingCeremony.jsx'
 import ParticleField from '../sanctum/ParticleField.jsx'
+import StoneGate from '../sanctum/StoneGate.jsx'
+import ThemeStage from '../shell/styles/themes/ThemeStage.jsx'
 
 // State machine:
-//  A) introComplete=false            -> intro button + caged, dulled gates
+//  A) introComplete=false            -> sanctum scene with the sealed Oni gate
 //  B) introComplete=true, sorted=false, returning -> run sorting ceremony
 //  C) sorted=true                    -> full house-themed hub
 export default function Dashboard() {
@@ -19,13 +21,22 @@ export default function Dashboard() {
   const [assignedHouse, setAssignedHouse] = useState(null)
 
   const load = useCallback(async () => {
-    const status = await api.get('/intro/status')
+    let status
+    try {
+      status = await api.get('/intro/status')
+    } catch {
+      // Session is gone (account deleted, cookie expired, logged out in another
+      // tab). Without this the rejection left phase stuck on 'loading' forever.
+      sessionStorage.removeItem('bk_has_access')
+      nav('/enter', { replace: true })
+      return
+    }
     const prog = await api.get('/progress').catch(() => ({ solved: [], unlocked: [] }))
     setProgress(prog)
     if (!status.introComplete) { setPhase('A'); return }
     if (status.introComplete && !user?.sorted) { setPhase('B'); return }
     setPhase('C')
-  }, [user?.sorted])
+  }, [user?.sorted, nav])
 
   useEffect(() => { load() }, [load])
 
@@ -52,21 +63,67 @@ export default function Dashboard() {
     return <SortingCeremony house={assignedHouse} onStart={runCeremony} />
   }
 
+  if (phase === 'C' && user?.house) {
+    return (
+      <div className="bk-dashboard" data-house={user.house}>
+        <ThemeStage house={user.house}>
+          <HubShell user={user}>
+            <div className="bk-gates">
+              {progress.unlocked.length === 0 ? (
+                <div className="bk-no-dungeons-card thaw-in">
+                  <h3 style={{ margin: '0 0 0.5rem', color: 'var(--house-accent, #ffdca8)', letterSpacing: '0.06em' }}>
+                    Chambers Awaiting Trial
+                  </h3>
+                  <p className="bk-note" style={{ margin: 0 }}>
+                    No dungeons are live yet. Check back before class.
+                  </p>
+                </div>
+              ) : (
+                <div className="unlocked-gates-grid">
+                  {progress.unlocked.map((dungeonId) => (
+                    <div
+                      key={dungeonId}
+                      className="gate-card active-gate thaw-in"
+                      onClick={() => nav(`/dungeons/${dungeonId}`)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => { if (e.key === 'Enter') nav(`/dungeons/${dungeonId}`) }}
+                    >
+                      <StoneGate status={progress.solved.includes(dungeonId) ? 'open' : 'unlocking'} />
+                      <span className="gate-name">{dungeonId}</span>
+                      <span className="gate-status-pill">
+                        {progress.solved.includes(dungeonId) ? 'Conquered' : 'Enter Chamber'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </HubShell>
+        </ThemeStage>
+      </div>
+    )
+  }
+
+  if (phase === 'A') {
+    return (
+      <div className="bk-dashboard">
+        <QuestMapHub user={user} />
+      </div>
+    )
+  }
+
+  // Fallback: sorted but no house on the user object yet (mid-refresh).
   return (
     <div className="bk-dashboard" data-house={user?.house || undefined}>
       <ParticleField mode="cavern" />
-      {phase === 'A' ? (
-        <QuestMapHub user={user} />
-      ) : (
-        <HubShell user={user}>
-          {phase === 'C' && (
-            <div className="bk-gates">
-              {/* real GateCards come from the hub shell, unlocked per progress */}
-              {progress.unlocked.length === 0 && <p className="bk-note">No dungeons are live yet. Check back before class.</p>}
-            </div>
-          )}
-        </HubShell>
-      )}
+      <HubShell user={user}>
+        {phase === 'C' && (
+          <div className="bk-gates">
+            {progress.unlocked.length === 0 && <p className="bk-note">No dungeons are live yet. Check back before class.</p>}
+          </div>
+        )}
+      </HubShell>
     </div>
   )
 }

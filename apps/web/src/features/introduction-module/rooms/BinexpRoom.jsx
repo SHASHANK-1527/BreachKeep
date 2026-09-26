@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { reportComplete } from '../reportComplete.js';
 import RoomShell from '../components/RoomShell';
 
 function Hint({ children }) {
@@ -235,7 +236,7 @@ export default function BinexpRoom() {
         return;
       }
       if (state.flagShown) return;
-      setState((s) => ({ ...s, flagShown: true }));
+      setState((s) => ({ ...s, flagShown: true })); reportComplete('build-tool');
       addLine('FLAG{h1dd3n_func_f0und}', 'im-flag');
       setDialogue(
         'That\'s the whole shape of it: functionality hidden in plain sight, found by inspection, triggered on purpose. The rest of the semester is mostly "how do you find this faster, and on things that fight back."'

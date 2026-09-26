@@ -2,12 +2,12 @@
   "name": "breachkeep-api",
   "version": "1.0.0",
   "type": "module",
-  "description": "BreachKeep API service — auth, access control, progress, house sorting, admin",
+  "description": "BreachKeep API service \u2014 auth, access control, progress, house sorting, admin",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "test": "node --test test/",
+    "test": "node --test test/*.test.js",
     "hash-admin": "node src/scripts/hashAdmin.js",
     "seed:dev": "node src/scripts/devSeed.js",
     "clear-db": "node src/scripts/clearDB.js"
@@ -22,10 +22,12 @@
     "google-auth-library": "^9.14.0",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
-    "mongodb-memory-server": "^11.3.0",
     "mongoose": "^8.6.0",
     "node-cron": "^3.0.3",
-    "nodemailer": "^7.0.0",
+    "nodemailer": "^7.0.0"
+  },
+  "devDependencies": {
+    "mongodb-memory-server": "^11.3.0",
     "supertest": "^7.3.0"
   }
 }

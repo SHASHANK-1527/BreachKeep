@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { reportComplete } from '../reportComplete.js';
 import RoomShell from '../components/RoomShell';
 
 function Hint({ children }) {
@@ -36,7 +37,7 @@ export default function IdorRoom() {
       return;
     }
     if (/^\d{4}$/.test(clean)) {
-      setStatus('stranger');
+      setStatus('stranger'); reportComplete('somebodys-invoice');
       setDialogue("That's not your account, and nothing stopped you from loading it — no password, no extra check, just a different number.");
       setMech(
         "This class of bug is called an insecure direct object reference (IDOR): the app used a plain, guessable ID to fetch a record and never re-checked ownership server-side. The fix is a server-side check on every request — \"does this invoice belong to this logged-in user?\" — not hiding the ID better or making it less guessable."

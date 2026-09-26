@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { reportComplete } from '../reportComplete.js';
 import RoomShell from '../components/RoomShell';
 
 function Hint({ children }) {
@@ -45,7 +46,7 @@ export default function MitmRoom() {
 
   function openPacket(p) {
     if (p.proto !== 'http') return;
-    setStage('done');
+    setStage('done'); reportComplete('coffee-shop-wifi');
     setDialogue(
       "There it is — a full username and password, sent in the clear, readable by anyone else sharing this network."
     );

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { reportComplete } from '../reportComplete.js';
 import RoomShell from '../components/RoomShell';
 
 function Hint({ children }) {
@@ -103,7 +104,7 @@ export default function CmdInjectionRoom() {
         return;
       }
       addLine('FLAG{p1ng_w1th_a_s3m1c0l0n}', 'im-flag');
-      setState((s) => ({ ...s, flagShown: true }));
+      setState((s) => ({ ...s, flagShown: true })); reportComplete('support-form');
       setDialogue(
         'A ping tool just handed you arbitrary command execution on their server. This is one of the most severe bug classes out there precisely because it goes straight from "text field" to "full control."'
       );

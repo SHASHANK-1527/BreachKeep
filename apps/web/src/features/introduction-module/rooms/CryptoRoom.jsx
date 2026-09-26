@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { reportComplete } from '../reportComplete.js';
 import RoomShell from '../components/RoomShell';
 
 function Hint({ children }) {
@@ -101,7 +102,7 @@ export default function CryptoRoom() {
         setDialogue(<>Read the file first: <Hint>cat memo.txt</Hint></>);
         return;
       }
-      setState((s) => ({ ...s, decoded: true }));
+      setState((s) => ({ ...s, decoded: true })); reportComplete('encoded-memo');
       addLine('FLAG{n0t_r34l_3ncrypt10n}', 'im-flag');
       setDialogue(
         "And that's the whole lesson: it looked secret, but there was never a key involved — just a different way of writing the same text."

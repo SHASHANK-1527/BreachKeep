@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { reportComplete } from '../reportComplete.js';
 import RoomShell from '../components/RoomShell';
 
 function Hint({ children }) {
@@ -63,7 +64,7 @@ export default function PathTraversalRoom() {
       );
       return;
     }
-    setFlagShown(true);
+    setFlagShown(true); reportComplete('dotdotdot-folder');
     setOutput({
       ok: true,
       text: `Downloaded ${val} —\n\nDB_HOST=internal-db.acme.local\nDB_USER=svc_billing\nDB_PASS=Tr0ub4dor&3\n\nFLAG{tw0_d0ts_tw1ce}`,

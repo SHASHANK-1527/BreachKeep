@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation, Link } from 'react-router-dom'
 import { AuthProvider, useAuth } from './AuthContext.jsx'
 import { GateProvider } from './GateContext.jsx'
 import Enter from '../pages/Enter.jsx'
@@ -10,8 +10,10 @@ import ResetPassword from '../pages/ResetPassword.jsx'
 import AdminPanel from '../pages/admin/AdminPanel.jsx'
 import IntroductionModule from '../features/introduction-module/IntroductionModule.jsx'
 import CodeEntryView from '../components/CodeEntryView.jsx'
+import Maintenance from '../pages/Maintenance.jsx'
+import useMaintenance from './useMaintenance.js'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { api } from './api.js'
 
 const ADMIN_PATH = import.meta.env.VITE_ADMIN_PATH || '/keep-warden-7f3a9c'
@@ -25,7 +27,25 @@ function RequireSession({ children }) {
 }
 
 function Header({ user, onLogout }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+
+  useEffect(() => {
+    if (!open) return
+    const onDown = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    const onKey = (e) => { if (e.key === 'Escape') setOpen(false) }
+    document.addEventListener('mousedown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
   if (!user) return null
+
+  const initial = (user.username || '?')[0].toUpperCase()
+
   return (
     <header style={{
       position: 'fixed',
@@ -44,42 +64,111 @@ function Header({ user, onLogout }) {
       <div style={{ fontWeight: 600, color: '#ffdca8' }}>
         {user.username} · {user.house || 'unsorted'}
       </div>
-      <button onClick={onLogout} style={{
-        background: '#ff5a1f',
-        color: '#fff',
-        border: 'none',
-        padding: '0.5rem 1rem',
-        borderRadius: '4px',
-        cursor: 'pointer',
-        fontWeight: 600,
-      }}>
-        Log out
-      </button>
+
+      <div style={{ position: 'relative' }} ref={ref}>
+        <button
+          onClick={() => setOpen((v) => !v)}
+          aria-haspopup="menu"
+          aria-expanded={open}
+          aria-label="Account menu"
+          style={{
+            display: 'flex', alignItems: 'center', gap: '0.5rem',
+            background: 'transparent', border: '1px solid rgba(255,122,0,0.22)',
+            borderRadius: '999px', padding: '0.2rem 0.7rem 0.2rem 0.2rem',
+            cursor: 'pointer', color: '#ffdca8', fontFamily: 'inherit', fontSize: '0.85rem',
+          }}
+        >
+          <span style={{
+            width: 30, height: 30, borderRadius: '50%', overflow: 'hidden',
+            background: 'rgba(255,122,0,0.18)', display: 'grid', placeItems: 'center',
+            fontWeight: 700, fontSize: '0.85rem', flexShrink: 0,
+          }}>
+            {user.avatar
+              ? <img src={user.avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              : initial}
+          </span>
+          <span style={{ maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {user.username}
+          </span>
+          <span style={{ fontSize: '0.6rem', opacity: 0.7 }}>▾</span>
+        </button>
+
+        {open && (
+          <div
+            role="menu"
+            style={{
+              position: 'absolute', top: 'calc(100% + 8px)', right: 0, minWidth: 210,
+              background: '#160806', border: '1px solid rgba(255,122,0,0.22)',
+              borderRadius: 10, padding: '0.35rem', boxShadow: '0 12px 32px rgba(0,0,0,0.55)',
+              animation: 'none',
+            }}
+          >
+            <div style={{ padding: '0.5rem 0.65rem', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ fontWeight: 600, color: '#ffdca8', fontSize: '0.9rem' }}>{user.username}</div>
+              <div style={{ color: 'rgba(233,217,209,0.55)', fontSize: '0.75rem', marginTop: 2, wordBreak: 'break-all' }}>{user.email}</div>
+              <div style={{ marginTop: 6, display: 'inline-block', fontSize: '0.68rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#ff5a1f', border: '1px solid rgba(255,122,0,0.3)', borderRadius: 999, padding: '2px 8px' }}>
+                {user.house || 'unsorted'}
+              </div>
+            </div>
+
+            <Link
+              to="/account"
+              onClick={() => setOpen(false)}
+              role="menuitem"
+              style={{ display: 'block', padding: '0.5rem 0.65rem', borderRadius: 6, color: '#e9d9d1', fontSize: '0.87rem', textDecoration: 'none' }}
+            >
+              Account Settings
+            </Link>
+            <Link
+              to="/dashboard"
+              onClick={() => setOpen(false)}
+              role="menuitem"
+              style={{ display: 'block', padding: '0.5rem 0.65rem', borderRadius: 6, color: '#e9d9d1', fontSize: '0.87rem', textDecoration: 'none' }}
+            >
+              Dashboard
+            </Link>
+
+            <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', margin: '0.35rem 0' }} />
+
+            <button
+              onClick={() => { setOpen(false); onLogout() }}
+              role="menuitem"
+              style={{ display: 'block', width: '100%', textAlign: 'left', padding: '0.5rem 0.65rem', borderRadius: 6, background: 'transparent', border: 'none', color: '#ef4444', fontSize: '0.87rem', cursor: 'pointer', fontFamily: 'inherit' }}
+            >
+              Log out
+            </button>
+          </div>
+        )}
+      </div>
     </header>
   )
 }
 
 function AppRoutes() {
   const { user, loading, logout } = useAuth()
-  const [accessCode, setAccessCode] = useState('')
-  const [accessError, setAccessError] = useState('')
+  const loc = useLocation()
   const [hasAccess, setHasAccess] = useState(() => sessionStorage.getItem('bk_has_access') === 'true')
 
-  const handleAccessSubmit = async (e) => {
-    e.preventDefault()
-    setAccessError('')
-    try {
-      const data = await api.post('/auth/verify-access-code', { code: accessCode })
-      if (data.ok) {
-        setHasAccess(true)
-        sessionStorage.setItem('bk_has_access', 'true')
-        window.location.href = data.next || '/enter'
-      } else {
-        setAccessError('Access Denied')
-      }
-    } catch (e2) {
-      setAccessError(e2.data?.error || 'Invalid access code')
-    }
+  // The kill switch. Skipped on the admin route so the Warden can always get in
+  // and turn the site back on.
+  const isAdminRoute = loc.pathname === ADMIN_PATH
+  const maint = useMaintenance(isAdminRoute)
+
+  // The hidden admin path is reached straight from the admin landing code, so it
+  // has no student gate cookie and no session. It must not be swallowed by the
+  // access-code gate below, and it does its own password auth internally.
+  if (isAdminRoute) {
+    return (
+      <Routes>
+        <Route path={ADMIN_PATH} element={<AdminPanel />} />
+        <Route path="*" element={<Navigate to={ADMIN_PATH} replace />} />
+      </Routes>
+    )
+  }
+
+  // Site closed by the Warden — nothing student-facing renders.
+  if (maint.maintenance) {
+    return <Maintenance message={maint.message} eta={maint.eta} />
   }
 
   // Show landing only if NOT logged in AND no gate access
@@ -99,10 +188,16 @@ function AppRoutes() {
     return <div className="bk-loading" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0403', color: '#ff5a1f' }}>Loading…</div>
   }
 
-  const loc = useLocation()
-  // Atmospheric pages render their own chrome (banner + avatar). The dashboard
-  // is one too now — the old fixed header would stack on top of it.
-  const isAtmosphericPage = loc.pathname === '/onboarding' || loc.pathname.startsWith('/dashboard') || loc.pathname === '/enter'
+  // Pages that render their own full-screen scene and chrome (ornate banner +
+  // the gold avatar medallion). The fixed header would stack on top of them.
+  // The individual introduction rooms are ordinary panels, not scenes, so they
+  // keep the header — it is their only route to logout and account settings.
+  const isAtmosphericPage = [
+    '/enter',
+    '/onboarding',
+    '/dashboard',
+    '/dashboard/introduction',
+  ].includes(loc.pathname.replace(/\/+$/, '') || '/')
 
   // User is logged in OR has gate access - show full app with header
   return (

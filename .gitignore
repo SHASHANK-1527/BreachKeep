@@ -5,3 +5,8 @@ dist/
 *.log
 .DS_Store
 coverage/
+
+# Personal operator notes — runbooks, checklists, class-day steps.
+# Deliberately untracked: they hold live URLs, codes and one-off steps that
+# are none of the repo's business.
+_ops/

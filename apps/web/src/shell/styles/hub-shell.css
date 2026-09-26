@@ -1,26 +1,188 @@
 /* Theme-agnostic hub layout. House themes override colors via [data-house]. */
-.bk-dashboard { position: relative; min-height: 100vh; overflow: hidden; }
-.hub-shell { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
-.hub-header { display: flex; justify-content: space-between; align-items: center;
-  padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.08); }
-.hub-brand { font-size: 1.3rem; font-weight: 700; letter-spacing: 0.04em; }
-.hub-user { color: rgba(255,255,255,0.55); font-size: 0.9rem; }
-.hub-main { padding-top: 1.5rem; }
-.intro-btn { display: block; width: 100%; max-width: 520px; margin: 0 auto 2rem; padding: 1.4rem;
-  border: 0; border-radius: 14px; cursor: pointer; text-align: center;
-  background: linear-gradient(135deg, #ff8a3a, #ff5a1f); color: #1a0e06; }
-.intro-btn-label { display: block; font-size: 1.2rem; font-weight: 800; }
-.intro-btn-sub { display: block; font-size: 0.85rem; opacity: 0.8; margin-top: 0.2rem; }
-.caged-gates { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; }
-.gate-card { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 12px; padding: 1.2rem; display: grid; place-items: center; gap: 0.6rem; }
-.gate-name { font-weight: 600; }
-.bk-note { grid-column: 1 / -1; color: rgba(255,255,255,0.5); font-size: 0.9rem; text-align: center; }
-.bk-flag { display: flex; gap: 0.5rem; margin-top: 1.5rem; }
-.bk-flag input { flex: 1; padding: 0.7rem; border-radius: 8px; background: rgba(0,0,0,0.3);
-  border: 1px solid rgba(255,255,255,0.15); color: inherit; }
-.bk-flag-ok { color: #4ade80; align-self: center; }
-.bk-flag-no { color: #f87171; align-self: center; }
-.bk-admin, .bk-admin-login, .bk-account, .bk-dungeon { max-width: 760px; margin: 2rem auto; padding: 1.5rem; }
-.bk-admin section { margin: 1.2rem 0; padding: 1rem; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; }
-.bk-admin label, .bk-account label { display: block; margin: 0.5rem 0; }
+.bk-dashboard {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.hub-shell {
+  position: relative;
+  z-index: 1;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.hub-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.hub-brand {
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.hub-user {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.9rem;
+}
+
+.hub-main {
+  padding-top: 1.5rem;
+}
+
+.intro-btn {
+  display: block;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto 2rem;
+  padding: 1.4rem;
+  border: 0;
+  border-radius: 14px;
+  cursor: pointer;
+  text-align: center;
+  background: linear-gradient(135deg, #ff8a3a, #ff5a1f);
+  color: #1a0e06;
+}
+
+.intro-btn-label {
+  display: block;
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.intro-btn-sub {
+  display: block;
+  font-size: 0.85rem;
+  opacity: 0.8;
+  margin-top: 0.2rem;
+}
+
+.caged-gates {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.gate-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 1.2rem;
+  display: grid;
+  place-items: center;
+  gap: 0.6rem;
+}
+
+.gate-name {
+  font-weight: 600;
+}
+
+.bk-note {
+  grid-column: 1 / -1;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.bk-flag {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+
+.bk-flag input {
+  flex: 1;
+  padding: 0.7rem;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: inherit;
+}
+
+.bk-flag-ok {
+  color: #4ade80;
+  align-self: center;
+}
+
+.bk-flag-no {
+  color: #f87171;
+  align-self: center;
+}
+
+.bk-admin,
+.bk-admin-login,
+.bk-account,
+.bk-dungeon {
+  max-width: 760px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+}
+
+.bk-admin section {
+  margin: 1.2rem 0;
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.bk-admin label,
+.bk-account label {
+  display: block;
+  margin: 0.5rem 0;
+}
+
+/* Themed hub enhancements */
+.bk-no-dungeons-card {
+  max-width: 520px;
+  margin: 2.5rem auto;
+  padding: 2rem;
+  background: var(--surface-card, rgba(16, 20, 30, 0.85));
+  border: 1px solid var(--border-active, rgba(255, 255, 255, 0.15));
+  border-radius: var(--radius-card, 16px);
+  backdrop-filter: blur(12px);
+  text-align: center;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
+}
+
+.unlocked-gates-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.25rem;
+  margin-top: 1rem;
+}
+
+.gate-card.active-gate {
+  background: var(--surface-card, rgba(20, 25, 38, 0.85));
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.15));
+  border-radius: var(--radius-card, 14px);
+  padding: 1.5rem 1rem;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease;
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  user-select: none;
+}
+
+.gate-card.active-gate:hover {
+  transform: translateY(-4px);
+  border-color: var(--house-accent, #6ea0ff);
+  box-shadow: 0 10px 28px var(--house-glow, rgba(110, 160, 255, 0.25));
+}
+
+.gate-status-pill {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.2));
+  color: var(--house-accent, inherit);
+  font-weight: 600;
+  margin-top: 0.2rem;
+}

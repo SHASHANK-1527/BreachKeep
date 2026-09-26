@@ -25,12 +25,24 @@ services:
 
   web-build:
     build: ./apps/web
+    # Vite bakes VITE_* values into the bundle at BUILD time, so the build
+    # container must see them. Without this, Google sign-in gets an empty client
+    # id and the hidden admin path falls back to the default in the source.
+    env_file: [.env]
     command: sh -c "npm run build && npm run build:landing"
     volumes: ["web_dist:/app/dist"]
 
   nginx:
     image: nginx:1.27-alpine
-    depends_on: [api, provisioner, web-build]
+    # Wait for the bundles to exist, otherwise the first boot serves an empty
+    # document root and the site looks broken until a manual restart.
+    depends_on:
+      api:
+        condition: service_started
+      provisioner:
+        condition: service_started
+      web-build:
+        condition: service_completed_successfully
     ports: ["8080:80"]
     volumes:
       - ./infra/nginx/breachkeep.conf:/etc/nginx/conf.d/default.conf:ro

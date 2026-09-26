@@ -1,0 +1,81 @@
+:root {
+  /* Emberkeep Forge & Furnace Cyber eLabs Design Tokens */
+  --bg-dark: #0a0403;
+  --bg-deep: #160806;
+  --surface-card: rgba(22, 8, 6, 0.88);
+  --surface-card-hover: rgba(36, 14, 10, 0.95);
+  --surface-card-locked: rgba(14, 5, 4, 0.75);
+  
+  --border-subtle: rgba(255, 90, 31, 0.18);
+  --border-active: rgba(255, 90, 31, 0.45);
+  --border-strong: rgba(255, 90, 31, 0.85);
+
+  --accent-fire: #ff5a1f;
+  --accent-glow: rgba(255, 90, 31, 0.38);
+  --accent-strong: #ffdca8;
+  --accent-btn: #ff5a1f;
+  --accent-btn-glow: rgba(255, 90, 31, 0.5);
+
+  --text-pure: #ffffff;
+  --text-bright: #fbf1eb;
+  --text-muted: #c49c8c;
+  --text-dim: #7a5446;
+
+  --font-serif: 'Cinzel', 'Cinzel Decorative', Georgia, serif;
+  --font-body: 'Roboto Slab', 'Manrope', -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --radius-card: 16px;
+  --radius-pill: 9999px;
+  --radius-sm: 8px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  width: 100%;
+  min-height: 100%;
+  background-color: var(--bg-dark);
+  color: var(--text-bright);
+  font-family: var(--font-body);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom Volcanic Amber Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-dark);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 90, 31, 0.25);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-fire);
+}
+
+/* Signature House Animation: Forge-In */
+/* Elements ignite with brightness spike & ember glow then cool into their resting state */
+@keyframes forgeIn {
+  from {
+    opacity: 0;
+    filter: brightness(2.5) drop-shadow(0 0 20px #ff5a1f);
+    transform: scale(0.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    filter: brightness(1) drop-shadow(0 0 0 transparent);
+    transform: scale(1) translateY(0);
+  }
+}
+
+.forge-in, .thaw-in {
+  animation: forgeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

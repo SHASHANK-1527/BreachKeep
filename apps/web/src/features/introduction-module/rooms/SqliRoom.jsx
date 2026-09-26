@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { reportComplete } from '../reportComplete.js';
 import RoomShell from '../components/RoomShell';
 
 function Hint({ children }) {
@@ -55,13 +56,13 @@ export default function SqliRoom() {
     if (stage === 'home') setStage('robots');
     else if (stage === 'robots') setStage('admin');
     else if (stage === 'admin') {
-      setUser("' OR '1'='1");
+      /* hint no longer autofills the payload */
       setFilled(true);
       setTimeout(() => setFilled(false), 1200);
     }
   }
   function submit() {
-    if (user.includes("' OR '1'='1")) { setStage('done'); setErr(false); }
+    if (user.includes("' OR '1'='1")) { setStage('done'); setErr(false); reportComplete('hidden-page'); }
     else setErr(true);
   }
 

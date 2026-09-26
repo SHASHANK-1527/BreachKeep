@@ -14,8 +14,15 @@ export default function TopAvatar() {
         setOpen(false)
       }
     }
+    const handleKey = (e) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
     document.addEventListener('mousedown', handleOutside)
-    return () => document.removeEventListener('mousedown', handleOutside)
+    document.addEventListener('keydown', handleKey)
+    return () => {
+      document.removeEventListener('mousedown', handleOutside)
+      document.removeEventListener('keydown', handleKey)
+    }
   }, [])
 
   return (
@@ -25,20 +32,28 @@ export default function TopAvatar() {
         className="bk-top-avatar"
         onClick={() => setOpen(!open)}
         title={user?.username || 'User Profile'}
+        aria-haspopup="menu"
+        aria-expanded={open}
         aria-label="User Profile"
       >
         <img src="/assets/avatar_icon.png" alt="Dragon crest avatar" />
       </button>
 
       {open && (
-        <div className="bk-avatar-menu">
+        <div className="bk-avatar-menu" role="menu">
           <div className="bk-avatar-menu-name">{user?.username || 'Initiate'}</div>
+          {user?.email && (
+            <div style={{ fontSize: '0.78rem', color: 'rgba(255, 220, 168, 0.6)', marginBottom: 2, wordBreak: 'break-all' }}>
+              {user.email}
+            </div>
+          )}
           <div className="bk-avatar-menu-sub">
             House: {user?.house ? user.house.toUpperCase() : 'Unsorted'}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             <button
               type="button"
+              role="menuitem"
               className="bk-avatar-menu-btn"
               style={{ background: 'rgba(212, 175, 55, 0.2)', border: '1px solid rgba(212, 175, 55, 0.4)', color: '#ffdca8' }}
               onClick={() => { setOpen(false); nav('/dashboard'); }}
@@ -47,6 +62,16 @@ export default function TopAvatar() {
             </button>
             <button
               type="button"
+              role="menuitem"
+              className="bk-avatar-menu-btn"
+              style={{ background: 'rgba(212, 175, 55, 0.12)', border: '1px solid rgba(212, 175, 55, 0.3)', color: '#ffdca8' }}
+              onClick={() => { setOpen(false); nav('/account'); }}
+            >
+              Account Settings
+            </button>
+            <button
+              type="button"
+              role="menuitem"
               className="bk-avatar-menu-btn"
               onClick={() => { setOpen(false); logout(); nav('/enter'); }}
             >

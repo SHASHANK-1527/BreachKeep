@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { reportComplete } from '../reportComplete.js';
 import RoomShell from '../components/RoomShell';
 
 function Hint({ children }) {
@@ -69,6 +70,7 @@ export default function SocialEngineeringRoom() {
     setTranscript((t) => [...t, { from: 'you', text: opt.label.replace(/^"|"$/g, '') }, { from: 'agent', text: nextNode.agent }]);
     setNodeId(opt.next);
     if (opt.next === 'success') {
+      reportComplete('phone-call');
       setDialogue("That's the whole scene — a real-sounding title, a small amount of urgency, and one specific-sounding detail was enough to skip verification entirely.");
     } else if (opt.next.startsWith('fail_')) {
       setDialogue(<>That got the call escalated instead of resolved. <Hint>Reset the scene and try a more confident, specific story.</Hint></>);
