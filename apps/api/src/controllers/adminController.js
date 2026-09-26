@@ -8,6 +8,7 @@ import Progress from '../models/Progress.js'
 import { labClient } from '../utils/labClient.js'
 import { houseCounts as _houseCounts } from './houseController.js'
 import { cookieOpts } from '../config/env.js'
+import { invalidateMaintenanceCache } from '../middleware/maintenance.js'
 
 const MAX_LIVE = 2
 
@@ -44,6 +45,9 @@ export async function adminState(req, res) {
   return res.json({
     commonCodeEnabled: cfg.commonCodeEnabled,
     rosterGateEnabled: cfg.rosterGateEnabled,
+    maintenance: !!cfg.maintenance,
+    maintenanceMessage: cfg.maintenanceMessage || '',
+    maintenanceEta: cfg.maintenanceEta || '',
     dungeons,
     houseCounts: Object.fromEntries(agg.map((r) => [r._id, r.n])),
   })
@@ -156,6 +160,26 @@ export async function setCommonCode(req, res) {
   cfg.updatedAt = new Date()
   await cfg.save()
   return res.json({ ok: true, commonCodeEnabled: cfg.commonCodeEnabled })
+}
+
+// POST /api/admin/maintenance  { enabled, message?, eta? }
+// The kill switch. Flipping this on makes every student-facing API route answer
+// 503 and both web bundles render the maintenance page. Admin stays reachable.
+export async function setMaintenance(req, res) {
+  const cfg = await AccessConfig.get()
+  cfg.maintenance = !!req.body.enabled
+  if (typeof req.body.message === 'string') cfg.maintenanceMessage = req.body.message.slice(0, 400)
+  if (typeof req.body.eta === 'string') cfg.maintenanceEta = req.body.eta.slice(0, 120)
+  cfg.updatedAt = new Date()
+  await cfg.save()
+  invalidateMaintenanceCache()
+  console.log(`[admin] maintenance ${cfg.maintenance ? 'ON — site closed' : 'OFF — site open'}`)
+  return res.json({
+    ok: true,
+    maintenance: cfg.maintenance,
+    maintenanceMessage: cfg.maintenanceMessage,
+    maintenanceEta: cfg.maintenanceEta,
+  })
 }
 
 // POST /api/admin/roster-gate  { enabled }

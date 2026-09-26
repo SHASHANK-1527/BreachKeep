@@ -46,6 +46,7 @@ function Icon({ name, size = 16, color = T.dim }) {
     key: <><circle cx="7.5" cy="15.5" r="4.5" /><path d="M10.5 12.5 21 2m-4 4 3 3m-6 0 3 3" /></>,
     users: <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /></>,
     castle: <><path d="M3 21h18M5 21V8l3 2V8l4 2V8l4 2V8l3 2v11" /></>,
+    power: <><path d="M18.36 6.64a9 9 0 1 1-12.73 0" /><line x1="12" y1="2" x2="12" y2="12" /></>,
   }
   return <svg {...p}>{d[name]}</svg>
 }
@@ -76,6 +77,8 @@ export default function AdminPanel() {
   const [rosterDraft, setRosterDraft] = useState('')
   const [students, setStudents] = useState([])
   const [query, setQuery] = useState('')
+  const [mMsg, setMMsg] = useState('')
+  const [mEta, setMEta] = useState('')
 
   const flash = useCallback((text, kind = 'ok') => setToast({ text, kind }), [])
   useEffect(() => { if (!toast) return; const t = setTimeout(() => setToast(null), 3000); return () => clearTimeout(t) }, [toast])
@@ -97,7 +100,7 @@ export default function AdminPanel() {
   useEffect(() => {
     if (!authed) return
     if (tab === 'overview') loadOverview()
-    if (tab === 'access' || tab === 'dungeons') loadState()
+    if (tab === 'access' || tab === 'dungeons' || tab === 'site') loadState()
     if (tab === 'roster') loadRoster()
     if (tab === 'students') loadStudents(query)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -130,6 +133,21 @@ export default function AdminPanel() {
     )
   }
 
+  // Keep the message/ETA boxes in step with whatever is stored.
+  useEffect(() => {
+    if (!state) return
+    setMMsg(state.maintenanceMessage || '')
+    setMEta(state.maintenanceEta || '')
+  }, [state?.maintenanceMessage, state?.maintenanceEta])
+
+  const down = !!state?.maintenance
+
+  const setMaintenance = (enabled) =>
+    act(async () => {
+      await api.post('/admin/maintenance', { enabled, message: mMsg, eta: mEta })
+      await loadState()
+    }, enabled ? 'Site closed — students now see the maintenance page' : 'Site reopened')
+
   const liveSet = new Set((state?.dungeons || []).filter((d) => d.live).map((d) => d.dungeonId))
   const maxHouse = Math.max(1, ...Object.values(overview?.houses || {}))
 
@@ -143,6 +161,7 @@ export default function AdminPanel() {
           ['roster', 'users', 'Roster'],
           ['dungeons', 'castle', 'Dungeons'],
           ['students', 'users', 'Students'],
+          ['site', 'power', 'Site'],
         ].map(([id, icon, label]) => (
           <button key={id} style={{ ...s.tab, ...(tab === id ? s.tabActive : {}) }} onClick={() => setTab(id)}>
             <Icon name={icon} size={16} color={tab === id ? T.accent : T.dim} /> {label}
@@ -341,6 +360,110 @@ export default function AdminPanel() {
                 </tbody>
               </table>
               {!students.length && <div style={{ color: T.dim, fontSize: '0.85rem', padding: '0.5rem 0' }}>No students match.</div>}
+            </div>
+          </>
+        )}
+
+        {tab === 'site' && (
+          <>
+            <h1 style={s.h1}>Site</h1>
+            <p style={s.sub}>Open or seal the Keep for everyone at once.</p>
+
+            {/* Status banner */}
+            <div style={{
+              ...s.card,
+              borderColor: down ? T.red : 'rgba(34,197,94,0.35)',
+              background: down ? 'rgba(239,68,68,0.07)' : 'rgba(34,197,94,0.06)',
+              display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap',
+            }}>
+              <span style={{
+                width: 12, height: 12, borderRadius: '50%', flexShrink: 0,
+                background: down ? T.red : T.green,
+                boxShadow: `0 0 12px ${down ? T.red : T.green}`,
+              }} />
+              <div style={{ flex: 1, minWidth: 200 }}>
+                <div style={{ fontSize: '1.05rem', fontWeight: 700, color: down ? T.red : T.green }}>
+                  {state ? (down ? 'Sealed — students see the maintenance page' : 'Open — students can enter') : 'Checking…'}
+                </div>
+                <div style={{ fontSize: '0.8rem', color: T.dim, marginTop: 3 }}>
+                  {down
+                    ? 'Registration, sign-in, the intro module and flag submission are all refused. This panel stays reachable.'
+                    : 'Everything is live. Anyone with the access code can register and work through the intro.'}
+                </div>
+              </div>
+            </div>
+
+            {/* What students will read */}
+            <div style={s.card}>
+              <div style={s.cardTitle}>What students will read</div>
+              <label style={{ display: 'block', fontSize: '0.78rem', color: T.dim, marginBottom: '0.35rem' }}>
+                Message (leave blank for the default notice)
+              </label>
+              <textarea
+                value={mMsg}
+                onChange={(e) => setMMsg(e.target.value)}
+                rows={3}
+                maxLength={400}
+                placeholder="The Warden has closed the gates while the next dungeons are forged. Your progress is safe — nothing has been lost."
+                style={{ ...s.input, resize: 'vertical', lineHeight: 1.55 }}
+              />
+              <label style={{ display: 'block', fontSize: '0.78rem', color: T.dim, margin: '0.9rem 0 0.35rem' }}>
+                Reopens (optional — shown as a badge)
+              </label>
+              <input
+                value={mEta}
+                onChange={(e) => setMEta(e.target.value)}
+                maxLength={120}
+                placeholder="Saturday 6 PM"
+                style={s.input}
+              />
+              {down && (
+                <button
+                  disabled={busy}
+                  style={{ ...s.btn, ...s.btnGhost, marginTop: '0.9rem' }}
+                  onClick={() => setMaintenance(true)}
+                >
+                  Update the notice
+                </button>
+              )}
+            </div>
+
+            {/* The switch itself */}
+            <div style={{ ...s.card, borderColor: 'rgba(239,68,68,0.3)' }}>
+              <div style={{ ...s.cardTitle, color: T.red }}>Kill switch</div>
+              {down ? (
+                <>
+                  <p style={{ fontSize: '0.88rem', color: T.dim, lineHeight: 1.6, margin: '0 0 1rem' }}>
+                    The site is closed. Reopening takes effect within five seconds for
+                    everyone — no rebuild, no restart.
+                  </p>
+                  <button
+                    disabled={busy}
+                    style={{ ...s.btn, ...s.btnGreen, padding: '0.7rem 1.4rem', fontSize: '0.92rem' }}
+                    onClick={() => setMaintenance(false)}
+                  >
+                    Reopen the Keep
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p style={{ fontSize: '0.88rem', color: T.dim, lineHeight: 1.6, margin: '0 0 1rem' }}>
+                    Closes the site for every student immediately. Anyone mid-session is
+                    moved to the maintenance page on their next action. No data is touched
+                    and no progress is lost — this is reversible from right here.
+                  </p>
+                  <button
+                    disabled={busy}
+                    style={{ ...s.btn, ...s.btnRed, padding: '0.7rem 1.4rem', fontSize: '0.92rem' }}
+                    onClick={() => {
+                      if (!window.confirm('Close BreachKeep for all students now?\n\nThey will see the maintenance page until you reopen it here.')) return
+                      setMaintenance(true)
+                    }}
+                  >
+                    Close the site now
+                  </button>
+                </>
+              )}
             </div>
           </>
         )}

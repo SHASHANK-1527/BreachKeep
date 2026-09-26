@@ -3,15 +3,14 @@ import { useNavigate } from 'react-router-dom'
 import { api } from '../app/api.js'
 import { useAuth } from '../app/AuthContext.jsx'
 import HubShell from '../shell/HubShell.jsx'
-import IntroButton from '../shell/IntroButton.jsx'
-import CagedGates from '../shell/CagedGates.jsx'
+import QuestMapHub from '../shell/QuestMapHub.jsx'
 import SortingCeremony from '../shell/SortingCeremony.jsx'
 import ParticleField from '../sanctum/ParticleField.jsx'
 import StoneGate from '../sanctum/StoneGate.jsx'
 import ThemeStage from '../shell/styles/themes/ThemeStage.jsx'
 
 // State machine:
-//  A) introComplete=false            -> intro button + caged, dulled gates
+//  A) introComplete=false            -> sanctum scene with the sealed Oni gate
 //  B) introComplete=true, sorted=false, returning -> run sorting ceremony
 //  C) sorted=true                    -> full house-themed hub
 export default function Dashboard() {
@@ -106,16 +105,19 @@ export default function Dashboard() {
     )
   }
 
+  if (phase === 'A') {
+    return (
+      <div className="bk-dashboard">
+        <QuestMapHub user={user} />
+      </div>
+    )
+  }
+
+  // Fallback: sorted but no house on the user object yet (mid-refresh).
   return (
     <div className="bk-dashboard" data-house={user?.house || undefined}>
       <ParticleField mode="cavern" />
       <HubShell user={user}>
-        {phase === 'A' && (
-          <>
-            <IntroButton onClick={() => nav('/dashboard/introduction')} />
-            <CagedGates />
-          </>
-        )}
         {phase === 'C' && (
           <div className="bk-gates">
             {progress.unlocked.length === 0 && <p className="bk-note">No dungeons are live yet. Check back before class.</p>}

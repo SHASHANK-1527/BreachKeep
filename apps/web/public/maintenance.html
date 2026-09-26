@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex" />
+<title>BreachKeep — The Keep is sealed</title>
+<link rel="icon" href="/favicon.svg" />
+<style>
+  :root {
+    --bg:#0a0403; --panel:rgba(22,8,6,.82); --border:rgba(255,122,0,.22);
+    --text:#e9d9d1; --dim:rgba(233,217,209,.55); --accent:#ff5a1f; --cream:#ffdca8;
+  }
+  * { box-sizing: border-box }
+  html,body { margin:0; height:100% }
+  body {
+    background:
+      radial-gradient(1100px 620px at 50% 8%, rgba(255,90,31,.10), transparent 70%),
+      linear-gradient(180deg,#120705 0%, var(--bg) 55%, #060302 100%);
+    color: var(--text);
+    font-family: system-ui, -apple-system, sans-serif;
+    display:grid; place-items:center; padding:2rem 1rem;
+    position:relative; overflow:hidden;
+  }
+  .card {
+    width:100%; max-width:560px; background:var(--panel);
+    border:1px solid var(--border); border-radius:18px;
+    padding:clamp(1.75rem,5vw,2.75rem); text-align:center;
+    box-shadow:0 30px 90px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,220,168,.06);
+    backdrop-filter:blur(6px); position:relative; z-index:1;
+    animation: rise 700ms cubic-bezier(.2,.7,.3,1) both;
+  }
+  @keyframes rise { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:none} }
+  .brand { margin-top:1.25rem; font-size:.68rem; letter-spacing:.22em; text-transform:uppercase; color:var(--accent); font-weight:700 }
+  h1 {
+    font-family:'Cinzel Decorative','Cinzel',Georgia,serif;
+    font-size:clamp(1.7rem,6vw,2.4rem); line-height:1.15; margin:.55rem 0 0;
+    color:var(--cream); text-shadow:0 0 28px rgba(255,90,31,.35);
+  }
+  p { color:var(--dim); font-size:.98rem; line-height:1.65; margin:1rem auto 0; max-width:38ch }
+  .foot { margin-top:2rem; padding-top:1.4rem; border-top:1px solid rgba(255,255,255,.06); font-size:.78rem; color:var(--dim) }
+  .stamp { position:absolute; bottom:1.1rem; font-size:.72rem; color:rgba(233,217,209,.28); letter-spacing:.06em }
+  .breathe { animation: breathe 4.5s ease-in-out infinite; transform-origin:center }
+  @keyframes breathe { 0%,100%{opacity:.55} 50%{opacity:1} }
+  .ember {
+    position:absolute; bottom:-12px; width:3px; height:3px; border-radius:50%;
+    background:#ff7a2f; box-shadow:0 0 7px 2px rgba(255,122,47,.55);
+    animation: ember linear infinite;
+  }
+  @keyframes ember {
+    0%{transform:translateY(0) scale(1);opacity:0} 12%{opacity:.7}
+    100%{transform:translateY(-78vh) scale(.5);opacity:0}
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .card,.breathe { animation:none }
+    .ember { display:none }
+  }
+</style>
+</head>
+<body>
+  <span class="ember" style="left:8%;animation-duration:11s"></span>
+  <span class="ember" style="left:21%;animation-duration:14.5s;animation-delay:1.6s"></span>
+  <span class="ember" style="left:34%;animation-duration:18s;animation-delay:3.2s"></span>
+  <span class="ember" style="left:47%;animation-duration:21.5s;animation-delay:4.8s"></span>
+  <span class="ember" style="left:59%;animation-duration:11s;animation-delay:6.4s"></span>
+  <span class="ember" style="left:72%;animation-duration:14.5s;animation-delay:8s"></span>
+  <span class="ember" style="left:86%;animation-duration:18s;animation-delay:9.6s"></span>
+  <span class="ember" style="left:93%;animation-duration:21.5s;animation-delay:11.2s"></span>
+
+  <main class="card">
+    <svg width="132" height="132" viewBox="0 0 132 132" aria-hidden="true" style="display:block;margin:0 auto">
+      <defs>
+        <radialGradient id="g" cx="50%" cy="62%" r="52%">
+          <stop offset="0%" stop-color="#ff5a1f" stop-opacity=".55"/>
+          <stop offset="60%" stop-color="#ff5a1f" stop-opacity=".12"/>
+          <stop offset="100%" stop-color="#ff5a1f" stop-opacity="0"/>
+        </radialGradient>
+        <linearGradient id="b" gradientUnits="userSpaceOnUse" x1="0" y1="24" x2="0" y2="126">
+          <stop offset="0%" stop-color="#ffdca8" stop-opacity=".85"/>
+          <stop offset="100%" stop-color="#ff5a1f" stop-opacity=".45"/>
+        </linearGradient>
+      </defs>
+      <circle class="breathe" cx="66" cy="72" r="58" fill="url(#g)"/>
+      <path d="M24 122V56a42 42 0 0 1 84 0v66" fill="none" stroke="url(#b)" stroke-width="3" stroke-linecap="round"/>
+      <line x1="38" y1="50" x2="38" y2="122" stroke="url(#b)" stroke-width="2.5" stroke-linecap="round" opacity=".9"/>
+      <line x1="52" y1="36" x2="52" y2="122" stroke="url(#b)" stroke-width="2.5" stroke-linecap="round" opacity=".9"/>
+      <line x1="66" y1="30" x2="66" y2="122" stroke="url(#b)" stroke-width="2.5" stroke-linecap="round" opacity=".9"/>
+      <line x1="80" y1="36" x2="80" y2="122" stroke="url(#b)" stroke-width="2.5" stroke-linecap="round" opacity=".9"/>
+      <line x1="94" y1="50" x2="94" y2="122" stroke="url(#b)" stroke-width="2.5" stroke-linecap="round" opacity=".9"/>
+      <line x1="27" y1="62" x2="105" y2="62" stroke="url(#b)" stroke-width="2" stroke-linecap="round" opacity=".75"/>
+      <line x1="27" y1="86" x2="105" y2="86" stroke="url(#b)" stroke-width="2" stroke-linecap="round" opacity=".75"/>
+      <line x1="27" y1="110" x2="105" y2="110" stroke="url(#b)" stroke-width="2" stroke-linecap="round" opacity=".75"/>
+      <line x1="14" y1="122" x2="118" y2="122" stroke="#ff5a1f" stroke-width="3" stroke-linecap="round" opacity=".5"/>
+    </svg>
+
+    <div class="brand">BreachKeep</div>
+    <h1>The Keep is sealed</h1>
+    <p>The Warden has closed the gates while the next dungeons are forged. Your progress is safe — nothing has been lost.</p>
+    <div class="foot">Come back shortly. This page refreshes itself every 60 seconds.</div>
+  </main>
+
+  <div class="stamp">Cyber eLabs · BreachKeep</div>
+  <script>setTimeout(function(){location.reload()}, 60000)</script>
+</body>
+</html>
