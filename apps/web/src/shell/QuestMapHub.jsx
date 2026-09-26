@@ -4,14 +4,13 @@ import FloatingLeaves from '../components/FloatingLeaves.jsx'
 
 /**
  * Pre-sorting dashboard — the onboarding scene: sanctum background, floating
- * leaves, INTRODUCTION banner, and the Oni Gate as static centerpiece art
- * (exactly as in the asset — it is not clickable). The Introduction bar at
- * the bottom is the toggle: it plays the portal warp into the trail.
+ * leaves, and the Oni Gate as static centerpiece art, exactly as in the
+ * asset. The INTRODUCTION banner itself is the button that toggles to the
+ * introduction page. No extra elements, no animations on the gate.
  */
 export default function QuestMapHub({ user }) {
   const nav = useNavigate()
 
-  // Straight into the introduction trail — no warp video here.
   const handleEnter = () => {
     nav('/dashboard/introduction')
   }
@@ -24,37 +23,30 @@ export default function QuestMapHub({ user }) {
       {/* Top-left User Avatar */}
       <TopAvatar />
 
-      {/* Ornate Header Banner (Top-center) */}
-      <div className="bk-ornate-banner">
+      {/* INTRODUCTION banner — it is the button into the introduction page */}
+      <button
+        type="button"
+        className="bk-ornate-banner bk-banner-btn"
+        onClick={handleEnter}
+        aria-label="Open the introduction page"
+      >
         <span className="bk-diamond-accent">◇</span>
         <span className="bk-ornate-banner-text">INTRODUCTION</span>
         <span className="bk-diamond-accent">◇</span>
-      </div>
+      </button>
 
       {/* Welcome line */}
       <p className="bk-hub-line">
-        Welcome, {user?.username || 'Initiate'} — the dungeons are sealed. Face the gate.
+        Welcome, {user?.username || 'Initiate'} — face the gate to begin.
       </p>
 
-      {/* Introduction button — toggles to the introduction page */}
-      <button
-        type="button"
-        className="bk-hub-cta-btn"
-        onClick={handleEnter}
-      >
-        Introduction
-      </button>
-
-      {/* The sealed Oni Gate — static centerpiece, as in the asset */}
-      <div className="bk-oni-wrapper bk-oni-static">
+      {/* The Oni Gate — static, exactly as in the asset (no label, no motion) */}
+      <div className="bk-oni-wrapper bk-oni-static bk-oni-still">
         <img
           src="/assets/oni-mask.png"
-          alt="Sealed Oni Gate"
+          alt="Oni Gate"
           className="bk-oni-graphic"
         />
-        <div className="bk-oni-label">
-          <span>Sealed</span>
-        </div>
       </div>
     </div>
   )

@@ -1,5 +1,5 @@
 // Shared quest-map data: the nine introduction scenes and their gate
-// placements on introduction-bg.png (percent of map width/height).
+// placements on introduction-ui.png (percent of map width/height).
 // Used by both the Introduction page (live gates + trials selector)
 // and the dashboard's pre-sorting view (caged, static gates).
 
@@ -69,18 +69,19 @@ export const SCENES = [
   },
 ]
 
-// Percent-based placements following the trail in the updated
-// introduction-bg.png — the path starts at the bottom-left corner and winds
-// up through the forest to the castle at the top-right. Coordinates are
-// relative to the full-bleed, bar-cropped map container.
+// Percent-based placements following the winding golden stone path in
+// introduction-ui.png — the path starts at the bottom-left trailhead and
+// winds up through the forest, past cliffs and waterfalls on the right,
+// to the castle at the top-right. Coordinates are relative to the full-bleed
+// map container (100vw x 100vh), matching the artwork 1:1.
 export const GATE_SPOTS = [
-  { left: 8, top: 93 },   // scene 1 — the trailhead, bottom-left
-  { left: 19, top: 84 },  // scene 2 — first bend past the lantern
-  { left: 27, top: 74 },  // scene 3 — lower switchback
-  { left: 45, top: 62 },  // scene 4 — the fork on the right
-  { left: 13, top: 57 },  // scene 5 — the westward excursion
-  { left: 55, top: 50 },  // scene 6 — the middle climb
-  { left: 34, top: 40 },  // scene 7 — upper-left bend by the lantern
-  { left: 64, top: 25 },  // scene 8 — heading east toward the falls
-  { left: 78, top: 16 },  // scene 9 — final switchback below the castle
+  { left: 10, top: 90 },  // scene I  — trailhead, bottom-left on the winding path
+  { left: 17, top: 81 },  // scene II — first bend near stone lantern on grassy rise
+  { left: 59, top: 73 },  // scene III — lower S-bend on cliff edge overlooking river
+  { left: 47, top: 65 },  // scene IV — fork where paths diverge near waterfall
+  { left: 17, top: 60 },  // scene V  — westward excursion past lantern on elevated platform
+  { left: 43, top: 50 },  // scene VI — middle climb on upper path, near rocky outcrop
+  { left: 22, top: 43 },  // scene VII — upper-left bend by ancient lantern on ridge
+  { left: 35, top: 35 },  // scene VIII — eastward stretch toward the falls/cliffs
+  { left: 20, top: 30 },  // scene IX  — final gate before the castle bridge (upper-right)
 ]

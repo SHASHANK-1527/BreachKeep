@@ -522,12 +522,12 @@
   opacity: 0.85;
 }
 
-/* Centerpiece Oni Gate (static centerpiece on hub, tappable on introduction) */
+/* Centerpiece Oni Gate — static, as in the asset: large, centered on the page. No motion, no label. */
 .bk-oni-wrapper {
   position: absolute;
-  bottom: 8%;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
   z-index: 20;
   display: flex;
   flex-direction: column;
@@ -536,46 +536,25 @@
   user-select: none;
 }
 
-/* Static variant: pure scenery, no pointer affordance */
+.bk-oni-graphic {
+  width: clamp(340px, 34vw, 48vh);
+  height: auto;
+  filter: drop-shadow(0 0 20px rgba(220, 38, 38, 0.55)) drop-shadow(0 0 35px rgba(212, 175, 55, 0.3));
+}
+
+/* Static variant: pure scenery, no pointer affordance, no motion */
 .bk-oni-wrapper.bk-oni-static {
   cursor: default;
   pointer-events: none;
 }
 
-.bk-oni-graphic {
-  width: clamp(260px, 28vw, 380px);
-  height: auto;
-  filter: drop-shadow(0 0 20px rgba(220, 38, 38, 0.55)) drop-shadow(0 0 35px rgba(212, 175, 55, 0.3));
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), filter 0.4s ease;
-  animation: bk-subtleFloat 4s ease-in-out infinite;
+.bk-oni-wrapper.bk-oni-still .bk-oni-graphic {
+  animation: none;
+  transition: none;
+  transform: none;
 }
 
-.bk-oni-wrapper:hover .bk-oni-graphic {
-  transform: scale(1.04) translateY(-6px);
-  filter: drop-shadow(0 0 35px rgba(239, 68, 68, 0.85)) drop-shadow(0 0 55px rgba(245, 158, 11, 0.6));
-}
 
-.bk-oni-label {
-  margin-top: -12px;
-  background: rgba(13, 21, 42, 0.9);
-  border: 1px solid var(--gold-accent);
-  color: #ffdca8;
-  font-family: var(--font-cinzel);
-  font-size: 0.95rem;
-  letter-spacing: 0.15em;
-  padding: 6px 18px;
-  border-radius: 20px;
-  box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
-  backdrop-filter: blur(8px);
-  transition: all 0.25s ease;
-}
-
-.bk-oni-wrapper:hover .bk-oni-label {
-  background: rgba(212, 175, 55, 0.2);
-  color: #ffffff;
-  box-shadow: 0 0 25px rgba(212, 175, 55, 0.6);
-  transform: translateY(-2px);
-}
 
 /* ========================================================
    ONBOARDING CARD (Introduction aesthetic WITHOUT Oni Mask)
@@ -808,12 +787,60 @@
 
 .qm-gate {
   position: absolute;
-  width: 13.5%;
+  width: 10%;
+  max-width: 160px;
   transform: translate(-50%, -50%);
   z-index: 20;
-  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.55));
+  filter: drop-shadow(0 8px 22px rgba(0, 0, 0, 0.7));
   pointer-events: none;
   transition: filter 0.3s ease, opacity 0.3s ease;
+}
+
+/* Gates grounded on terrain with subtle perspective */
+.qm-gate .qm-gate-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+  /* Subtle ambient occlusion at base for grounding on terrain */
+  -webkit-mask-image: linear-gradient(to top, 
+    rgba(0, 0, 0, 0.22) 0%, 
+    rgba(0, 0, 0, 0.08) 12%,
+    black 22%,
+    black 100%);
+  mask-image: linear-gradient(to top, 
+    rgba(0, 0, 0, 0.22) 0%, 
+    rgba(0, 0, 0, 0.08) 12%,
+    black 22%,
+    black 100%);
+}
+
+/* Gates positioned on lower elevations appear slightly lower */
+.qm-gate:nth-child(1), .qm-gate:nth-child(2), .qm-gate:nth-child(3) {
+  transform: translate(-50%, -48%);
+}
+
+.qm-gate:nth-child(4), .qm-gate:nth-child(5), .qm-gate:nth-child(6) {
+  transform: translate(-50%, -42%);
+}
+
+/* Hover states for all gates */
+.qm-gate-tappable:hover {
+  transform: translate(-50%, -50%) scale(1.06);
+  filter: drop-shadow(0 8px 22px rgba(0, 0, 0, 0.75)) drop-shadow(0 0 20px rgba(126, 180, 255, 0.6));
+}
+
+.qm-gate:nth-child(1).qm-gate-tappable:hover,
+.qm-gate:nth-child(2).qm-gate-tappable:hover,
+.qm-gate:nth-child(3).qm-gate-tappable:hover {
+  transform: translate(-50%, -48%) scale(1.06);
+}
+
+.qm-gate:nth-child(4).qm-gate-tappable:hover,
+.qm-gate:nth-child(5).qm-gate-tappable:hover,
+.qm-gate:nth-child(6).qm-gate-tappable:hover {
+  transform: translate(-50%, -42%) scale(1.06);
 }
 
 .qm-gate-img {
@@ -843,39 +870,40 @@
 }
 
 /* ========================================================
-   INTRODUCTION PAGE — immersive trail variant
+   INTRODUCTION PAGE — scrollable fantasy quest map (introduction-bg)
    ======================================================== */
 .bk-intro-page {
-  background:
-    radial-gradient(ellipse 90% 55% at 50% -10%, rgba(37, 52, 96, 0.5), transparent 70%),
-    radial-gradient(ellipse 80% 40% at 50% 110%, rgba(13, 21, 44, 0.9), transparent 70%),
-    #0a0f1e;
+  background: #0a0f1e;
+  min-height: 100vh;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 .qm-map-immersive {
+  /* Container for the tall map — allows vertical scrolling */
+  position: relative;
   width: 100%;
-  max-width: none;
-  padding: 5.6rem 0 0;
+  max-width: 100vw;
+  margin: 0 auto;
+  padding: 0;
 }
 
-/* Full-bleed fit: the source PNG has black side-bars baked in — scale past
-   them and crop, so the map art itself spans the full viewport width. */
+/* Background map — full-width, maintains aspect ratio, enables scrolling */
 .qm-map-bg-plain {
-  border-radius: 0;
-  width: 114%;
-  max-width: none;
-  margin-left: -7%;
   display: block;
+  width: 100%;
+  max-width: 100%;
   height: auto;
+  margin: 0;
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+  z-index: 1;
 }
 
+/* Reset vignette — map art provides its own atmosphere */
 .qm-vignette {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background:
-    linear-gradient(180deg, rgba(10, 15, 30, 0.55) 0%, transparent 12%, transparent 88%, rgba(10, 15, 30, 0.7) 100%);
-  z-index: 10;
+  display: none;
 }
 
 /* Living gates: soft breathing glow + hover reveal */
@@ -947,6 +975,26 @@
 .qm-gate-tappable:hover {
   transform: translate(-50%, -50%) scale(1.08);
   filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 16px rgba(126, 180, 255, 0.75));
+}
+
+/* Central gate hover maintains integration with rocks (per 3rd-page reference) */
+.qm-gate:nth-child(4).qm-gate-tappable:hover {
+  transform: translate(-50%, -38%) scale(1.04);
+}
+
+/* Contact shadow enhancement on hover for central gate */
+.qm-gate:nth-child(4).qm-gate-tappable:hover .qm-gate-img {
+  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.55)) drop-shadow(0 22px 36px rgba(0, 0, 0, 0.65));
+}
+
+.qm-gate:nth-child(4).qm-gate-tappable:hover::after {
+  bottom: -1%;
+  height: 16px;
+  background: radial-gradient(ellipse, 
+    rgba(0, 0, 0, 0.9) 0%, 
+    rgba(0, 0, 0, 0.6) 35%,
+    rgba(0, 0, 0, 0.25) 65%,
+    transparent 90%);
 }
 
 .qm-gate-tappable:active {
@@ -1121,11 +1169,25 @@
   pointer-events: none;
 }
 
-/* Dashboard variant shows the welcome title above the text */
-.qm-intro-box.has-title {
-  flex-direction: column;
-  align-items: stretch;
-  gap: 0.45rem;
+/* The INTRODUCTION banner rendered as a button (dashboard toggle) */
+.bk-banner-btn {
+  appearance: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.bk-banner-btn:hover {
+  background: rgba(22, 33, 62, 0.95);
+  box-shadow: 0 0 30px rgba(212, 175, 55, 0.45), inset 0 0 18px rgba(212, 175, 55, 0.18);
+}
+
+.bk-banner-btn:active {
+  transform: translateX(-50%) scale(0.98);
+}
+
+.bk-banner-btn:focus-visible {
+  outline: 2px solid var(--gold-accent);
+  outline-offset: 4px;
 }
 
 .qm-intro-box.has-title .qm-intro-box-title {

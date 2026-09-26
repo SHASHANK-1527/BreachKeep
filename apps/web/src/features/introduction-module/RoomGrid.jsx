@@ -15,13 +15,6 @@ export default function RoomGrid() {
       <FloatingLeaves count={12} />
       <TopAvatar />
 
-      {/* Ornate Header Banner (Top-center) */}
-      <div className="bk-ornate-banner">
-        <span className="bk-diamond-accent">◇</span>
-        <span className="bk-ornate-banner-text">INTRODUCTION</span>
-        <span className="bk-diamond-accent">◇</span>
-      </div>
-
       {/* Immersive trail: tap a gate to enter its task */}
       <div className="qm-map qm-map-immersive">
         <img src="/assets/introduction-bg.png" alt="" className="qm-map-bg qm-map-bg-plain" draggable="false" />
