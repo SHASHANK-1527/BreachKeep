@@ -5,6 +5,7 @@ import cors from 'cors'
 import helmet from 'helmet'
 import { loadEnv } from './config/env.js'
 import { startDailyCodeJob } from './jobs/dailyCodeJob.js'
+import maintenanceGate, { readMaintenance } from './middleware/maintenance.js'
 
 import authRoutes from './routes/auth.js'
 import accessRoutes from './routes/access.js'
@@ -17,6 +18,13 @@ import adminRoutes from './routes/admin.js'
 const env = loadEnv()
 const app = express()
 
+// Number of reverse proxies in front of us. Without this, express sees every
+// request as coming from the proxy, so the per-IP rate limiter puts the entire
+// cohort in one bucket and locks everybody out.
+//   1  = nginx only (the docker-compose / single-VM setup)
+//   2  = Vercel rewrite -> Render (the split free-tier setup)
+app.set('trust proxy', parseInt(process.env.TRUST_PROXY_HOPS || '1', 10))
+
 app.use(helmet())
 app.use(express.json({ limit: '1mb' }))
 app.use(cookieParser())
@@ -28,6 +36,17 @@ app.use(
 )
 
 app.get('/api/health', (req, res) => res.json({ ok: true, service: 'breachkeep-api' }))
+
+// Public, ungated: both web bundles poll this so they can show the maintenance
+// page instead of a broken app. Deliberately reveals nothing but the flag.
+app.get('/api/status', async (req, res) => {
+  const { maintenance, message, eta } = await readMaintenance()
+  res.set('Cache-Control', 'no-store')
+  return res.json({ maintenance, message, eta })
+})
+
+// Kill switch — must sit in front of every student-facing route.
+app.use(maintenanceGate)
 
 app.use('/api/auth', authRoutes)
 app.use('/api/access', accessRoutes)

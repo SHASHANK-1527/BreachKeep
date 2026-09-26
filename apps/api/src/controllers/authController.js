@@ -1,4 +1,11 @@
 import bcrypt from 'bcryptjs'
+
+// bcryptjs is the pure-JS implementation, so each hash blocks the event loop.
+// At cost 12 that is ~350ms per signup on a shared-CPU VPS; a class of 150
+// registering together would serialise into a minute of stall. Cost 10 is
+// ~110ms and still comfortably above any practical offline-cracking threat for
+// a course platform. Override with BCRYPT_COST if you want it higher.
+const BCRYPT_COST = parseInt(process.env.BCRYPT_COST || '10', 10)
 import jwt from 'jsonwebtoken'
 import crypto from 'crypto'
 import User from '../models/User.js'
@@ -46,7 +53,7 @@ export async function signup(req, res) {
     const exists = await User.findOne({ email: email.toLowerCase() })
     if (exists) return res.status(409).json({ error: 'An account with this email already exists' })
 
-    const hash = await bcrypt.hash(password, 12)
+    const hash = await bcrypt.hash(password, BCRYPT_COST)
     const code = generateCode()
     const user = await User.create({
       username,
@@ -175,7 +182,7 @@ export async function updatePassword(req, res) {
   if (!ok) return res.status(401).json({ error: 'Current password is incorrect' })
   const pw = validatePassword(newPassword)
   if (!pw.valid) return res.status(400).json({ error: pw.error })
-  req.user.password = await bcrypt.hash(newPassword, 12)
+  req.user.password = await bcrypt.hash(newPassword, BCRYPT_COST)
   await req.user.save()
   return res.json({ ok: true, message: 'Password updated successfully' })
 }
@@ -210,7 +217,7 @@ export async function resetPassword(req, res) {
       resetTokenExpires: { $gt: new Date() },
     })
     if (!user) return res.status(400).json({ error: 'Invalid or expired reset token' })
-    user.password = await bcrypt.hash(newPassword, 12)
+    user.password = await bcrypt.hash(newPassword, BCRYPT_COST)
     user.resetToken = undefined
     user.resetTokenExpires = undefined
     await user.save()

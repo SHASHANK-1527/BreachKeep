@@ -9,6 +9,9 @@ import Account from '../pages/Account.jsx'
 import ResetPassword from '../pages/ResetPassword.jsx'
 import AdminPanel from '../pages/admin/AdminPanel.jsx'
 import IntroductionModule from '../features/introduction-module/IntroductionModule.jsx'
+import CodeEntryView from '../components/CodeEntryView.jsx'
+import Maintenance from '../pages/Maintenance.jsx'
+import useMaintenance from './useMaintenance.js'
 
 import { useState, useEffect, useRef } from 'react'
 import { api } from './api.js'
@@ -144,36 +147,17 @@ function Header({ user, onLogout }) {
 function AppRoutes() {
   const { user, loading, logout } = useAuth()
   const loc = useLocation()
-  const [accessCode, setAccessCode] = useState('')
-  const [accessError, setAccessError] = useState('')
   const [hasAccess, setHasAccess] = useState(() => sessionStorage.getItem('bk_has_access') === 'true')
 
-  const handleAccessSubmit = async (e) => {
-    e.preventDefault()
-    setAccessError('')
-    try {
-      const data = await api.post('/auth/verify-access-code', { code: accessCode })
-      // The admin landing code answers with { redirect }, not { ok, next }.
-      if (data?.redirect) {
-        window.location.href = data.redirect
-        return
-      }
-      if (data?.ok) {
-        setHasAccess(true)
-        sessionStorage.setItem('bk_has_access', 'true')
-        window.location.href = data.next || '/enter'
-        return
-      }
-      setAccessError('Access Denied')
-    } catch (e2) {
-      setAccessError(e2.data?.error || 'Invalid access code')
-    }
-  }
+  // The kill switch. Skipped on the admin route so the Warden can always get in
+  // and turn the site back on.
+  const isAdminRoute = loc.pathname === ADMIN_PATH
+  const maint = useMaintenance(isAdminRoute)
 
   // The hidden admin path is reached straight from the admin landing code, so it
   // has no student gate cookie and no session. It must not be swallowed by the
   // access-code gate below, and it does its own password auth internally.
-  if (loc.pathname === ADMIN_PATH) {
+  if (isAdminRoute) {
     return (
       <Routes>
         <Route path={ADMIN_PATH} element={<AdminPanel />} />
@@ -182,22 +166,20 @@ function AppRoutes() {
     )
   }
 
+  // Site closed by the Warden — nothing student-facing renders.
+  if (maint.maintenance) {
+    return <Maintenance message={maint.message} eta={maint.eta} />
+  }
+
   // Show landing only if NOT logged in AND no gate access
   if (!loading && !user && !hasAccess) {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0403', color: '#e9d9d1', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '2rem' }}>
-        <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', zIndex: 10 }}>
-          <form onSubmit={handleAccessSubmit} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <input type="text" placeholder="Access Code" value={accessCode} onChange={e => setAccessCode(e.target.value)} style={{ background: '#160806', border: '1px solid rgba(255,122,0,0.3)', padding: '0.4rem 0.8rem', borderRadius: '4px', color: '#ffdca8', fontSize: '0.85rem', outline: 'none' }} />
-            <button type="submit" style={{ background: '#ff5a1f', color: '#fff', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '4px', cursor: 'pointer', fontWeight: '600', fontSize: '0.85rem' }}>Enter</button>
-          </form>
-          {accessError && <p style={{ color: '#ef4444', fontSize: '0.75rem', marginTop: '0.25rem', textAlign: 'right' }}>{accessError}</p>}
-        </div>
-        <div style={{ textAlign: 'center', maxWidth: '500px' }}>
-          <h1 style={{ fontFamily: "'Cinzel Decorative', serif", color: '#ff5a1f', fontSize: '2.5rem', marginBottom: '1rem', letterSpacing: '0.1em' }}>BreachKeep</h1>
-          <p style={{ color: '#e9d9d1', opacity: 0.8, fontSize: '1.1rem', lineHeight: '1.6' }}>Enter the access code in top right corner to access the website and proceed further</p>
-        </div>
-      </div>
+      <CodeEntryView
+        onSuccess={() => {
+          setHasAccess(true)
+          sessionStorage.setItem('bk_has_access', 'true')
+        }}
+      />
     )
   }
 
@@ -206,11 +188,22 @@ function AppRoutes() {
     return <div className="bk-loading" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0a0403', color: '#ff5a1f' }}>Loading…</div>
   }
 
+  // Pages that render their own full-screen scene and chrome (ornate banner +
+  // the gold avatar medallion). The fixed header would stack on top of them.
+  // The individual introduction rooms are ordinary panels, not scenes, so they
+  // keep the header — it is their only route to logout and account settings.
+  const isAtmosphericPage = [
+    '/enter',
+    '/onboarding',
+    '/dashboard',
+    '/dashboard/introduction',
+  ].includes(loc.pathname.replace(/\/+$/, '') || '/')
+
   // User is logged in OR has gate access - show full app with header
   return (
     <>
-      <Header user={user} onLogout={logout} />
-      <main style={{ paddingTop: '56px', minHeight: '100vh' }}>
+      {!isAtmosphericPage && <Header user={user} onLogout={logout} />}
+      <main style={{ paddingTop: isAtmosphericPage ? '0' : '56px', minHeight: '100vh' }}>
         <Routes>
           <Route path={ADMIN_PATH} element={<AdminPanel />} />
           <Route

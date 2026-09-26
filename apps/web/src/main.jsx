@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import App from './app/App.jsx'
 import './sanctum/sanctum.css'
+import './styles/custom-pages.css'
 import './shell/styles/hub-shell.css'
 // all four house themes are scoped by [data-house], safe to import together
 import './shell/styles/themes/rimeguard.css'

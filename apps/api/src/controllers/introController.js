@@ -1,6 +1,19 @@
 import User from '../models/User.js'
 
-const INTRO_ROOMS = ['build-tool', 'hidden-page', 'guestbook']
+// The nine introduction scenes, in quest-map order. Every one must be solved
+// before introComplete flips and house sorting unlocks — keep this in sync with
+// the routes in features/introduction-module/IntroductionModule.jsx.
+const INTRO_ROOMS = [
+  'build-tool',
+  'hidden-page',
+  'guestbook',
+  'coffee-shop-wifi',
+  'encoded-memo',
+  'support-form',
+  'somebodys-invoice',
+  'dotdotdot-folder',
+  'phone-call',
+]
 
 // POST /api/intro/complete  (session)
 export async function completeRoom(req, res) {

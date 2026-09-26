@@ -3,7 +3,7 @@ import requireAdmin from '../middleware/requireAdmin.js'
 import { strictLimiter } from '../middleware/rateLimit.js'
 import {
   adminLogin, adminLogout, adminWhere, adminState, adminOverview,
-  setCommonCode, setRosterGate, setRoster, getRoster, removeFromRoster, setDungeon,
+  setCommonCode, setRosterGate, setMaintenance, setRoster, getRoster, removeFromRoster, setDungeon,
   adminStudents, adminStudentDetail, adminAssignHouse, adminResetProgress, adminDeleteStudent,
 } from '../controllers/adminController.js'
 
@@ -15,6 +15,7 @@ r.get('/state', requireAdmin, adminState)
 r.get('/overview', requireAdmin, adminOverview)
 r.post('/common-code', requireAdmin, setCommonCode)
 r.post('/roster-gate', requireAdmin, setRosterGate)
+r.post('/maintenance', requireAdmin, setMaintenance)
 r.get('/roster', requireAdmin, getRoster)
 r.post('/roster', requireAdmin, setRoster)
 r.post('/roster-remove', requireAdmin, removeFromRoster)

@@ -10,6 +10,16 @@ async function req(path, method = 'GET', body) {
   })
   let data = null
   try { data = await res.json() } catch {}
+
+  // The Warden's kill switch. Any 503 from a student route means the site has
+  // just been closed — tell the app so it can swap in the maintenance page
+  // instead of surfacing a wall of failed requests.
+  if (res.status === 503 && data?.error === 'maintenance') {
+    window.dispatchEvent(new CustomEvent('bk:maintenance', {
+      detail: { message: data.message || '', eta: data.eta || '' },
+    }))
+  }
+
   if (!res.ok) throw Object.assign(new Error(data?.error || `HTTP ${res.status}`), { status: res.status, data })
   return data
 }
