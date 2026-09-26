@@ -1,9 +1,11 @@
 FROM node:20-slim
 WORKDIR /app
 
-# Install deps from the lockfile first so code edits don't re-run npm install.
+# Install deps first so code edits don't re-run the install layer.
+# npm install (not ci) so a lockfile that drifts from package.json cannot
+# break the deploy mid-class.
 COPY package.json package-lock.json ./
-RUN npm ci --omit=dev
+RUN npm install --omit=dev --no-audit --no-fund
 
 COPY src ./src
 
