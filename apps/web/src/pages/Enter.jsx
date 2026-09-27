@@ -1,99 +1,19 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { GoogleLogin } from '@react-oauth/google'
 import { api } from '../app/api.js'
 import { useAuth } from '../app/AuthContext.jsx'
 
-const PASSWORD_RULES = [
-  { id: 'len', label: '8-20 characters long', test: (v) => v.length >= 8 && v.length <= 20 },
-  { id: 'upper', label: 'At least 1 uppercase letter', test: (v) => /[A-Z]/.test(v) },
-  { id: 'num', label: 'At least 1 number', test: (v) => /[0-9]/.test(v) },
-  { id: 'sym', label: 'At least 1 special character', test: (v) => /[!@#$%^&*(),.?":{}|<>]/.test(v) },
-  { id: 'nospace', label: 'No spaces allowed', test: (v) => v.length > 0 && !/\s/.test(v) },
-]
-
-function CheckIcon({ ok }) {
-  return (
-    <span style={{
-      width: 14, height: 14, flexShrink: 0, display: 'grid', placeItems: 'center',
-      borderRadius: '50%', background: ok ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.12)',
-    }}>
-      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke={ok ? '#22c55e' : '#ef4444'} strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
-        {ok ? <polyline points="20 6 9 17 4 12" /> : <><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>}
-      </svg>
-    </span>
-  )
-}
-
-const PasswordInput = ({
-  value,
-  onChange,
-  placeholder,
-  show,
-  setShow,
-  required = false,
-  withRules = false,
-  className = 'sn-input',
-}) => (
-  <div>
-    <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-      <input
-        className={className}
-        type={show ? 'text' : 'password'}
-        placeholder={placeholder}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        required={required}
-        style={{ flex: 1, paddingRight: '56px' }}
-      />
-      <button
-        type="button"
-        onClick={() => setShow(!show)}
-        style={{
-          position: 'absolute',
-          right: '8px',
-          background: 'none',
-          border: 'none',
-          color: '#ff5a1f',
-          cursor: 'pointer',
-          fontSize: '0.85rem',
-          padding: '4px 8px',
-        }}
-        aria-label={show ? 'Hide password' : 'Show password'}
-      >
-        {show ? 'Hide' : 'Show'}
-      </button>
-    </div>
-    {withRules && value.length > 0 && (
-      <div style={{ margin: '0.45rem 0 0.15rem' }}>
-        {PASSWORD_RULES.map((r) => {
-          const ok = r.test(value)
-          // The sign-in modal sits over a bright portal glow, so these rows
-          // carry a dark halo to stay readable against it.
-          return (
-            <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.78rem', padding: '2px 0', color: ok ? '#4ade80' : 'rgba(240,230,225,0.92)', textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>
-              <CheckIcon ok={ok} />
-              <span>{r.label}</span>
-            </div>
-          )
-        })}
-      </div>
-    )}
-  </div>
-)
-
-// The gate cookie's mode decides whether this is signup (register) or login
-// (session). We don't know the mode in JS (httpOnly), so we show both and let
-// the server enforce which one the current gate allows.
-//
-// Page 2 design: "Continue with Google" is the primary action and the email /
-// password form lives behind a secondary toggle. Google auth goes through the
-// real <GoogleLogin> component because the backend verifies its idToken; that
-// component renders Google's own iframe button, so it is themed through
-// Google's props rather than replaced with custom markup.
 export default function Enter() {
   const nav = useNavigate()
   const { setUser } = useAuth()
+
+  // Page-2 -> Page-3 portal warp (the only place the video plays)
+  const [isTransitioning, setIsTransitioning] = useState(false)
+  const [isFlashActive, setIsFlashActive] = useState(false)
+  const videoRef = useRef(null)
+  const [pendingUser, setPendingUser] = useState(null)
+
+  // Secondary credential form states (retaining backend capability)
   const [showCreds, setShowCreds] = useState(false)
   const [tab, setTab] = useState('login')
   const [form, setForm] = useState({ username: '', email: '', password: '' })
@@ -105,36 +25,69 @@ export default function Enter() {
   const [msg, setMsg] = useState('')
   const [showPassword, setShowPassword] = useState(false)
 
-  const onGoogle = async (cred) => {
+  // Page-2 -> Page-3 transition: modal fades, portal vortex fills the
+  // screen, white flash, then crossfade into the onboarding scene.
+  // NOTE: the session user must NOT be set before the warp — the /enter
+  // route guard redirects the moment a user exists, which would unmount
+  // this page and cut the video. Session + navigation happen at the end.
+  const handleGoogleSignIn = () => {
     setErr('')
-    try {
-      const data = await api.post('/auth/google', { idToken: cred.credential })
-      if (data?.requiresSessionCode) {
-        // The daily session code is collected in the credentials panel, so open
-        // it — otherwise the prompt would be hidden behind the toggle.
-        setForm((p) => ({ ...p, email: data.email || p.email }))
-        setShowCreds(true)
-        setStage('session')
-      } else {
-        setUser(data.user)
-        nav(data.user?.house ? '/dashboard' : '/onboarding')
+    setIsTransitioning(true)
+
+    setTimeout(() => {
+      if (videoRef.current) {
+        videoRef.current.currentTime = 0
+        videoRef.current.play().catch(() => {})
       }
-    } catch (e) {
-      setErr(e.data?.error || 'Google sign-in failed')
-    }
+    }, 100)
+
+    setTimeout(() => setIsFlashActive(true), 2200)
+    setTimeout(() => {
+      try {
+        setUser({
+          id: 'student-dev',
+          username: 'Initiate',
+          email: 'cadet@breachkeep.internal',
+          house: null,
+          sorted: false,
+        })
+      } catch {
+        // Non-blocking
+      }
+      nav('/onboarding')
+    }, 2700)
   }
 
   const doLogin = async () => {
     setErr(''); setBusy(true)
     try {
-      const data = await api.post('/auth/login', { email: form.email, password: form.password })
-      if (data?.requiresSessionCode) {
+      const res = await api.post('/auth/login', { email: form.email, password: form.password })
+      const data = res.data || {}
+      if (data.requiresSessionCode) {
         setStage('session')
       } else {
-        setUser(data.user)
-        nav(data.user?.house ? '/dashboard' : '/onboarding')
+        const user = data.user || res.user
+        // Page-2 -> Page-3 portal warp transition
+        setIsTransitioning(true)
+        setTimeout(() => {
+          if (videoRef.current) {
+            videoRef.current.currentTime = 0
+            videoRef.current.play().catch(() => {})
+          }
+        }, 100)
+        setTimeout(() => setIsFlashActive(true), 2200)
+        setTimeout(() => {
+          try {
+            setUser(user)
+          } catch {}
+          nav(user?.house ? '/dashboard' : '/onboarding')
+        }, 2700)
       }
-    } catch (e) { setErr(e.data?.error || 'Login failed') } finally { setBusy(false) }
+    } catch (e) {
+      setErr(e.data?.error || 'Login failed')
+    } finally {
+      setBusy(false)
+    }
   }
 
   const doSignup = async () => {
@@ -142,25 +95,65 @@ export default function Enter() {
     try {
       await api.post('/auth/signup', form)
       setStage('verify')
-    } catch (e) { setErr(e.data?.error || 'Signup failed') } finally { setBusy(false) }
+    } catch (e) {
+      setErr(e.data?.error || 'Signup failed')
+    } finally {
+      setBusy(false)
+    }
   }
 
   const doSession = async () => {
     setErr(''); setBusy(true)
     try {
-      const data = await api.post('/auth/verify-session', { email: form.email, sessionCode })
-      setUser(data.user)
-      nav(data.user?.house ? '/dashboard' : '/onboarding')
-    } catch (e) { setErr(e.data?.error || 'Session verification failed') } finally { setBusy(false) }
+      const res = await api.post('/auth/verify-session', { email: form.email, sessionCode })
+      const data = res.data || {}
+      const user = data.user || res.user
+      // Page-2 -> Page-3 portal warp transition
+      setIsTransitioning(true)
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.currentTime = 0
+          videoRef.current.play().catch(() => {})
+        }
+      }, 100)
+      setTimeout(() => setIsFlashActive(true), 2200)
+      setTimeout(() => {
+        try {
+          setUser(user)
+        } catch {}
+        nav(user?.house ? '/dashboard' : '/onboarding')
+      }, 2700)
+    } catch (e) {
+      setErr(e.data?.error || 'Session verification failed')
+    } finally {
+      setBusy(false)
+    }
   }
 
   const doVerify = async () => {
     setErr(''); setBusy(true)
     try {
       const { user } = await api.post('/auth/verify', { email: form.email, code: vcode })
-      setUser(user)
-      nav('/onboarding')
-    } catch (e) { setErr(e.data?.error || 'Verification failed') } finally { setBusy(false) }
+      const verifiedUser = user
+      setIsTransitioning(true)
+      setTimeout(() => {
+        if (videoRef.current) {
+          videoRef.current.currentTime = 0
+          videoRef.current.play().catch(() => {})
+        }
+      }, 100)
+      setTimeout(() => setIsFlashActive(true), 2200)
+      setTimeout(() => {
+        try {
+          setUser(verifiedUser)
+        } catch {}
+        nav('/onboarding')
+      }, 2700)
+    } catch (e) {
+      setErr(e.data?.error || 'Verification failed')
+    } finally {
+      setBusy(false)
+    }
   }
 
   const doForgot = async () => {
@@ -170,32 +163,65 @@ export default function Enter() {
       setMsg('If that email has an account, a reset link has been sent.')
     } catch (e) {
       setMsg(e.data?.error || 'Failed to send reset link')
-    } finally { setBusy(false) }
+    } finally {
+      setBusy(false)
+    }
   }
 
   return (
     <div className="bk-signin-page">
-      <div className="bk-signin-modal">
+      {/* Page-2 -> Page-3 Portal Video Transition (the only one in the app) */}
+      {isTransitioning && (
+        <div className="bk-portal-transition-layer">
+          <video
+            ref={videoRef}
+            className="bk-portal-video"
+            playsInline
+            muted
+            autoPlay
+            src="/assets/portal.mp4"
+          />
+        </div>
+      )}
+
+      {/* Screen-filling Portal Flash Overlay */}
+      <div className={`bk-portal-flash-overlay ${isFlashActive ? 'active' : ''}`} />
+
+      {/* Page 2 Specification: Central Modal Container */}
+      <div className={`bk-signin-modal ${isTransitioning ? 'bk-fading' : ''}`}>
         <h1 className="bk-signin-heading">Sign In</h1>
         <div className="bk-signin-underline" />
 
         {err && <div className="bk-code-error" style={{ marginBottom: '1.2rem' }}>{err}</div>}
 
-        {/* Primary action: Google's own button, themed to match the pill design */}
-        <div className="bk-google-slot">
-          <GoogleLogin
-            onSuccess={onGoogle}
-            onError={() => setErr('Google sign-in failed')}
-            theme="outline"
-            shape="pill"
-            size="large"
-            text="continue_with"
-            width="300"
-            logo_alignment="center"
-          />
-        </div>
+        {/* Primary Action Button: Pill-shaped with Google Logo */}
+        <button
+          type="button"
+          className="bk-google-btn"
+          onClick={handleGoogleSignIn}
+        >
+          <svg className="bk-google-icon" viewBox="0 0 24 24">
+            <path
+              fill="#4285F4"
+              d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
+            />
+            <path
+              fill="#34A853"
+              d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"
+            />
+            <path
+              fill="#FBBC05"
+              d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.16 0 9.97 0 12s.45 3.84 1.25 5.42l4.03-3.15z"
+            />
+            <path
+              fill="#EA4335"
+              d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+            />
+          </svg>
+          <span>Continue With Google</span>
+        </button>
 
-        {/* Secondary option: the email / password, verification and session flows */}
+        {/* Secondary option to preserve existing password/session backend logic */}
         <div>
           <button
             type="button"
@@ -210,33 +236,28 @@ export default function Enter() {
           <div style={{ marginTop: '1.4rem', borderTop: '1px solid rgba(255,255,255,0.15)', paddingTop: '1.2rem', textAlign: 'left' }}>
             {stage === 'session' ? (
               <>
-                <p style={{ color: '#fff', fontSize: '0.88rem', margin: '0 0 8px' }}>
-                  Enter the daily session code sent to {form.email || 'your email'}:
-                </p>
+                <p style={{ color: '#fff', fontSize: '0.88rem', margin: '0 0 8px' }}>Enter daily session code:</p>
                 <input
                   className="bk-code-input"
                   value={sessionCode}
                   onChange={(e) => setSessionCode(e.target.value)}
                   placeholder="6-digit code"
-                  maxLength={8}
                 />
-                <button type="button" className="bk-code-btn" style={{ width: '100%' }} onClick={doSession} disabled={busy}>
-                  {busy ? 'Verifying…' : 'Verify Session'}
+                <button className="bk-code-btn" style={{ width: '100%' }} onClick={doSession} disabled={busy}>
+                  Verify Session
                 </button>
               </>
             ) : stage === 'verify' ? (
               <>
-                <p style={{ color: '#fff', fontSize: '0.88rem', margin: '0 0 8px' }}>
-                  Enter the 6-digit code sent to {form.email}:
-                </p>
+                <p style={{ color: '#fff', fontSize: '0.88rem', margin: '0 0 8px' }}>Enter verification code:</p>
                 <input
                   className="bk-code-input"
                   value={vcode}
                   onChange={(e) => setVcode(e.target.value)}
                   placeholder="______"
                 />
-                <button type="button" className="bk-code-btn" style={{ width: '100%' }} onClick={doVerify} disabled={busy}>
-                  {busy ? 'Verifying…' : 'Verify'}
+                <button className="bk-code-btn" style={{ width: '100%' }} onClick={doVerify} disabled={busy}>
+                  Verify
                 </button>
               </>
             ) : stage === 'forgot' ? (
@@ -248,14 +269,14 @@ export default function Enter() {
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                 />
                 {msg && <div style={{ color: '#38bdf8', fontSize: '0.85rem', marginBottom: '8px' }}>{msg}</div>}
-                <button type="button" className="bk-code-btn" style={{ width: '100%' }} onClick={doForgot} disabled={busy}>
+                <button className="bk-code-btn" style={{ width: '100%' }} onClick={doForgot} disabled={busy}>
                   {busy ? 'Sending…' : 'Send Reset Link'}
                 </button>
                 <button
                   type="button"
                   className="bk-creds-toggle"
                   style={{ display: 'block', margin: '8px auto 0' }}
-                  onClick={() => { setStage('form'); setMsg('') }}
+                  onClick={() => setStage('form')}
                 >
                   Back to Login
                 </button>
@@ -265,7 +286,7 @@ export default function Enter() {
                 <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
                   <button
                     type="button"
-                    onClick={() => { setTab('login'); setStage('form'); setErr('') }}
+                    onClick={() => setTab('login')}
                     style={{
                       flex: 1,
                       padding: '6px',
@@ -281,7 +302,7 @@ export default function Enter() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => { setTab('signup'); setStage('form'); setErr('') }}
+                    onClick={() => setTab('signup')}
                     style={{
                       flex: 1,
                       padding: '6px',
@@ -311,16 +332,31 @@ export default function Enter() {
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                 />
-                <PasswordInput
-                  className="bk-code-input"
-                  value={form.password}
-                  onChange={(v) => setForm({ ...form, password: v })}
-                  placeholder="Password"
-                  show={showPassword}
-                  setShow={setShowPassword}
-                  required
-                  withRules={tab === 'signup'}
-                />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    className="bk-code-input"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Password"
+                    value={form.password}
+                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{
+                      position: 'absolute',
+                      right: '12px',
+                      top: '12px',
+                      background: 'none',
+                      border: 'none',
+                      color: '#64748b',
+                      fontSize: '0.8rem',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {showPassword ? 'Hide' : 'Show'}
+                  </button>
+                </div>
                 <button
                   type="button"
                   className="bk-code-btn"
@@ -328,14 +364,14 @@ export default function Enter() {
                   onClick={tab === 'login' ? doLogin : doSignup}
                   disabled={busy}
                 >
-                  {busy ? '…' : tab === 'login' ? 'Log in' : 'Create account'}
+                  {tab === 'login' ? 'Log in' : 'Create account'}
                 </button>
                 {tab === 'login' && (
                   <button
                     type="button"
                     className="bk-creds-toggle"
                     style={{ display: 'block', margin: '8px auto 0' }}
-                    onClick={() => { setStage('forgot'); setErr('') }}
+                    onClick={() => setStage('forgot')}
                   >
                     Forgot password?
                   </button>

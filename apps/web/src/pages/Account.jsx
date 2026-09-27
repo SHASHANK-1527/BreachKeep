@@ -3,67 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { api } from '../app/api.js'
 import { useAuth } from '../app/AuthContext.jsx'
 
-const T = {
-  bg: '#0a0403',
-  panel: '#160806',
-  panel2: '#1c0d09',
-  border: 'rgba(255,122,0,0.22)',
-  borderSoft: 'rgba(255,122,0,0.12)',
-  text: '#e9d9d1',
-  dim: 'rgba(233,217,209,0.55)',
-  accent: '#ff5a1f',
-  cream: '#ffdca8',
-  green: '#22c55e',
-  red: '#ef4444',
-  gold: '#e0a800',
-}
-
-const s = {
-  shell: { minHeight: '100vh', background: T.bg, color: T.text, fontFamily: 'system-ui, -apple-system, sans-serif', display: 'flex' },
-  side: {
-    width: 220, flexShrink: 0, background: T.panel, borderRight: `1px solid ${T.borderSoft}`,
-    padding: '1.25rem 0.75rem', position: 'sticky', top: 0, height: '100vh',
-  },
-  sideTitle: { fontSize: '0.68rem', textTransform: 'uppercase', letterSpacing: '0.12em', color: T.dim, padding: '0 0.75rem', marginBottom: '0.5rem', fontWeight: 700 },
-  tab: {
-    display: 'flex', alignItems: 'center', gap: '0.6rem', width: '100%', padding: '0.55rem 0.75rem',
-    background: 'transparent', border: 'none', color: T.text, textAlign: 'left', cursor: 'pointer',
-    borderRadius: 8, fontSize: '0.9rem', fontWeight: 500, marginBottom: 2, transition: 'all 160ms ease',
-  },
-  tabActive: { background: 'rgba(255,122,0,0.12)', color: T.accent },
-  main: { flex: 1, padding: '2rem 2.25rem 7rem', maxWidth: 760, minWidth: 0 },
-  h1: { fontSize: '1.6rem', fontWeight: 700, margin: '0 0 0.25rem', color: T.text },
-  sub: { color: T.dim, fontSize: '0.88rem', margin: '0 0 1.75rem' },
-  card: { background: T.panel, border: `1px solid ${T.borderSoft}`, borderRadius: 12, padding: '1.25rem', marginBottom: '1.25rem' },
-  cardTitle: { fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: T.accent, fontWeight: 700, marginBottom: '1rem' },
-  row: { display: 'flex', alignItems: 'center', gap: '1rem', padding: '0.85rem 0', borderTop: '1px solid rgba(255,255,255,0.05)' },
-  rowFirst: { borderTop: 'none' },
-  rowLabel: { flex: 1, minWidth: 0 },
-  rowLabelKey: { fontSize: '0.72rem', color: T.dim, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 },
-  rowLabelVal: { fontSize: '0.95rem', color: T.cream, marginTop: 2, wordBreak: 'break-all' },
-  input: {
-    width: '100%', padding: '0.6rem 0.7rem', background: T.bg, border: `1px solid ${T.border}`,
-    color: T.cream, borderRadius: 8, fontFamily: 'inherit', fontSize: '0.92rem', outline: 'none', boxSizing: 'border-box',
-  },
-  btn: {
-    padding: '0.5rem 0.95rem', borderRadius: 8, border: 'none', cursor: 'pointer',
-    fontWeight: 600, fontSize: '0.85rem', fontFamily: 'inherit', transition: 'filter 150ms ease',
-  },
-  btnGhost: { background: 'transparent', border: `1px solid ${T.border}`, color: T.accent },
-  btnGreen: { background: T.green, color: '#fff' },
-  btnRed: { background: T.red, color: '#fff' },
-  link: { background: 'none', border: 'none', color: T.accent, cursor: 'pointer', fontSize: '0.85rem', padding: 0, textDecoration: 'underline' },
-  bar: {
-    position: 'fixed', left: 220, right: 0, bottom: 0, background: T.panel2,
-    borderTop: `1px solid ${T.accent}`, padding: '0.85rem 1.5rem', display: 'flex',
-    alignItems: 'center', justifyContent: 'space-between', gap: '1rem', zIndex: 60,
-    transform: 'translateY(0)', transition: 'transform 220ms cubic-bezier(0.2,0.8,0.3,1)',
-    boxShadow: '0 -8px 24px rgba(0,0,0,0.45)',
-  },
-  barHidden: { transform: 'translateY(110%)' },
-  checkRow: { display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.82rem', padding: '2px 0' },
-}
-
 const PASSWORD_RULES = [
   { id: 'len', label: '8-20 characters long', test: (v) => v.length >= 8 && v.length <= 20 },
   { id: 'upper', label: 'At least 1 uppercase letter', test: (v) => /[A-Z]/.test(v) },
@@ -72,7 +11,7 @@ const PASSWORD_RULES = [
   { id: 'nospace', label: 'No spaces allowed', test: (v) => v.length > 0 && !/\s/.test(v) },
 ]
 
-function Icon({ name, size = 16, color = T.dim }) {
+function Icon({ name, size = 16, color = '#334155' }) {
   const p = {
     width: size, height: size, viewBox: '0 0 24 24', fill: 'none',
     stroke: color, strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round',
@@ -88,36 +27,6 @@ function Icon({ name, size = 16, color = T.dim }) {
     pencil: <><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z" /></>,
   }
   return <svg {...p}>{paths[name]}</svg>
-}
-
-function Field({ label, value, editable, onStartEdit, onChange, onSave, onCancel, type = 'text', readOnly }) {
-  const [draft, setDraft] = useState(value)
-  useEffect(() => setDraft(value), [value])
-
-  if (editable) {
-    return (
-      <div style={{ display: 'flex', gap: '0.5rem', width: '100%', alignItems: 'center' }}>
-        <input
-          autoFocus value={draft} type={type} disabled={readOnly}
-          onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={(e) => { if (e.key === 'Enter') onSave(draft); if (e.key === 'Escape') onCancel() }}
-          style={s.input}
-        />
-        <button style={{ ...s.btn, ...s.btnGreen }} onClick={() => onSave(draft)}>Save</button>
-        <button style={{ ...s.btn, ...s.btnGhost }} onClick={onCancel}>Cancel</button>
-      </div>
-    )
-  }
-  return (
-    <div style={{ display: 'flex', gap: '0.5rem', width: '100%', alignItems: 'center' }}>
-      <div style={{ ...s.rowLabelVal, flex: 1, minWidth: 0, color: readOnly ? T.dim : T.cream }}>{value}</div>
-      {!readOnly && (
-        <button style={{ ...s.btn, ...s.btnGhost, display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }} onClick={onStartEdit}>
-          <Icon name="pencil" size={13} color={T.accent} /> Edit
-        </button>
-      )}
-    </div>
-  )
 }
 
 export default function Account() {
@@ -155,21 +64,26 @@ export default function Account() {
 
   const flash = (text, kind = 'ok') => setToast({ text, kind })
 
-  // ---- My Account actions ----
   const saveAccount = async () => {
     if (name !== (user?.username || '')) {
       try {
         const res = await api.post('/auth/update-username', { username: name })
         setUser(res.user)
         flash('Display name updated')
-      } catch (e) { flash(e.data?.error || 'Could not update name', 'err'); return }
+      } catch (e) {
+        flash(e.data?.error || 'Could not update name', 'err')
+        return
+      }
     }
     if (avatar !== (user?.avatar || null)) {
       try {
         const res = await api.post('/auth/update-avatar', { avatar })
         setUser(res.user)
         flash('Avatar updated')
-      } catch (e) { flash(e.data?.error || 'Could not update avatar', 'err'); return }
+      } catch (e) {
+        flash(e.data?.error || 'Could not update avatar', 'err')
+        return
+      }
     }
     flash('All changes saved')
   }
@@ -178,7 +92,9 @@ export default function Account() {
     setName(user?.username || '')
     setAvatar(user?.avatar || null)
     setEditing(null)
-    setCur(''); setNext(''); setConfirm('')
+    setCur('')
+    setNext('')
+    setConfirm('')
     setSecMsg(null)
   }
 
@@ -187,7 +103,10 @@ export default function Account() {
     if (!file) return
     if (file.size > 1024 * 512) return flash('Image too large (max 512KB)', 'err')
     const reader = new FileReader()
-    reader.onload = () => { setAvatar(reader.result); flash('Avatar ready — save to apply') }
+    reader.onload = () => {
+      setAvatar(reader.result)
+      flash('Avatar ready — save to apply')
+    }
     reader.readAsDataURL(file)
   }
 
@@ -199,11 +118,15 @@ export default function Account() {
     setBusy(true)
     try {
       await api.post('/auth/update-password', { currentPassword: cur, newPassword: next })
-      setCur(''); setNext(''); setConfirm('')
+      setCur('')
+      setNext('')
+      setConfirm('')
       setSecMsg({ t: 'Password updated successfully', k: 'ok' })
     } catch (err) {
       setSecMsg({ t: err.data?.error || 'Could not update password', k: 'err' })
-    } finally { setBusy(false) }
+    } finally {
+      setBusy(false)
+    }
   }
 
   const sendReset = async (e) => {
@@ -212,200 +135,597 @@ export default function Account() {
     try {
       await api.post('/auth/forgot-password', { email: forgotEmail })
       setSecMsg({ t: 'If that email has an account, a reset link has been sent.', k: 'ok' })
-      setForgotOpen(false); setForgotEmail('')
+      setForgotOpen(false)
+      setForgotEmail('')
     } catch (err) {
       setSecMsg({ t: err.data?.error || 'Request failed', k: 'err' })
-    } finally { setBusy(false) }
+    } finally {
+      setBusy(false)
+    }
   }
 
-  const doLogout = async () => { await logout(); sessionStorage.removeItem('bk_has_access'); nav('/') }
+  const doLogout = async () => {
+    await logout()
+    sessionStorage.removeItem('bk_has_access')
+    nav('/')
+  }
+
   const doDelete = async () => {
     if (!window.confirm('Delete your account permanently? This cannot be undone.')) return
     try {
       await api.post('/auth/delete-account')
       sessionStorage.removeItem('bk_has_access')
       nav('/')
-    } catch (e) { flash(e.data?.error || 'Delete failed', 'err') }
+    } catch (e) {
+      flash(e.data?.error || 'Delete failed', 'err')
+    }
   }
 
-  const PasswordField = ({ label, value, setValue, vis, setVis, placeholder, autoComplete }) => (
-    <div style={{ marginBottom: '0.9rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
-        <span style={{ fontSize: '0.72rem', color: T.dim, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>{label}</span>
-        <button type="button" style={{ ...s.btn, background: 'none', border: 'none', color: T.dim, padding: 2 }} onClick={() => setVis(!vis)} aria-label={vis ? 'Hide' : 'Show'}>
-          <Icon name={vis ? 'eyeOff' : 'eye'} size={16} color={vis ? T.accent : T.dim} />
-        </button>
-      </div>
-      <input
-        style={s.input} type={vis ? 'text' : 'password'} value={value} placeholder={placeholder}
-        autoComplete={autoComplete}
-        onChange={(e) => setValue(e.target.value)}
-      />
-    </div>
-  )
-
   return (
-    <div style={s.shell}>
-      <aside style={s.side}>
-        <div style={s.sideTitle}>Settings</div>
-        <button style={{ ...s.tab, ...(tab === 'account' ? s.tabActive : {}) }} onClick={() => setTab('account')}>
-          <Icon name="user" size={16} color={tab === 'account' ? T.accent : T.dim} /> My Account
-        </button>
-        <button style={{ ...s.tab, ...(tab === 'security' ? s.tabActive : {}) }} onClick={() => setTab('security')}>
-          <Icon name="shield" size={16} color={tab === 'security' ? T.accent : T.dim} /> Security
-        </button>
-      </aside>
+    <div
+      className="bk-account-page"
+      style={{
+        minHeight: '100vh',
+        width: '100%',
+        padding: '85px 1rem 4rem',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+        boxSizing: 'border-box',
+        overflowY: 'auto',
+      }}
+    >
+      {/* Central Glassmorphic Card (Page 1 Specification) */}
+      <div
+        className="bk-code-modal"
+        style={{
+          width: 'min(92vw, 560px)',
+          maxWidth: '560px',
+          padding: '2.5rem 2.2rem 2.2rem',
+          textAlign: 'left',
+          boxSizing: 'border-box',
+        }}
+      >
+        {/* Header & Underline */}
+        <div style={{ textAlign: 'center' }}>
+          <h1 className="bk-code-heading">{tab === 'account' ? 'My Account' : 'Security'}</h1>
+          <div className="bk-code-underline" />
+        </div>
 
-      <main style={s.main}>
+        {/* Tab switcher styled with Page 1 glass/pill aesthetic */}
+        <div
+          style={{
+            display: 'flex',
+            gap: '8px',
+            marginBottom: '1.8rem',
+            background: 'rgba(15, 22, 38, 0.12)',
+            padding: '4px',
+            borderRadius: '12px',
+            border: '1px solid rgba(255, 255, 255, 0.25)',
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => setTab('account')}
+            style={{
+              flex: 1,
+              padding: '0.55rem 1rem',
+              borderRadius: '8px',
+              border: tab === 'account' ? '1px solid rgba(0, 0, 0, 0.35)' : '1px solid transparent',
+              background: tab === 'account' ? '#dedfe3' : 'transparent',
+              color: '#0f172a',
+              fontWeight: tab === 'account' ? 600 : 500,
+              fontSize: '0.9rem',
+              fontFamily: 'var(--font-inter)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              transition: 'all 0.18s ease',
+              boxShadow: tab === 'account' ? '0 2px 5px rgba(0, 0, 0, 0.12)' : 'none',
+            }}
+          >
+            <Icon name="user" size={15} color="#0f172a" />
+            My Account
+          </button>
+          <button
+            type="button"
+            onClick={() => setTab('security')}
+            style={{
+              flex: 1,
+              padding: '0.55rem 1rem',
+              borderRadius: '8px',
+              border: tab === 'security' ? '1px solid rgba(0, 0, 0, 0.35)' : '1px solid transparent',
+              background: tab === 'security' ? '#dedfe3' : 'transparent',
+              color: '#0f172a',
+              fontWeight: tab === 'security' ? 600 : 500,
+              fontSize: '0.9rem',
+              fontFamily: 'var(--font-inter)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem',
+              transition: 'all 0.18s ease',
+              boxShadow: tab === 'security' ? '0 2px 5px rgba(0, 0, 0, 0.12)' : 'none',
+            }}
+          >
+            <Icon name="shield" size={15} color="#0f172a" />
+            Security
+          </button>
+        </div>
+
         {tab === 'account' ? (
           <>
-            <h1 style={s.h1}>My Account</h1>
-            <p style={s.sub}>Manage your profile and account details.</p>
-
-            <section style={s.card}>
-              <div style={s.cardTitle}>Avatar</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+            {/* Avatar section */}
+            <div style={{ marginBottom: '1.8rem', paddingBottom: '1.4rem', borderBottom: '1px solid rgba(15, 22, 38, 0.12)' }}>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.8rem' }}>
+                Avatar
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1.2rem' }}>
                 <div
                   onClick={() => fileRef.current?.click()}
+                  title="Click to change picture"
                   style={{
-                    width: 84, height: 84, borderRadius: '50%', overflow: 'hidden', cursor: 'pointer', position: 'relative',
-                    background: T.panel2, border: `1px solid ${T.border}`, display: 'grid', placeItems: 'center', flexShrink: 0,
+                    width: 76,
+                    height: 76,
+                    borderRadius: '50%',
+                    overflow: 'hidden',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    background: '#d8dde3',
+                    border: '2px solid rgba(255, 255, 255, 0.6)',
+                    display: 'grid',
+                    placeItems: 'center',
+                    flexShrink: 0,
+                    boxShadow: '0 4px 12px rgba(7, 18, 38, 0.15)',
                   }}
                 >
-                  {avatar
-                    ? <img src={avatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    : <span style={{ fontSize: '1.8rem', fontWeight: 700, color: T.accent }}>{(user?.username || '?')[0]?.toUpperCase()}</span>}
+                  {avatar ? (
+                    <img src={avatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <span style={{ fontSize: '1.8rem', fontWeight: 700, color: '#0f1626' }}>
+                      {(user?.username || '?')[0]?.toUpperCase()}
+                    </span>
+                  )}
                   <div
                     style={{
-                      position: 'absolute', inset: 0, display: 'grid', placeItems: 'center',
-                      background: 'rgba(10,4,3,0.82)', opacity: 0, transition: 'opacity 160ms ease',
+                      position: 'absolute',
+                      inset: 0,
+                      display: 'grid',
+                      placeItems: 'center',
+                      background: 'rgba(15, 22, 38, 0.65)',
+                      opacity: 0,
+                      transition: 'opacity 160ms ease',
                     }}
                     onMouseEnter={(e) => (e.currentTarget.style.opacity = 1)}
                     onMouseLeave={(e) => (e.currentTarget.style.opacity = 0)}
                   >
-                    <Icon name="camera" size={22} color={T.accent} />
+                    <Icon name="camera" size={22} color="#ffffff" />
                   </div>
                 </div>
                 <div>
-                  <button style={{ ...s.btn, ...s.btnGhost }} onClick={() => fileRef.current?.click()}>Change picture</button>
-                  <p style={{ color: T.dim, fontSize: '0.75rem', margin: '0.5rem 0 0' }}>PNG or JPG, max 512KB.</p>
+                  <button
+                    type="button"
+                    className="bk-code-btn"
+                    style={{ padding: '0.45rem 1.2rem', fontSize: '0.88rem' }}
+                    onClick={() => fileRef.current?.click()}
+                  >
+                    Change picture
+                  </button>
+                  <p style={{ color: '#475569', fontSize: '0.75rem', margin: '0.4rem 0 0' }}>PNG or JPG, max 512KB.</p>
                   <input ref={fileRef} type="file" accept="image/*" onChange={onPickAvatar} style={{ display: 'none' }} />
                 </div>
               </div>
-            </section>
+            </div>
 
-            <section style={s.card}>
-              <div style={s.cardTitle}>Account Details</div>
-              <div style={{ ...s.row, ...s.rowFirst }}>
-                <div style={s.rowLabel}>
-                  <div style={s.rowLabelKey}>Display Name</div>
-                  <Field
-                    label="Display Name" value={name} editable={editing === 'name'}
-                    onStartEdit={() => setEditing('name')} onCancel={() => { setName(user?.username || ''); setEditing(null) }}
-                    onSave={(v) => { setName(v); setEditing(null) }}
-                  />
+            {/* Account details */}
+            <div style={{ marginBottom: '1.8rem', paddingBottom: '1.4rem', borderBottom: '1px solid rgba(15, 22, 38, 0.12)' }}>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.8rem' }}>
+                Account Details
+              </div>
+
+              {/* Display Name */}
+              <div style={{ marginBottom: '1rem' }}>
+                <div style={{ fontSize: '0.72rem', color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '0.3rem' }}>
+                  Display Name
+                </div>
+                {editing === 'name' ? (
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <input
+                      autoFocus
+                      className="bk-code-input"
+                      style={{ marginBottom: 0, padding: '0.65rem 0.9rem', fontSize: '0.95rem' }}
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          saveAccount()
+                          setEditing(null)
+                        }
+                        if (e.key === 'Escape') {
+                          setName(user?.username || '')
+                          setEditing(null)
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="bk-code-btn"
+                      style={{ padding: '0.65rem 1.1rem', fontSize: '0.88rem', background: '#22c55e', color: '#fff', borderColor: '#16a34a' }}
+                      onClick={() => {
+                        saveAccount()
+                        setEditing(null)
+                      }}
+                    >
+                      Save
+                    </button>
+                    <button
+                      type="button"
+                      className="bk-code-btn"
+                      style={{ padding: '0.65rem 0.9rem', fontSize: '0.88rem' }}
+                      onClick={() => {
+                        setName(user?.username || '')
+                        setEditing(null)
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      background: '#d8dde3',
+                      padding: '0.7rem 1rem',
+                      borderRadius: '12px',
+                      border: '1px solid rgba(255, 255, 255, 0.4)',
+                    }}
+                  >
+                    <span style={{ fontSize: '0.98rem', fontWeight: 600, color: '#0f172a' }}>{name}</span>
+                    <button
+                      type="button"
+                      className="bk-code-btn"
+                      style={{ padding: '0.35rem 0.9rem', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+                      onClick={() => setEditing('name')}
+                    >
+                      <Icon name="pencil" size={12} color="#0f172a" />
+                      Edit
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Email */}
+              <div style={{ marginBottom: '1rem' }}>
+                <div style={{ fontSize: '0.72rem', color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '0.3rem' }}>
+                  Email
+                </div>
+                <div
+                  style={{
+                    background: 'rgba(216, 221, 227, 0.65)',
+                    padding: '0.7rem 1rem',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(255, 255, 255, 0.35)',
+                    color: '#475569',
+                    fontSize: '0.92rem',
+                    wordBreak: 'break-all',
+                  }}
+                >
+                  {user?.email || 'No email attached'}
+                </div>
+                <p style={{ color: '#64748b', fontSize: '0.72rem', margin: '0.3rem 0 0' }}>
+                  Email changes are disabled in this build.
+                </p>
+              </div>
+
+              {/* House */}
+              <div>
+                <div style={{ fontSize: '0.72rem', color: '#475569', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600, marginBottom: '0.3rem' }}>
+                  Assigned House
+                </div>
+                <div
+                  style={{
+                    background: 'rgba(216, 221, 227, 0.65)',
+                    padding: '0.7rem 1rem',
+                    borderRadius: '12px',
+                    border: '1px solid rgba(255, 255, 255, 0.35)',
+                    color: '#0f172a',
+                    fontWeight: 600,
+                    fontSize: '0.92rem',
+                    letterSpacing: '0.04em',
+                  }}
+                >
+                  {user?.house ? user.house.toUpperCase() : 'UNSORTED'}
                 </div>
               </div>
-              <div style={s.row}>
-                <div style={s.rowLabel}>
-                  <div style={s.rowLabelKey}>Email</div>
-                  <Field label="Email" value={user?.email || ''} readOnly />
-                  <p style={{ color: T.dim, fontSize: '0.72rem', margin: '0.35rem 0 0' }}>Email changes require re-verification and are disabled in this build.</p>
-                </div>
-              </div>
-            </section>
+            </div>
 
-            <section style={s.card}>
-              <div style={s.cardTitle}>Account Actions</div>
+            {/* Account Actions */}
+            <div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.8rem' }}>
+                Account Actions
+              </div>
               <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                <button style={{ ...s.btn, ...s.btnGhost }} onClick={doLogout}>Log Out</button>
-                <button style={{ ...s.btn, ...s.btnRed }} onClick={doDelete}>Delete Account</button>
+                <button
+                  type="button"
+                  className="bk-code-btn"
+                  style={{ padding: '0.55rem 1.4rem' }}
+                  onClick={doLogout}
+                >
+                  Log Out
+                </button>
+                <button
+                  type="button"
+                  onClick={doDelete}
+                  style={{
+                    background: '#fee2e2',
+                    border: '1px solid rgba(239, 68, 68, 0.45)',
+                    borderRadius: '8px',
+                    padding: '0.55rem 1.4rem',
+                    color: '#dc2626',
+                    fontFamily: 'var(--font-inter)',
+                    fontSize: '0.95rem',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    transition: 'all 0.18s ease',
+                  }}
+                >
+                  Delete Account
+                </button>
               </div>
-            </section>
+            </div>
           </>
         ) : (
           <>
-            <h1 style={s.h1}>Security</h1>
-            <p style={s.sub}>Change your password and keep your account safe.</p>
+            {/* Security tab: Password change */}
+            <form onSubmit={savePassword}>
+              <div style={{ marginBottom: '1.2rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                  <span style={{ fontSize: '0.75rem', color: '#334155', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>
+                    Current Password
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShow({ ...show, cur: !show.cur })}
+                    style={{ background: 'none', border: 'none', color: '#475569', cursor: 'pointer', fontSize: '0.78rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+                  >
+                    <Icon name={show.cur ? 'eyeOff' : 'eye'} size={14} color="#475569" />
+                    {show.cur ? 'Hide' : 'Show'}
+                  </button>
+                </div>
+                <input
+                  className="bk-code-input"
+                  type={show.cur ? 'text' : 'password'}
+                  value={cur}
+                  onChange={(e) => setCur(e.target.value)}
+                  placeholder="••••••••"
+                  autoComplete="current-password"
+                  style={{ marginBottom: 0 }}
+                />
+              </div>
 
-            <section style={s.card}>
-              <div style={s.cardTitle}>Change Password</div>
-              <form onSubmit={savePassword}>
-                <PasswordField label="Current Password" value={cur} setValue={setCur} vis={show.cur} setVis={(v) => setShow({ ...show, cur: v })} placeholder="••••••••" autoComplete="current-password" />
-                <PasswordField label="New Password" value={next} setValue={setNext} vis={show.next} setVis={(v) => setShow({ ...show, next: v })} placeholder="••••••••" autoComplete="new-password" />
+              <div style={{ marginBottom: '1.2rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                  <span style={{ fontSize: '0.75rem', color: '#334155', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>
+                    New Password
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShow({ ...show, next: !show.next })}
+                    style={{ background: 'none', border: 'none', color: '#475569', cursor: 'pointer', fontSize: '0.78rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+                  >
+                    <Icon name={show.next ? 'eyeOff' : 'eye'} size={14} color="#475569" />
+                    {show.next ? 'Hide' : 'Show'}
+                  </button>
+                </div>
+                <input
+                  className="bk-code-input"
+                  type={show.next ? 'text' : 'password'}
+                  value={next}
+                  onChange={(e) => setNext(e.target.value)}
+                  placeholder="••••••••"
+                  autoComplete="new-password"
+                  style={{ marginBottom: '0.5rem' }}
+                />
 
                 {next.length > 0 && (
-                  <div style={{ margin: '-0.4rem 0 0.9rem' }}>
+                  <div style={{ padding: '0.6rem 0.8rem', background: 'rgba(216, 221, 227, 0.65)', borderRadius: '10px', marginBottom: '0.5rem' }}>
                     {rules.map((r) => (
-                      <div key={r.id} style={{ ...s.checkRow, color: r.ok ? T.green : T.dim }}>
-                        <span style={{ width: 14, height: 14, display: 'grid', placeItems: 'center', borderRadius: '50%', background: r.ok ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.12)' }}>
-                          <Icon name={r.ok ? 'check' : 'x'} size={9} color={r.ok ? T.green : T.red} />
+                      <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.8rem', color: r.ok ? '#15803d' : '#64748b', padding: '2px 0' }}>
+                        <span style={{ width: 14, height: 14, display: 'grid', placeItems: 'center', borderRadius: '50%', background: r.ok ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.15)' }}>
+                          <Icon name={r.ok ? 'check' : 'x'} size={9} color={r.ok ? '#16a34a' : '#ef4444'} />
                         </span>
-                        <span style={{ textDecoration: r.ok ? 'none' : 'none', opacity: r.ok ? 1 : 0.75 }}>{r.label}</span>
+                        <span>{r.label}</span>
                       </div>
                     ))}
                   </div>
                 )}
+              </div>
 
-                <PasswordField label="Confirm New Password" value={confirm} setValue={setConfirm} vis={show.confirm} setVis={(v) => setShow({ ...show, confirm: v })} placeholder="••••••••" autoComplete="new-password" />
-
+              <div style={{ marginBottom: '1.4rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                  <span style={{ fontSize: '0.75rem', color: '#334155', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 600 }}>
+                    Confirm New Password
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShow({ ...show, confirm: !show.confirm })}
+                    style={{ background: 'none', border: 'none', color: '#475569', cursor: 'pointer', fontSize: '0.78rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}
+                  >
+                    <Icon name={show.confirm ? 'eyeOff' : 'eye'} size={14} color="#475569" />
+                    {show.confirm ? 'Hide' : 'Show'}
+                  </button>
+                </div>
+                <input
+                  className="bk-code-input"
+                  type={show.confirm ? 'text' : 'password'}
+                  value={confirm}
+                  onChange={(e) => setConfirm(e.target.value)}
+                  placeholder="••••••••"
+                  autoComplete="new-password"
+                  style={{ marginBottom: 0 }}
+                />
                 {confirm.length > 0 && next !== confirm && (
-                  <div style={{ ...s.checkRow, color: T.red, marginTop: '-0.4rem', marginBottom: '0.9rem' }}>
-                    <span style={{ width: 14, height: 14, display: 'grid', placeItems: 'center', borderRadius: '50%', background: 'rgba(239,68,68,0.12)' }}>
-                      <Icon name="x" size={9} color={T.red} />
-                    </span>
-                    <span>Passwords do not match</span>
+                  <div style={{ color: '#dc2626', fontSize: '0.8rem', marginTop: '0.4rem', fontWeight: 500 }}>
+                    Passwords do not match
                   </div>
                 )}
+              </div>
 
-                {secMsg && (
-                  <div style={{ fontSize: '0.85rem', marginBottom: '0.9rem', color: secMsg.k === 'ok' ? T.green : T.red }}>{secMsg.t}</div>
-                )}
+              {secMsg && (
+                <div
+                  className={secMsg.k === 'err' ? 'bk-code-error' : ''}
+                  style={
+                    secMsg.k === 'ok'
+                      ? {
+                          color: '#15803d',
+                          background: 'rgba(220, 252, 231, 0.85)',
+                          border: '1px solid rgba(34, 197, 94, 0.4)',
+                          borderRadius: '8px',
+                          padding: '0.5rem 0.8rem',
+                          fontSize: '0.88rem',
+                          marginBottom: '1rem',
+                        }
+                      : {}
+                  }
+                >
+                  {secMsg.t}
+                </div>
+              )}
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-                  <button type="submit" disabled={!pwReady || busy} style={{ ...s.btn, ...s.btnGreen, opacity: pwReady ? 1 : 0.45, cursor: pwReady ? 'pointer' : 'not-allowed' }}>
-                    {busy ? 'Updating…' : 'Update Password'}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+                <button
+                  type="submit"
+                  className="bk-code-btn"
+                  disabled={!pwReady || busy}
+                  style={{ minWidth: 150 }}
+                >
+                  {busy ? 'Updating…' : 'Update Password'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setForgotOpen(!forgotOpen)}
+                  style={{ background: 'none', border: 'none', color: '#0f172a', textDecoration: 'underline', cursor: 'pointer', fontSize: '0.88rem', fontFamily: 'var(--font-inter)' }}
+                >
+                  Forgot password?
+                </button>
+              </div>
+            </form>
+
+            {/* Forgot password inline form */}
+            {forgotOpen && (
+              <form onSubmit={sendReset} style={{ marginTop: '1.4rem', paddingTop: '1.2rem', borderTop: '1px solid rgba(15, 22, 38, 0.12)' }}>
+                <div style={{ fontSize: '0.85rem', color: '#334155', marginBottom: '0.6rem' }}>
+                  Enter your email and we'll send a reset link:
+                </div>
+                <div style={{ display: 'flex', gap: '0.6rem' }}>
+                  <input
+                    className="bk-code-input"
+                    type="email"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    style={{ marginBottom: 0 }}
+                  />
+                  <button
+                    type="submit"
+                    className="bk-code-btn"
+                    disabled={busy || !forgotEmail}
+                    style={{ padding: '0.6rem 1.4rem', whiteSpace: 'nowrap' }}
+                  >
+                    Send Link
                   </button>
-                  <button type="button" style={s.link} onClick={() => setForgotOpen((v) => !v)}>Forgot password?</button>
                 </div>
               </form>
-
-              {forgotOpen && (
-                <form onSubmit={sendReset} style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: `1px solid ${T.borderSoft}` }}>
-                  <div style={{ fontSize: '0.8rem', color: T.dim, marginBottom: '0.6rem' }}>
-                    Enter your email and we'll send a reset link valid for 1 hour.
-                  </div>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <input style={s.input} type="email" value={forgotEmail} placeholder="you@example.com" onChange={(e) => setForgotEmail(e.target.value)} />
-                    <button type="submit" disabled={busy || !forgotEmail} style={{ ...s.btn, ...s.btnGhost }}>Send link</button>
-                  </div>
-                </form>
-              )}
-            </section>
+            )}
           </>
         )}
-      </main>
+      </div>
 
+      {/* Toast Alert */}
       {toast && (
         <div
           style={{
-            position: 'fixed', top: 18, left: '50%', transform: 'translateX(-50%)', zIndex: 80,
-            background: T.panel2, border: `1px solid ${toast.kind === 'err' ? T.red : T.green}`, color: toast.kind === 'err' ? T.red : T.cream,
-            padding: '0.6rem 1rem', borderRadius: 8, fontSize: '0.85rem', boxShadow: '0 8px 20px rgba(0,0,0,0.5)',
+            position: 'fixed',
+            top: 24,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 100,
+            background: 'rgba(255, 255, 255, 0.96)',
+            backdropFilter: 'blur(10px)',
+            border: `1.5px solid ${toast.kind === 'err' ? '#ef4444' : '#22c55e'}`,
+            color: toast.kind === 'err' ? '#dc2626' : '#15803d',
+            padding: '0.65rem 1.4rem',
+            borderRadius: '12px',
+            fontSize: '0.9rem',
+            fontWeight: 500,
+            boxShadow: '0 12px 30px rgba(7, 18, 38, 0.25)',
+            animation: 'bk-fadeIn 0.25s ease both',
           }}
         >
           {toast.text}
         </div>
       )}
 
-      <div style={{ ...s.bar, ...(dirty ? {} : s.barHidden) }}>
-        <span style={{ fontSize: '0.9rem', color: T.gold, fontWeight: 600 }}>Careful — you have unsaved changes!</span>
+      {/* Floating Unsaved Changes Bar */}
+      <div
+        style={{
+          position: 'fixed',
+          left: '50%',
+          bottom: 24,
+          transform: dirty ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(140%)',
+          transition: 'transform 260ms cubic-bezier(0.16, 1, 0.3, 1)',
+          zIndex: 90,
+          width: 'min(90vw, 520px)',
+          background: 'rgba(222, 230, 240, 0.95)',
+          backdropFilter: 'blur(14px)',
+          border: '1.5px solid rgba(255, 255, 255, 0.6)',
+          borderRadius: '16px',
+          padding: '0.8rem 1.4rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '1rem',
+          boxShadow: '0 16px 40px rgba(7, 18, 38, 0.35)',
+        }}
+      >
+        <span style={{ fontSize: '0.88rem', color: '#0f172a', fontWeight: 600 }}>
+          Unsaved changes!
+        </span>
         <div style={{ display: 'flex', gap: '0.6rem' }}>
-          <button style={{ ...s.btn, ...s.btnGhost }} onClick={resetAll}>Reset</button>
+          <button
+            type="button"
+            className="bk-code-btn"
+            style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}
+            onClick={resetAll}
+          >
+            Reset
+          </button>
           {tab === 'account' ? (
-            <button style={{ ...s.btn, ...s.btnGreen }} onClick={saveAccount} disabled={!accountDirty}>Save Changes</button>
+            <button
+              type="button"
+              className="bk-code-btn"
+              style={{ padding: '0.4rem 1.2rem', fontSize: '0.85rem', background: '#22c55e', color: '#fff', borderColor: '#16a34a' }}
+              onClick={saveAccount}
+              disabled={!accountDirty}
+            >
+              Save Changes
+            </button>
           ) : (
-            <button style={{ ...s.btn, ...s.btnGreen }} onClick={savePassword} disabled={!pwReady}>Save Changes</button>
+            <button
+              type="button"
+              className="bk-code-btn"
+              style={{ padding: '0.4rem 1.2rem', fontSize: '0.85rem', background: '#22c55e', color: '#fff', borderColor: '#16a34a' }}
+              onClick={savePassword}
+              disabled={!pwReady}
+            >
+              Save Changes
+            </button>
           )}
         </div>
       </div>
