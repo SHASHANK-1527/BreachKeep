@@ -26,6 +26,10 @@ export default function useMaintenance(skip = false) {
     const poll = async () => {
       try {
         const res = await fetch(`${BASE}/status`, { credentials: 'include', cache: 'no-store' })
+        if (!alive) return
+        // A non-2xx here (a 404 from a stale API build, a 502 mid-deploy) is
+        // NOT a maintenance signal. Mark the check done and let the app render.
+        if (!res.ok) { setState((s) => ({ ...s, checked: true })); return }
         const data = await res.json()
         if (!alive) return
         setState({

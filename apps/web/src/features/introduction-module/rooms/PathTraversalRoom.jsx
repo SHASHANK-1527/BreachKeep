@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { reportComplete } from '../reportComplete.js';
 import RoomShell from '../components/RoomShell';
 
 function Hint({ children }) {
@@ -27,7 +26,10 @@ export default function PathTraversalRoom() {
   const [dialogue, setDialogue] = useState(INITIAL_DIALOGUE);
   const [mech, setMech] = useState(INITIAL_MECH);
 
+  const [resetKey, setResetKey] = useState(0);
+
   function reset() {
+    setResetKey((k) => k + 1);
     setInput('brochure.pdf'); setOutput(null); setFlagShown(false); setTriedNormal(false);
     setDialogue(INITIAL_DIALOGUE); setMech(INITIAL_MECH);
   }
@@ -64,10 +66,10 @@ export default function PathTraversalRoom() {
       );
       return;
     }
-    setFlagShown(true); reportComplete('dotdotdot-folder');
+    setFlagShown(true);
     setOutput({
       ok: true,
-      text: `Downloaded ${val} —\n\nDB_HOST=internal-db.acme.local\nDB_USER=svc_billing\nDB_PASS=Tr0ub4dor&3\n\nFLAG{tw0_d0ts_tw1ce}`,
+      text: `Downloaded ${val} —\n\nDB_HOST=internal-db.acme.local\nDB_USER=svc_billing\nDB_PASS=Tr0ub4dor&3\n\n[the keep has issued your flag below]`,
     });
     setDialogue(
       "Two levels up was enough to leave the folder this tool was ever meant to serve files from, and land on a config file with real database credentials in it."
@@ -93,8 +95,9 @@ export default function PathTraversalRoom() {
       onHint={hint}
       onReset={reset}
       pageTitle="acmewidgets.co/docs"
-      flag="FLAG{tw0_d0ts_tw1ce}"
-      flagShown={flagShown}
+      roomId="dotdotdot-folder"
+      solved={flagShown}
+      resetKey={resetKey}
     >
       <div className="im-browser">
         <div className="im-addr-row">

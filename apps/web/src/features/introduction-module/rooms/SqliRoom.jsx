@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { reportComplete } from '../reportComplete.js';
 import RoomShell from '../components/RoomShell';
 
 function Hint({ children }) {
@@ -49,7 +48,10 @@ export default function SqliRoom() {
   const [filled, setFilled] = useState(false);
   const [err, setErr] = useState(false);
 
+  const [resetKey, setResetKey] = useState(0);
+
   function reset() {
+    setResetKey((k) => k + 1);
     setStage('home'); setUser(''); setErr(false); setFilled(false);
   }
   function hint() {
@@ -62,7 +64,7 @@ export default function SqliRoom() {
     }
   }
   function submit() {
-    if (user.includes("' OR '1'='1")) { setStage('done'); setErr(false); reportComplete('hidden-page'); }
+    if (user.includes("' OR '1'='1")) { setStage('done'); setErr(false); }
     else setErr(true);
   }
 
@@ -76,8 +78,9 @@ export default function SqliRoom() {
       onHint={hint}
       onReset={reset}
       pageTitle="acmewidgets.co"
-      flag="FLAG{r0b0ts_txt_g1ves_1t_away}"
-      flagShown={stage === 'done'}
+      roomId="hidden-page"
+      solved={stage === 'done'}
+      resetKey={resetKey}
     >
       <div className="im-browser">
         <div className="im-addr-row">
@@ -122,7 +125,7 @@ export default function SqliRoom() {
             <>
               <h3 className="im-page-h2">Welcome, admin</h3>
               <p>Authentication bypassed. Session opened without a valid password.</p>
-              <p className="im-flag-echo">FLAG&#123;r0b0ts_txt_g1ves_1t_away&#125;</p>
+              <p className="im-flag-echo">The keep has issued your flag below &mdash; submit it to clear this scene.</p>
             </>
           )}
         </div>

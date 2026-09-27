@@ -1,6 +1,10 @@
 # PRODUCTION nginx config (HTTPS). ${DOMAIN} and ${ADMIN_SECRET_PATH} are filled
 # in from .env when the container starts. Local dev keeps using breachkeep.conf.
 
+# Websocket upgrades (the labs terminal) need Connection: upgrade; ordinary API
+# requests must NOT get it. proxy_common.conf reads this.
+map $http_upgrade $connection_upgrade { default upgrade; '' close; }
+
 map $cookie_bk_gate $has_gate { default 0; "~.+" 1; }
 
 # Per-IP request limits. A whole class shares ONE campus IP, so these are

@@ -9,6 +9,7 @@ import CmdInjectionRoom from './rooms/CmdInjectionRoom';
 import IdorRoom from './rooms/IdorRoom';
 import PathTraversalRoom from './rooms/PathTraversalRoom';
 import SocialEngineeringRoom from './rooms/SocialEngineeringRoom';
+import DemoVulnRoom from './rooms/DemoVulnRoom';
 import './introduction.css';
 
 /**
@@ -49,6 +50,8 @@ export default function IntroductionModule() {
         <Route path="somebodys-invoice" element={<IdorRoom />} />
         <Route path="dotdotdot-folder" element={<PathTraversalRoom />} />
         <Route path="phone-call" element={<SocialEngineeringRoom />} />
+        {/* Instructor demo. Not one of the nine: no flag, awards no progress. */}
+        <Route path="demo-vulnerability" element={<DemoVulnRoom />} />
       </Routes>
     </div>
   );

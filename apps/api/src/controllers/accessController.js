@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken'
 import User from '../models/User.js'
 import AccessConfig from '../models/AccessConfig.js'
 import { safeEqual } from '../utils/flags.js'
-import { getMidnightISTExpiry } from '../utils/auth.js'
+import { getMidnightISTExpiry, getTodayIST, generateSessionCode } from '../utils/auth.js'
 import { sendSessionCodeEmail } from '../utils/email.js'
 import { cookieOpts } from '../config/env.js'
 
@@ -44,7 +44,17 @@ export async function resendDaily(req, res) {
   const generic = { ok: true }
   try {
     const user = await User.findOne({ email: (email || '').toLowerCase(), verified: true })
-    if (user && user.sessionCode && user.sessionCodeExpires > new Date()) {
+    if (user) {
+      // Mint a fresh code when today's has lapsed. Previously this endpoint
+      // only ever re-sent an already-valid code, so a student who missed the
+      // midnight email — or whose code expired mid-class — had no way back in.
+      const valid = user.sessionCode && user.sessionCodeExpires > new Date()
+      if (!valid) {
+        user.sessionCode = generateSessionCode()
+        user.sessionCodeExpires = getMidnightISTExpiry()
+        user.lastSessionDate = getTodayIST()
+        await user.save()
+      }
       await sendSessionCodeEmail(user.email, user.sessionCode)
     }
   } catch (e) {

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { reportComplete } from '../reportComplete.js';
 import RoomShell from '../components/RoomShell';
 
 function Hint({ children }) {
@@ -58,7 +57,10 @@ export default function SocialEngineeringRoom() {
   const success = nodeId === 'success';
   const failed = nodeId.startsWith('fail_');
 
+  const [resetKey, setResetKey] = useState(0);
+
   function reset() {
+    setResetKey((k) => k + 1);
     setNodeId('start');
     setTranscript([{ from: 'agent', text: NODES.start.agent }]);
     setDialogue(INITIAL_DIALOGUE);
@@ -70,7 +72,6 @@ export default function SocialEngineeringRoom() {
     setTranscript((t) => [...t, { from: 'you', text: opt.label.replace(/^"|"$/g, '') }, { from: 'agent', text: nextNode.agent }]);
     setNodeId(opt.next);
     if (opt.next === 'success') {
-      reportComplete('phone-call');
       setDialogue("That's the whole scene — a real-sounding title, a small amount of urgency, and one specific-sounding detail was enough to skip verification entirely.");
     } else if (opt.next.startsWith('fail_')) {
       setDialogue(<>That got the call escalated instead of resolved. <Hint>Reset the scene and try a more confident, specific story.</Hint></>);
@@ -96,8 +97,9 @@ export default function SocialEngineeringRoom() {
       onHint={hint}
       onReset={reset}
       pageTitle="Incoming call — Acme IT Helpdesk"
-      flag="FLAG{c0nf1dence_1s_the_expl0it}"
-      flagShown={success}
+      roomId="phone-call"
+      solved={success}
+      resetKey={resetKey}
     >
       <div className="im-browser" style={{ background: '#0c0e13', color: '#e9ebf1' }}>
         <div className="im-addr-row" style={{ background: '#191d27', borderBottom: '1px solid #2b313f' }}>

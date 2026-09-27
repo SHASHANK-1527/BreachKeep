@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from 'react';
-import { reportComplete } from '../reportComplete.js';
 import RoomShell from '../components/RoomShell';
 
 function Hint({ children }) {
@@ -36,7 +35,10 @@ export default function CmdInjectionRoom() {
     setLines((l) => [...l, { text, cls }]);
   }
 
+  const [resetKey, setResetKey] = useState(0);
+
   function reset() {
+    setResetKey((k) => k + 1);
     setState({ ranNormal: false, foundWhoami: false, flagShown: false });
     setLines(INITIAL_LINES);
     setDialogue(INITIAL_DIALOGUE);
@@ -103,8 +105,8 @@ export default function CmdInjectionRoom() {
         setDialogue(<>Not yet — confirm you can run arbitrary commands first: <Hint>acmewidgets.co; whoami</Hint></>);
         return;
       }
-      addLine('FLAG{p1ng_w1th_a_s3m1c0l0n}', 'im-flag');
-      setState((s) => ({ ...s, flagShown: true })); reportComplete('support-form');
+      addLine('the keep has issued your flag below — submit it to clear this scene.', 'im-flag');
+      setState((s) => ({ ...s, flagShown: true }));
       setDialogue(
         'A ping tool just handed you arbitrary command execution on their server. This is one of the most severe bug classes out there precisely because it goes straight from "text field" to "full control."'
       );
@@ -129,8 +131,9 @@ export default function CmdInjectionRoom() {
       onHint={hint}
       onReset={reset}
       pageTitle="Network diagnostics"
-      flag="FLAG{p1ng_w1th_a_s3m1c0l0n}"
-      flagShown={state.flagShown}
+      roomId="support-form"
+      solved={state.flagShown}
+      resetKey={resetKey}
     >
       <div className="im-term">
         <div className="im-term-bar"><span></span><span></span><span></span></div>

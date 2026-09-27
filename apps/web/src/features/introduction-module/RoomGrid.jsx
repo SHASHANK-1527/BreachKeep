@@ -6,6 +6,12 @@ import GoldenFireflies from './components/GoldenFireflies.jsx'
 import { SCENES, GATE_SPOTS } from './questMapScenes.js'
 import { api } from '../../app/api.js'
 
+// The instructor demo wing is always reachable by URL
+// (/dashboard/introduction/demo-vulnerability); this only decides whether a
+// button for it sits on the quest map. Vite strips the branch from a production
+// bundle when VITE_TEST_MODE is not 'true'.
+const SHOW_DEMO_LINK = import.meta.env.VITE_TEST_MODE === 'true'
+
 // Precise locations of night sky stars across top sky
 const STAR_SPOTS = [
   { left: 4.2, top: 3.0, size: 2.0, delay: 0 },
@@ -112,6 +118,14 @@ export default function RoomGrid() {
         <span className="bk-ornate-banner-text">INTRODUCTION</span>
         <span className="bk-diamond-accent">◇</span>
       </div>
+
+      {SHOW_DEMO_LINK && (
+        <p className="bk-questmap-demo-link">
+          <button type="button" className="im-btn im-ghost im-small" onClick={() => nav('demo-vulnerability')}>
+            Instructor demo &mdash; the unpatched wing
+          </button>
+        </p>
+      )}
 
       {/* Trail progress line */}
       <p className="bk-questmap-progress">

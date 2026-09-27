@@ -13,7 +13,7 @@ import Progress from '../models/Progress.js'
 import Roster from '../models/Roster.js'
 import AccessConfig from '../models/AccessConfig.js'
 import { isValidEmailDomain } from '../utils/emailValidate.js'
-import { validatePassword, getTodayIST, getMidnightISTExpiry } from '../utils/auth.js'
+import { validatePassword, getTodayIST, getMidnightISTExpiry, generateSessionCode } from '../utils/auth.js'
 import { generateCode, sendVerificationEmail, sendSessionCodeEmail, sendPasswordResetEmail } from '../utils/email.js'
 import { cookieOpts } from '../config/env.js'
 
@@ -113,7 +113,7 @@ export async function login(req, res) {
     // Auto-generate session code if needed (like reference backend)
     const today = getTodayIST()
     if (user.lastSessionDate !== today || !user.sessionCode || new Date() > user.sessionCodeExpires) {
-      const sessionCode = generateCode()
+      const sessionCode = generateSessionCode()
       user.sessionCode = sessionCode
       user.sessionCodeExpires = getMidnightISTExpiry()
       user.lastSessionDate = today

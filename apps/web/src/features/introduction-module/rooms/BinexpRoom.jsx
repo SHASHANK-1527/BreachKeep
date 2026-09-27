@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from 'react';
-import { reportComplete } from '../reportComplete.js';
 import RoomShell from '../components/RoomShell';
 
 function Hint({ children }) {
@@ -36,7 +35,10 @@ export default function BinexpRoom() {
     setLines((l) => [...l, { text, cls }]);
   }
 
+  const [resetKey, setResetKey] = useState(0);
+
   function reset() {
+    setResetKey((k) => k + 1);
     setState({ ranVault: false, foundSecret: false, unlocked: false, flagShown: false });
     setLines(INITIAL_LINES);
     setDialogue(INITIAL_DIALOGUE);
@@ -236,8 +238,8 @@ export default function BinexpRoom() {
         return;
       }
       if (state.flagShown) return;
-      setState((s) => ({ ...s, flagShown: true })); reportComplete('build-tool');
-      addLine('FLAG{h1dd3n_func_f0und}', 'im-flag');
+      setState((s) => ({ ...s, flagShown: true }));
+      addLine('the keep has issued your flag below — submit it to clear this scene.', 'im-flag');
       setDialogue(
         'That\'s the whole shape of it: functionality hidden in plain sight, found by inspection, triggered on purpose. The rest of the semester is mostly "how do you find this faster, and on things that fight back."'
       );
@@ -264,8 +266,9 @@ export default function BinexpRoom() {
       onHint={hint}
       onReset={reset}
       pageTitle="~/leak"
-      flag="FLAG{h1dd3n_func_f0und}"
-      flagShown={state.flagShown}
+      roomId="build-tool"
+      solved={state.flagShown}
+      resetKey={resetKey}
     >
       <div className="im-term">
         <div className="im-term-bar"><span></span><span></span><span></span></div>

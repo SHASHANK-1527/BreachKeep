@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useGoogleLogin } from '@react-oauth/google'
 import { api } from '../app/api.js'
 import { useAuth } from '../app/AuthContext.jsx'
 
@@ -31,6 +32,13 @@ export default function Enter() {
   // route guard redirects the moment a user exists, which would unmount
   // this page and cut the video. Session + navigation happen at the end.
   const executePortalTransition = (authUser, targetPath) => {
+    // Without a user there is no session cookie, so the 5-second warp would end
+    // on a guarded route that immediately bounces back here. That is what made
+    // a correct password look like "login does nothing".
+    if (!authUser) {
+      setErr('Signed in, but the session did not come back. Please try again.')
+      return
+    }
     setIsTransitioning(true)
     if (videoRef.current) {
       videoRef.current.currentTime = 0
@@ -49,32 +57,58 @@ export default function Enter() {
     }, 5000)
   }
 
-  const handleGoogleSignIn = async () => {
-    setErr('')
-    try {
-      const res = await api.post('/auth/google', { idToken: 'mock-google-token' })
-      const authUser = res?.user || res?.data?.user
-      executePortalTransition(authUser)
-    } catch (e) {
-      setIsTransitioning(false)
-      setIsFlashActive(false)
-      setErr(e.data?.error || e.message || 'Sign in failed')
+  // api.post() resolves to the response BODY. The old code read `res.data.*`,
+  // an axios-ism that is always undefined here — so `requiresSessionCode` never
+  // fired, the daily-code step never appeared, and the page warped onward with
+  // no user. This is the single place that reads an auth response now.
+  const handleAuthResponse = (res, targetPath) => {
+    if (res?.requiresSessionCode) {
+      if (res.email) setForm((f) => ({ ...f, email: res.email }))
+      // The code panel lives inside the credentials section, so it has to be
+      // open — otherwise a Google sign-in that needs today's code would set the
+      // stage and then render nothing at all.
+      setShowCreds(true)
+      setStage('session')
+      setMsg(res.message || 'We emailed you today\u2019s session code. Check your inbox.')
+      return
     }
+    executePortalTransition(res?.user, targetPath)
   }
+
+  const describeError = (e) => {
+    if (e?.status === 0) return 'Could not reach the Keep. Check your connection and try again.'
+    if (e?.data?.error === 'gate_required')
+      return 'Your access code has expired. Go back and enter today\u2019s code again.'
+    return e?.data?.error || e?.message || 'Something went wrong'
+  }
+
+  const loginWithGoogle = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setErr('')
+      try {
+        const res = await api.post('/auth/google', {
+          accessToken: tokenResponse.access_token,
+        })
+        handleAuthResponse(res)
+      } catch (e) {
+        setIsTransitioning(false)
+        setIsFlashActive(false)
+        setErr(describeError(e))
+      }
+    },
+    onError: (error) => {
+      console.error('Google Sign In Error:', error)
+      setErr('Google sign in was cancelled or failed')
+    },
+  })
 
   const doLogin = async () => {
     setErr(''); setBusy(true)
     try {
       const res = await api.post('/auth/login', { email: form.email, password: form.password })
-      const data = res.data || {}
-      if (data.requiresSessionCode) {
-        setStage('session')
-      } else {
-        const authUser = data.user || res.user
-        executePortalTransition(authUser)
-      }
+      handleAuthResponse(res)
     } catch (e) {
-      setErr(e.data?.error || 'Login failed')
+      setErr(describeError(e))
     } finally {
       setBusy(false)
     }
@@ -84,9 +118,10 @@ export default function Enter() {
     setErr(''); setBusy(true)
     try {
       await api.post('/auth/signup', form)
+      setShowCreds(true)
       setStage('verify')
     } catch (e) {
-      setErr(e.data?.error || 'Signup failed')
+      setErr(describeError(e))
     } finally {
       setBusy(false)
     }
@@ -95,12 +130,13 @@ export default function Enter() {
   const doSession = async () => {
     setErr(''); setBusy(true)
     try {
-      const res = await api.post('/auth/verify-session', { email: form.email, sessionCode })
-      const data = res.data || {}
-      const authUser = data.user || res.user
-      executePortalTransition(authUser)
+      const res = await api.post('/auth/verify-session', {
+        email: form.email,
+        sessionCode: sessionCode.trim().toUpperCase(),
+      })
+      handleAuthResponse(res)
     } catch (e) {
-      setErr(e.data?.error || 'Session verification failed')
+      setErr(describeError(e))
     } finally {
       setBusy(false)
     }
@@ -109,10 +145,10 @@ export default function Enter() {
   const doVerify = async () => {
     setErr(''); setBusy(true)
     try {
-      const { user } = await api.post('/auth/verify', { email: form.email, code: vcode })
-      executePortalTransition(user, '/onboarding')
+      const res = await api.post('/auth/verify', { email: form.email, code: vcode.trim() })
+      handleAuthResponse(res, '/onboarding')
     } catch (e) {
-      setErr(e.data?.error || 'Verification failed')
+      setErr(describeError(e))
     } finally {
       setBusy(false)
     }
@@ -124,7 +160,19 @@ export default function Enter() {
       await api.post('/auth/forgot-password', { email: form.email })
       setMsg('If that email has an account, a reset link has been sent.')
     } catch (e) {
-      setMsg(e.data?.error || 'Failed to send reset link')
+      setMsg(describeError(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const doResendDaily = async () => {
+    setErr(''); setMsg(''); setBusy(true)
+    try {
+      await api.post('/access/resend-daily', { email: form.email })
+      setMsg('If that email has an account, today\u2019s code is on its way.')
+    } catch (e) {
+      setErr(describeError(e))
     } finally {
       setBusy(false)
     }
@@ -161,7 +209,7 @@ export default function Enter() {
         <button
           type="button"
           className="bk-google-btn"
-          onClick={handleGoogleSignIn}
+          onClick={() => loginWithGoogle()}
         >
           <svg className="bk-google-icon" viewBox="0 0 24 24">
             <path
@@ -189,9 +237,12 @@ export default function Enter() {
           <button
             type="button"
             className="bk-creds-toggle"
-            onClick={() => setShowCreds(!showCreds)}
+            onClick={() => { if (stage === 'form') setShowCreds(!showCreds) }}
+            disabled={stage !== 'form'}
           >
-            {showCreds ? 'Hide credentials form' : 'Or use email / password'}
+            {stage !== 'form'
+              ? 'Finish the step below to continue'
+              : showCreds ? 'Hide credentials form' : 'Or use email / password'}
           </button>
         </div>
 
@@ -199,28 +250,73 @@ export default function Enter() {
           <div style={{ marginTop: '1.4rem', borderTop: '1px solid rgba(255,255,255,0.15)', paddingTop: '1.2rem', textAlign: 'left' }}>
             {stage === 'session' ? (
               <>
-                <p style={{ color: '#fff', fontSize: '0.88rem', margin: '0 0 8px' }}>Enter daily session code:</p>
+                <p style={{ color: '#fff', fontSize: '0.88rem', margin: '0 0 4px' }}>
+                  Enter today&rsquo;s session code:
+                </p>
+                <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '0.78rem', margin: '0 0 10px' }}>
+                  Sent to {form.email || 'your email'} &middot; valid until midnight IST
+                </p>
+                {msg && <div style={{ color: '#38bdf8', fontSize: '0.82rem', marginBottom: 8 }}>{msg}</div>}
                 <input
                   className="bk-code-input"
                   value={sessionCode}
-                  onChange={(e) => setSessionCode(e.target.value)}
-                  placeholder="6-digit code"
+                  onChange={(e) => setSessionCode(e.target.value.toUpperCase())}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && !busy) doSession() }}
+                  placeholder="8-character code"
+                  autoFocus
+                  autoComplete="one-time-code"
+                  maxLength={12}
                 />
                 <button className="bk-code-btn" style={{ width: '100%' }} onClick={doSession} disabled={busy}>
-                  Verify Session
+                  {busy ? 'Verifying\u2026' : 'Verify Session'}
+                </button>
+                <button
+                  type="button"
+                  className="bk-creds-toggle"
+                  style={{ display: 'block', margin: '8px auto 0' }}
+                  onClick={doResendDaily}
+                  disabled={busy}
+                >
+                  Didn&rsquo;t get it? Resend today&rsquo;s code
+                </button>
+                <button
+                  type="button"
+                  className="bk-creds-toggle"
+                  style={{ display: 'block', margin: '4px auto 0' }}
+                  onClick={() => { setStage('form'); setSessionCode(''); setMsg(''); setErr('') }}
+                >
+                  Back to sign in
                 </button>
               </>
             ) : stage === 'verify' ? (
               <>
-                <p style={{ color: '#fff', fontSize: '0.88rem', margin: '0 0 8px' }}>Enter verification code:</p>
+                <p style={{ color: '#fff', fontSize: '0.88rem', margin: '0 0 4px' }}>
+                  Enter your verification code:
+                </p>
+                <p style={{ color: 'rgba(255,255,255,0.65)', fontSize: '0.78rem', margin: '0 0 10px' }}>
+                  Sent to {form.email || 'your email'} &middot; expires in 10 minutes
+                </p>
+                {msg && <div style={{ color: '#38bdf8', fontSize: '0.82rem', marginBottom: 8 }}>{msg}</div>}
                 <input
                   className="bk-code-input"
                   value={vcode}
-                  onChange={(e) => setVcode(e.target.value)}
-                  placeholder="______"
+                  onChange={(e) => setVcode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  onKeyDown={(e) => { if (e.key === 'Enter' && !busy) doVerify() }}
+                  placeholder="6-digit code"
+                  autoFocus
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
                 />
                 <button className="bk-code-btn" style={{ width: '100%' }} onClick={doVerify} disabled={busy}>
-                  Verify
+                  {busy ? 'Verifying\u2026' : 'Verify'}
+                </button>
+                <button
+                  type="button"
+                  className="bk-creds-toggle"
+                  style={{ display: 'block', margin: '8px auto 0' }}
+                  onClick={() => { setStage('form'); setVcode(''); setMsg(''); setErr('') }}
+                >
+                  Back to sign in
                 </button>
               </>
             ) : stage === 'forgot' ? (
@@ -302,6 +398,9 @@ export default function Enter() {
                     placeholder="Password"
                     value={form.password}
                     onChange={(e) => setForm({ ...form, password: e.target.value })}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !busy) (tab === 'login' ? doLogin : doSignup)()
+                    }}
                   />
                   <button
                     type="button"
@@ -327,7 +426,7 @@ export default function Enter() {
                   onClick={tab === 'login' ? doLogin : doSignup}
                   disabled={busy}
                 >
-                  {tab === 'login' ? 'Log in' : 'Create account'}
+                  {busy ? 'Working\u2026' : tab === 'login' ? 'Log in' : 'Create account'}
                 </button>
                 {tab === 'login' && (
                   <button

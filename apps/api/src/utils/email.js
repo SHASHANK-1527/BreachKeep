@@ -1,19 +1,57 @@
 import nodemailer from 'nodemailer'
 
+// One transporter for the process. The previous code built a fresh SMTP
+// connection for every single message, which on a class-sized signup burst
+// meant a new Gmail handshake per student.
+let _transporter = null
+function transporter() {
+  if (!_transporter) {
+    // With no Gmail credentials (or EMAIL_TRANSPORT=console) nothing is sent —
+    // the message is printed instead. That keeps local dev and CI working
+    // without a mailbox, and it never engages when EMAIL_USER is configured.
+    const useConsole =
+      process.env.EMAIL_TRANSPORT === 'console' ||
+      !process.env.EMAIL_USER ||
+      !process.env.EMAIL_PASS
+    _transporter = useConsole
+      ? nodemailer.createTransport({ jsonTransport: true })
+      : nodemailer.createTransport({
+          service: 'gmail',
+          auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+          pool: true,
+          maxConnections: 3,
+        })
+    if (useConsole) console.warn('[email] no EMAIL_USER/EMAIL_PASS — mail is logged, not sent')
+  }
+  return _transporter
+}
+
+// Codes are the whole point of these emails, so surface them when mail is only
+// being logged. Never called on the Gmail path.
+function logIfConsole(kind, to, detail) {
+  if (process.env.EMAIL_TRANSPORT === 'console' || !process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.log(`[email:${kind}] to=${to} ${detail}`)
+  }
+}
+
+// Where the site actually lives. The password-reset link used to be hardcoded
+// to http://localhost:3000, so every reset email sent from the VM pointed at
+// the student's own machine and did nothing.
+export function publicBaseUrl() {
+  const explicit = (process.env.PUBLIC_BASE_URL || '').trim().replace(/\/+$/, '')
+  if (explicit) return explicit
+  const domain = (process.env.DOMAIN || '').trim().replace(/^https?:\/\//, '').replace(/\/+$/, '')
+  if (domain) return `https://${domain}`
+  return 'http://localhost:3000'
+}
+
 export function generateCode() {
   return Math.floor(100000 + Math.random() * 900000).toString()
 }
 
 export async function sendVerificationEmail(email, code) {
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  })
-
-  await transporter.sendMail({
+  logIfConsole('verify', email, `code=${code}`)
+  await transporter().sendMail({
     from: `"BreachKeep" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: 'Your 6-Digit Verification Code',
@@ -31,15 +69,8 @@ export async function sendVerificationEmail(email, code) {
 }
 
 export async function sendSessionCodeEmail(email, code) {
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  })
-
-  await transporter.sendMail({
+  logIfConsole('session', email, `code=${code}`)
+  await transporter().sendMail({
     from: `"BreachKeep" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: 'Daily Session Code',
@@ -57,17 +88,10 @@ export async function sendSessionCodeEmail(email, code) {
 }
 
 export async function sendPasswordResetEmail(email, resetToken) {
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  })
-
-  const resetLink = `http://localhost:3000/reset-password?token=${resetToken}`
+  const resetLink = `${publicBaseUrl()}/reset-password?token=${resetToken}`
+  logIfConsole('reset', email, resetLink)
   
-  await transporter.sendMail({
+  await transporter().sendMail({
     from: `"BreachKeep" <${process.env.EMAIL_USER}>`,
     to: email,
     subject: 'Reset Your Password',

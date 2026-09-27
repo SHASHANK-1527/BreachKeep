@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { reportComplete } from '../reportComplete.js';
 import RoomShell from '../components/RoomShell';
 
 function Hint({ children }) {
@@ -28,7 +27,10 @@ export default function MitmRoom() {
   const [dialogue, setDialogue] = useState(INITIAL_DIALOGUE);
   const [mech, setMech] = useState(INITIAL_MECH);
 
+  const [resetKey, setResetKey] = useState(0);
+
   function reset() {
+    setResetKey((k) => k + 1);
     setStage('idle');
     setDialogue(INITIAL_DIALOGUE);
     setMech(INITIAL_MECH);
@@ -46,7 +48,7 @@ export default function MitmRoom() {
 
   function openPacket(p) {
     if (p.proto !== 'http') return;
-    setStage('done'); reportComplete('coffee-shop-wifi');
+    setStage('done');
     setDialogue(
       "There it is — a full username and password, sent in the clear, readable by anyone else sharing this network."
     );
@@ -70,8 +72,9 @@ export default function MitmRoom() {
       onHint={hint}
       onReset={reset}
       pageTitle="Capture — coffeeshop-guest"
-      flag="FLAG{pl41ntext_http_sn1ff3d}"
-      flagShown={stage === 'done'}
+      roomId="coffee-shop-wifi"
+      solved={stage === 'done'}
+      resetKey={resetKey}
     >
       <div className="im-browser">
         <div className="im-addr-row">

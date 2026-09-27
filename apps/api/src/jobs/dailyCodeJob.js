@@ -1,7 +1,6 @@
 import cron from 'node-cron'
 import User from '../models/User.js'
-import { randomAlphanumeric } from '../utils/flags.js'
-import { getTodayIST, getMidnightISTExpiry } from '../utils/auth.js'
+import { getTodayIST, getMidnightISTExpiry, generateSessionCode } from '../utils/auth.js'
 import { sendSessionCodeEmail } from '../utils/email.js'
 
 // Runs at 00:00 IST (18:30 UTC). Issues a fresh daily code to every verified user.
@@ -17,7 +16,7 @@ export async function runDailyCodes() {
   let sent = 0, failed = 0
   for (const u of users) {
     try {
-      u.sessionCode = randomAlphanumeric(8)
+      u.sessionCode = generateSessionCode()
       u.sessionCodeExpires = expiry
       u.lastSessionDate = today
       await u.save()

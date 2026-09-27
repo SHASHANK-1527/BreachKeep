@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from 'react';
-import { reportComplete } from '../reportComplete.js';
 import RoomShell from '../components/RoomShell';
 
 function Hint({ children }) {
@@ -37,7 +36,10 @@ export default function CryptoRoom() {
     setLines((l) => [...l, { text, cls }]);
   }
 
+  const [resetKey, setResetKey] = useState(0);
+
   function reset() {
+    setResetKey((k) => k + 1);
     setState({ sawMemo: false, decoded: false });
     setLines(INITIAL_LINES);
     setDialogue(INITIAL_DIALOGUE);
@@ -102,8 +104,8 @@ export default function CryptoRoom() {
         setDialogue(<>Read the file first: <Hint>cat memo.txt</Hint></>);
         return;
       }
-      setState((s) => ({ ...s, decoded: true })); reportComplete('encoded-memo');
-      addLine('FLAG{n0t_r34l_3ncrypt10n}', 'im-flag');
+      setState((s) => ({ ...s, decoded: true }));
+      addLine('the keep has issued your flag below — submit it to clear this scene.', 'im-flag');
       setDialogue(
         "And that's the whole lesson: it looked secret, but there was never a key involved — just a different way of writing the same text."
       );
@@ -128,8 +130,9 @@ export default function CryptoRoom() {
       onHint={hint}
       onReset={reset}
       pageTitle="~/leak"
-      flag="FLAG{n0t_r34l_3ncrypt10n}"
-      flagShown={state.decoded}
+      roomId="encoded-memo"
+      solved={state.decoded}
+      resetKey={resetKey}
     >
       <div className="im-term">
         <div className="im-term-bar"><span></span><span></span><span></span></div>

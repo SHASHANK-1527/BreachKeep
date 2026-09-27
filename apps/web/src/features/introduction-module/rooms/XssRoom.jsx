@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { reportComplete } from '../reportComplete.js';
 import RoomShell from '../components/RoomShell';
 
 function Hint({ children }) {
@@ -34,7 +33,10 @@ export default function XssRoom() {
   const [mech, setMech] = useState(INITIAL_MECH);
   const [flagShown, setFlagShown] = useState(false);
 
+  const [resetKey, setResetKey] = useState(0);
+
   function reset() {
+    setResetKey((k) => k + 1);
     setComments(INITIAL_COMMENTS);
     setInput('');
     setFlagShown(false);
@@ -54,7 +56,6 @@ export default function XssRoom() {
     const lower = val.toLowerCase();
     const hasScript = lower.includes('<script');
     const hasCookie = lower.includes('cookie');
-    if (hasScript && hasCookie) reportComplete('guestbook');
     setComments((c) => [...c, { user: 'you', text: val }]);
     setInput('');
 
@@ -117,8 +118,9 @@ export default function XssRoom() {
       onHint={hint}
       onReset={reset}
       pageTitle="acmewidgets.co/guestbook"
-      flag="FLAG{a_c0mm3nt_b0x_1s_c0d3_t00}"
-      flagShown={flagShown}
+      roomId="guestbook"
+      solved={flagShown}
+      resetKey={resetKey}
     >
       <div className="im-browser">
         <div className="im-addr-row">

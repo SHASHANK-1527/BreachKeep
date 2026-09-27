@@ -93,8 +93,22 @@ to system sans-serif / monospace cleanly.
   at future dungeons (MITM, crypto, command injection, IDOR, path
   traversal, social engineering) — edit or remove them freely, they don't
   wire up to anything yet.
-- Flags are plain strings rendered client-side for this teaser purpose —
-  there's no submission/validation step, matching the "just a hook, not a
-  real challenge" brief. If you later want completion to actually count
-  toward something, that's the one piece that would need a backend call
-  added to each room's flag-reveal branch.
+- Flags are **no longer** plain strings in the bundle. A scene tells
+  `RoomShell` it is solved (`solved={...}` plus its `roomId`), and the shell
+  does the rest: it fetches `GET /api/flags/for-room/:roomId` — an HMAC of
+  (userId, roomId), so every student gets a different flag — and renders a
+  submit box that POSTs `/api/flags/submit`. Only a correct server-side match
+  records the scene, and the server flips `introComplete` itself once all nine
+  are in, so rooms no longer call `reportComplete` directly. A flag copied off
+  a classmate's screen fails to validate.
+
+  Adding a scene therefore means: a `roomId` in `INTRO_ROOMS`
+  (`apps/api/src/controllers/introController.js`), a matching `<Route>`, and
+  `roomId` / `solved` / `resetKey` passed to `RoomShell`. Nothing in the room
+  decides whether the answer was right.
+
+- `rooms/DemoVulnRoom.jsx` (`/dashboard/introduction/demo-vulnerability`) is
+  the instructor demo wing — deliberately vulnerable and genuinely
+  exploitable, unlike the nine scripted scenes. It is not in `INTRO_ROOMS`,
+  issues no flag and records no progress. Its quest-map button only appears
+  when `VITE_TEST_MODE=true`; the URL works regardless.
