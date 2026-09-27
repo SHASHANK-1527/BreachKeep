@@ -75,8 +75,24 @@ export async function googleAuth(req, res) {
     // Decide purely from whether the account already exists.
 
     if (!user) {
-      if (process.env.NODE_ENV === 'production' && !(await rosterAllows(email)))
-        return res.status(403).json({ error: 'This email is not on the course roster' })
+      // Roster gate disabled in code (27 Sep 2026).
+      //
+      // `AccessConfig.rosterGateEnabled` defaults to TRUE and the Roster
+      // collection was never populated, so this rejected every first-time
+      // Google sign-in with "This email is not on the course roster".
+      // Email/password signup already has the same check commented out
+      // (authController.js, `signup`), so enforcing it here alone meant the
+      // two registration paths disagreed about who was allowed in.
+      //
+      // To re-enable: uncomment the two lines below AND either turn the
+      // Roster gate on in the admin panel (Access -> Gates) or leave
+      // rosterGateEnabled true, then add the class emails on the Roster tab.
+      // An empty roster with the gate on locks everyone out.
+      //
+      // NOTE: with this off, ANY Google account can register, not just school
+      // ones. Domain restriction is a separate check and is not implemented.
+      // if (process.env.NODE_ENV === 'production' && !(await rosterAllows(email)))
+      //   return res.status(403).json({ error: 'This email is not on the course roster' })
 
       const username = email === 'cadet@breachkeep.internal'
         ? 'Initiate'
