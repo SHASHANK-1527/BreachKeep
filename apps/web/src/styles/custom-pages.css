@@ -582,7 +582,7 @@
 .bk-oni-wrapper,
 .bk-gate-wrapper {
   position: absolute;
-  top: 55.5%;
+  top: 52.8%;
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 20;
@@ -598,40 +598,19 @@
 .bk-gate-pedestal-shadow {
   position: absolute;
   bottom: 0%;
-  left: 2%;
-  right: 2%;
-  height: 18%;
-  background: radial-gradient(ellipse at 50% 50%, rgba(6, 2, 12, 0.98) 0%, rgba(10, 4, 18, 0.75) 45%, transparent 75%);
+  left: 8%;
+  right: 8%;
+  height: 10%;
+  background: radial-gradient(ellipse at 50% 50%, rgba(0, 0, 0, 0.4) 0%, transparent 70%);
   border-radius: 50%;
   pointer-events: none;
-  filter: blur(10px);
+  filter: blur(4px);
   z-index: 1;
 }
 
 .bk-oni-ambient-aura,
 .bk-gate-ambient-aura {
-  position: absolute;
-  top: 8%;
-  left: -8%;
-  right: -8%;
-  height: 76%;
-  background: radial-gradient(ellipse at 50% 45%, rgba(159, 18, 57, 0.22) 0%, rgba(88, 28, 135, 0.12) 48%, transparent 75%);
-  border-radius: 50%;
-  pointer-events: none;
-  filter: blur(28px);
-  z-index: 0;
-  animation: bk-oniShrineAura 6s ease-in-out infinite alternate;
-}
-
-@keyframes bk-oniShrineAura {
-  0% {
-    transform: scale(0.97);
-    opacity: 0.5;
-  }
-  100% {
-    transform: scale(1.03);
-    opacity: 0.8;
-  }
+  display: none;
 }
 
 .bk-oni-graphic,
@@ -639,19 +618,14 @@
 .bk-torii-graphic {
   position: relative;
   z-index: 2;
-  width: clamp(280px, min(32vw, 43vh), 420px);
+  width: clamp(220px, min(24vw, 38vh), 360px);
   height: auto;
-  filter: drop-shadow(0 20px 30px rgba(3, 1, 6, 0.94))
-         drop-shadow(0 4px 12px rgba(4, 1, 8, 0.8))
-         drop-shadow(0 0 16px rgba(120, 15, 30, 0.28));
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.35));
 }
 
 .bk-oni-graphic.bk-oni-themed,
 .bk-torii-graphic {
-  filter: drop-shadow(0 20px 32px rgba(3, 1, 6, 0.96))
-         drop-shadow(0 6px 14px rgba(4, 1, 8, 0.85))
-         drop-shadow(0 0 20px rgba(136, 19, 55, 0.32))
-         contrast(1.06) brightness(0.98);
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.4));
 }
 
 /* Static variant: pure scenery, no pointer affordance, no motion */
