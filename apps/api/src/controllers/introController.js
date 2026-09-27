@@ -28,5 +28,11 @@ export async function completeRoom(req, res) {
 
 // GET /api/intro/status  (session)
 export async function introStatus(req, res) {
-  return res.json({ introRooms: req.user.introRooms, introComplete: req.user.introComplete })
+  const introRooms = req.user.introRooms || []
+  return res.json({
+    introRooms,
+    introComplete: req.user.introComplete,
+    cleared: introRooms.length,
+  })
 }
+

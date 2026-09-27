@@ -72,13 +72,13 @@ export const SCENES = [
 // Coordinates specify the center (left, top) and width of each gate as a percentage
 // of the map container (1024x1536).
 export const GATE_SPOTS = [
-  { left: 24.8, top: 21.68, width: 14.65 }, // Scene I: Upper Left Purple Portal (gate_01)
-  { left: 27.15, top: 39.36, width: 13.67 }, // Scene II: Blue Rune Gate (gate_02)
-  { left: 58.25, top: 30.18, width: 14.16 }, // Scene III: Red Torii Gate (gate_03)
-  { left: 62.26, top: 53.35, width: 15.14 }, // Scene IV: Center Right Blue Gate (gate_04)
-  { left: 15.72, top: 60.55, width: 14.65 }, // Scene V: Lower Left Upper Purple Gate (gate_05)
-  { left: 57.76, top: 76.6, width: 17.09 },  // Scene VI: Lower Middle Blue Gate (gate_06)
-  { left: 15.97, top: 78.81, width: 15.14 }, // Scene VII: Lower Left Lower Purple Gate (gate_07)
-  { left: 35.16, top: 87.89, width: 16.6 },  // Scene VIII: Lower Purple Portal (gate_08)
-  { left: 65.72, top: 91.11, width: 14.65 }, // Scene IX: Bottom Right Green Gate (gate_09)
+  { left: 24.8, top: 21.68, width: 12.2 },  // Scene I: Upper Left Purple Portal (gate_01)
+  { left: 27.15, top: 39.36, width: 11.5 }, // Scene II: Blue Rune Gate (gate_02)
+  { left: 58.25, top: 30.18, width: 11.8 }, // Scene III: Red Torii Gate (gate_03)
+  { left: 62.26, top: 53.35, width: 12.4 }, // Scene IV: Center Right Blue Gate (gate_04)
+  { left: 15.72, top: 60.55, width: 11.6 }, // Scene V: Lower Left Upper Purple Gate (gate_05)
+  { left: 57.76, top: 76.6, width: 13.0 },  // Scene VI: Lower Middle Blue Gate (gate_06)
+  { left: 15.97, top: 78.81, width: 11.8 }, // Scene VII: Lower Left Lower Purple Gate (gate_07)
+  { left: 35.16, top: 87.89, width: 12.5 }, // Scene VIII: Lower Purple Portal (gate_08)
+  { left: 65.72, top: 91.11, width: 11.8 }, // Scene IX: Bottom Right Green Gate (gate_09)
 ]

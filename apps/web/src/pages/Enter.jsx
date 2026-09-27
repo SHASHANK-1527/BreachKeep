@@ -30,32 +30,36 @@ export default function Enter() {
   // NOTE: the session user must NOT be set before the warp — the /enter
   // route guard redirects the moment a user exists, which would unmount
   // this page and cut the video. Session + navigation happen at the end.
-  const handleGoogleSignIn = () => {
-    setErr('')
+  const executePortalTransition = (authUser, targetPath) => {
     setIsTransitioning(true)
+    if (videoRef.current) {
+      videoRef.current.currentTime = 0
+      videoRef.current.play().catch(() => {})
+    }
 
-    setTimeout(() => {
-      if (videoRef.current) {
-        videoRef.current.currentTime = 0
-        videoRef.current.play().catch(() => {})
-      }
-    }, 100)
-
-    setTimeout(() => setIsFlashActive(true), 2200)
+    // portal.mp4 is 5.0s long. Let the entire video play out fully:
+    // Flash triggers near the culmination of the warp (~4.6s)
+    setTimeout(() => setIsFlashActive(true), 4600)
+    // Seamless crossfade into the destination when the video completes (~5.0s)
     setTimeout(() => {
       try {
-        setUser({
-          id: 'student-dev',
-          username: 'Initiate',
-          email: 'cadet@breachkeep.internal',
-          house: null,
-          sorted: false,
-        })
-      } catch {
-        // Non-blocking
-      }
-      nav('/onboarding')
-    }, 2700)
+        if (authUser) setUser(authUser)
+      } catch {}
+      nav(targetPath || (authUser?.house ? '/dashboard' : '/onboarding'))
+    }, 5000)
+  }
+
+  const handleGoogleSignIn = async () => {
+    setErr('')
+    try {
+      const res = await api.post('/auth/google', { idToken: 'mock-google-token' })
+      const authUser = res?.user || res?.data?.user
+      executePortalTransition(authUser)
+    } catch (e) {
+      setIsTransitioning(false)
+      setIsFlashActive(false)
+      setErr(e.data?.error || e.message || 'Sign in failed')
+    }
   }
 
   const doLogin = async () => {
@@ -66,22 +70,8 @@ export default function Enter() {
       if (data.requiresSessionCode) {
         setStage('session')
       } else {
-        const user = data.user || res.user
-        // Page-2 -> Page-3 portal warp transition
-        setIsTransitioning(true)
-        setTimeout(() => {
-          if (videoRef.current) {
-            videoRef.current.currentTime = 0
-            videoRef.current.play().catch(() => {})
-          }
-        }, 100)
-        setTimeout(() => setIsFlashActive(true), 2200)
-        setTimeout(() => {
-          try {
-            setUser(user)
-          } catch {}
-          nav(user?.house ? '/dashboard' : '/onboarding')
-        }, 2700)
+        const authUser = data.user || res.user
+        executePortalTransition(authUser)
       }
     } catch (e) {
       setErr(e.data?.error || 'Login failed')
@@ -107,22 +97,8 @@ export default function Enter() {
     try {
       const res = await api.post('/auth/verify-session', { email: form.email, sessionCode })
       const data = res.data || {}
-      const user = data.user || res.user
-      // Page-2 -> Page-3 portal warp transition
-      setIsTransitioning(true)
-      setTimeout(() => {
-        if (videoRef.current) {
-          videoRef.current.currentTime = 0
-          videoRef.current.play().catch(() => {})
-        }
-      }, 100)
-      setTimeout(() => setIsFlashActive(true), 2200)
-      setTimeout(() => {
-        try {
-          setUser(user)
-        } catch {}
-        nav(user?.house ? '/dashboard' : '/onboarding')
-      }, 2700)
+      const authUser = data.user || res.user
+      executePortalTransition(authUser)
     } catch (e) {
       setErr(e.data?.error || 'Session verification failed')
     } finally {
@@ -134,21 +110,7 @@ export default function Enter() {
     setErr(''); setBusy(true)
     try {
       const { user } = await api.post('/auth/verify', { email: form.email, code: vcode })
-      const verifiedUser = user
-      setIsTransitioning(true)
-      setTimeout(() => {
-        if (videoRef.current) {
-          videoRef.current.currentTime = 0
-          videoRef.current.play().catch(() => {})
-        }
-      }, 100)
-      setTimeout(() => setIsFlashActive(true), 2200)
-      setTimeout(() => {
-        try {
-          setUser(verifiedUser)
-        } catch {}
-        nav('/onboarding')
-      }, 2700)
+      executePortalTransition(user, '/onboarding')
     } catch (e) {
       setErr(e.data?.error || 'Verification failed')
     } finally {
@@ -171,18 +133,19 @@ export default function Enter() {
   return (
     <div className="bk-signin-page">
       {/* Page-2 -> Page-3 Portal Video Transition (the only one in the app) */}
-      {isTransitioning && (
-        <div className="bk-portal-transition-layer">
-          <video
-            ref={videoRef}
-            className="bk-portal-video"
-            playsInline
-            muted
-            autoPlay
-            src="/assets/portal.mp4"
-          />
-        </div>
-      )}
+      <div
+        className={`bk-portal-transition-layer ${isTransitioning ? 'active' : ''}`}
+        style={{ display: isTransitioning ? 'flex' : 'none' }}
+      >
+        <video
+          ref={videoRef}
+          className="bk-portal-video"
+          playsInline
+          muted
+          preload="auto"
+          src="/assets/portal.mp4"
+        />
+      </div>
 
       {/* Screen-filling Portal Flash Overlay */}
       <div className={`bk-portal-flash-overlay ${isFlashActive ? 'active' : ''}`} />

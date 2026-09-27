@@ -1,87 +1,46 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import './ArcweaveFortressView.css';
 import ArcweaveAnimatedFlags from './ArcweaveAnimatedFlags';
 
 export default function ArcweaveFortressView({ children }) {
-  const [windGust, setWindGust] = useState(1);
-
-  useEffect(() => {
-    // Subtle periodic ambient wind gusts to vary flag flutter naturally
-    const interval = setInterval(() => {
-      setWindGust(1.4);
-      setTimeout(() => setWindGust(1), 2200);
-    }, 12000);
-    return () => clearInterval(interval);
-  }, []);
-
   return (
     <div className="arcweave-viewport-stage">
-      {/* ========================================================
-          1. UNIFIED 2D SCENE CANVAS: ARTWORK & ANIMATED FLAGS
-          Unified within a single 1376x768 SVG coordinate system
-          with preserveAspectRatio="xMidYMax slice" so that all
-          flags are mathematically locked to their flagpoles on every screen.
-          ======================================================== */}
+      {/* Master 1376x768 SVG scene layer */}
       <div className="fortress-illustration-canvas">
-        <ArcweaveAnimatedFlags windGust={windGust} />
-
-        {/* ========================================================
-            2. SCENE CLOUD FORMATIONS IN CONTINUOUS MOTION
-            The authentic illustrated clouds from the artwork itself,
-            drifting and billowing with living ambient wind motion.
-            ======================================================== */}
-        <div className="scene-illustrated-clouds-container" aria-hidden="true">
-          <div className="scene-cloud-wrapper cloud-left-wrapper">
-            <img
-              src="/cloud_left.png"
-              alt=""
-              className="scene-cloud-sprite cloud-left-sprite"
-            />
-          </div>
-          <div className="scene-cloud-wrapper cloud-right-wrapper">
-            <img
-              src="/cloud_right.png"
-              alt=""
-              className="scene-cloud-sprite cloud-right-sprite"
-            />
-          </div>
-        </div>
+        <ArcweaveAnimatedFlags />
       </div>
 
-      {/* ========================================================
-          3. CINEMATIC TITLE HEADER
-          Clean, weightless typography tuned to House Arcweave
-          ======================================================== */}
+      {/* Cinematic Title Header */}
       <header className="arcweave-cinematic-hud">
         <div className="hud-cinematic-title">
-          <div className="cinematic-crest-icon">
-            <svg width="28" height="34" viewBox="0 0 28 34" fill="none">
-              {/* Outer Arcane Shield Border */}
+          <div className="cinematic-crest-icon" aria-hidden="true">
+            <svg width="34" height="40" viewBox="0 0 34 40" fill="none">
+              {/* Shield Base */}
               <path
-                d="M14 2 L26 6 V18 C26 27 14 33 14 33 C14 33 2 27 2 18 V6 Z"
-                fill="#16102b"
-                stroke="#2a1f4a"
+                d="M17 2 L31 7 V22 C31 32 17 38 17 38 C17 38 3 32 3 22 V7 Z"
+                fill="#120924"
+                stroke="#3b1d5c"
                 strokeWidth="2.2"
               />
-              {/* Inner Royal Violet Inset */}
+              {/* Inner High-Voltage Inset */}
               <path
-                d="M14 5 L23 8.5 V17.5 C23 24.5 14 29.5 14 29.5 C14 29.5 5 24.5 5 17.5 V8.5 Z"
-                fill="#2c1e4d"
-                stroke="#9b7bff"
+                d="M17 5 L28 9 V21 C28 29 17 34 17 34 C17 34 6 29 6 21 V9 Z"
+                fill="#1e1038"
+                stroke="#a855f7"
                 strokeWidth="1.2"
               />
-              {/* Grimoire Astral Star in Arcweave Gold */}
+              {/* Lightning Bolt Crest */}
               <polygon
-                points="14,9 16.5,15 22.5,15.5 18,19.5 19.5,25.5 14,22.5 8.5,25.5 10,19.5 5.5,15.5 11.5,15"
-                fill="#ffcf70"
+                points="18,8 10,21 16,21 14,32 24,18 18,18"
+                fill="#ffffff"
+                stroke="#c084fc"
+                strokeWidth="0.8"
               />
-              {/* Central Arcane Eye / Pearl */}
-              <circle cx="14" cy="18" r="2.2" fill="#ffffff" />
             </svg>
           </div>
           <div className="cinematic-title-text">
             <h1 className="cinematic-house-name">HOUSE ARCWEAVE</h1>
-            <span className="cinematic-realm-sub">THE FLOATING ARCHIVES &bull; REALM OF ARCANE CIPHERS</span>
+            <span className="cinematic-realm-sub">THE LIGHTNING CITADEL : REALM OF PLASMA ARCANA</span>
           </div>
         </div>
       </header>

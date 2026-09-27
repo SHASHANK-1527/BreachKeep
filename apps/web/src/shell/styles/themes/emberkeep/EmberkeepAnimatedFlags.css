@@ -24,16 +24,16 @@
    pulsing volcanic aura, and active energy conduit
    ======================================================== */
 .energy-core-crystal-group {
-  transform-origin: 688px 96px;
+  transform-origin: 688px 70px;
   animation: coreLevitationFloat 4.2s ease-in-out infinite alternate;
 }
 
 @keyframes coreLevitationFloat {
   0% {
-    transform: translate(688px, 98px);
+    transform: translate(688px, 73px);
   }
   100% {
-    transform: translate(688px, 90px);
+    transform: translate(688px, 66px);
   }
 }
 

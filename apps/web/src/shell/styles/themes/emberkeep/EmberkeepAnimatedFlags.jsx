@@ -57,36 +57,20 @@ export default function EmberkeepAnimatedFlags({ windGust = 1 }) {
           />
         </filter>
 
-        {/* 14 Authentic Hand-Drawn Flags in the Illustration Artwork (exact 1px past pole) */}
+        {/* Authentic Hand-Drawn Flags & Banners in the New Fortress Artwork */}
         <clipPath id="authentic-flags-clip">
-          {/* 1. West Watchtower Roof Flag (pole at 427) */}
-          <rect x="429" y="276" width="32" height="20" />
-          {/* 2. East Watchtower Roof Flag (pole at 960) */}
-          <rect x="962" y="291" width="32" height="20" />
-          {/* 3. Castle High Left Spire - Sun Circle (pole at 602) */}
-          <rect x="604" y="153" width="33" height="22" />
-          {/* 4. Castle High Right Spire - Silver Sigil (pole at 775) */}
-          <rect x="777" y="153" width="33" height="22" />
-          {/* 5. Castle Mid-Left Conical Tower Flag (pole at 557) */}
-          <rect x="559" y="214" width="26" height="18" />
-          {/* 6. Castle Mid-Right Conical Tower Flag (pole at 819) */}
-          <rect x="821" y="215" width="26" height="18" />
-          {/* 7. Castle Outer West Wall Turret Flag (pole at 526) */}
-          <rect x="528" y="307" width="24" height="15" />
-          {/* 8. Castle Outer East Wall Turret Flag (pole at 850) */}
-          <rect x="852" y="307" width="24" height="15" />
-          {/* 9. Castle Inner Keep Crimson Streamer Left (pole at 627) */}
-          <rect x="629" y="264" width="25" height="15" />
-          {/* 10. Castle Inner Keep Crimson Streamer Right (pole at 749) */}
-          <rect x="751" y="264" width="25" height="15" />
-          {/* 11. Causeway Front Left Parapet Post Flag (pole at 538) */}
-          <rect x="541" y="474" width="42" height="28" />
-          {/* 12. Causeway Front Right Parapet Post Flag - Sun Sigil (pole at 831) */}
-          <rect x="835" y="459" width="54" height="30" />
-          {/* 13. Causeway Gatehouse-Approach Left Flag (pole at 631) */}
-          <rect x="633" y="440" width="23" height="17" />
-          {/* 14. Causeway Gatehouse-Approach Right Flag (pole at 734) */}
-          <rect x="736" y="440" width="23" height="17" />
+          {/* 1. Gatehouse West Battlement Flag */}
+          <rect x="568" y="188" width="38" height="34" />
+          {/* 2. Gatehouse East Battlement Flag */}
+          <rect x="803" y="188" width="38" height="34" />
+          {/* 3. Gatehouse Inner Wall Crimson Banner Left */}
+          <rect x="486" y="445" width="32" height="66" />
+          {/* 4. Gatehouse Inner Wall Crimson Banner Right */}
+          <rect x="858" y="445" width="32" height="66" />
+          {/* 5. Outer Rampart Crimson Banner Left */}
+          <rect x="348" y="455" width="28" height="62" />
+          {/* 6. Outer Rampart Crimson Banner Right */}
+          <rect x="994" y="455" width="28" height="62" />
         </clipPath>
 
         {/* Ember Energy Core Glowing Radial Aura Gradient */}
@@ -122,17 +106,17 @@ export default function EmberkeepAnimatedFlags({ windGust = 1 }) {
         />
       </g>
 
-      {/* 3. Floating Rotational Forge Energy Core (Hovering above Citadel Central Spire) */}
-      <g className="energy-core-crystal-group" transform="translate(688, 96)">
+      {/* 3. Floating Rotational Forge Energy Core (Hovering above Citadel Gatehouse) */}
+      <g className="energy-core-crystal-group" transform="translate(688, 70)">
         {/* Pulsing Luminous Molten Fire Energy Aura */}
-        <circle r="36" fill="url(#core-energy-glow-grad)" className="core-energy-aura-pulse" />
+        <circle r="32" fill="url(#core-energy-glow-grad)" className="core-energy-aura-pulse" />
 
-        {/* Vertical Energy Conduit Tether Connecting Spire Tip at (688, 143) to Core */}
+        {/* Vertical Energy Conduit Tether Connecting Gatehouse Battlement to Core */}
         <line
           x1="0"
-          y1="28"
+          y1="24"
           x2="0"
-          y2="46"
+          y2="48"
           stroke="#ff5a1f"
           strokeWidth="1.8"
           strokeDasharray="3,3"
@@ -141,8 +125,8 @@ export default function EmberkeepAnimatedFlags({ windGust = 1 }) {
 
         {/* Orbiting Concentric Energy Rings */}
         <ellipse
-          rx="38"
-          ry="11"
+          rx="34"
+          ry="10"
           fill="none"
           stroke="#ff5a1f"
           strokeWidth="1.2"
@@ -150,8 +134,8 @@ export default function EmberkeepAnimatedFlags({ windGust = 1 }) {
           className="core-orbital-ring-outer"
         />
         <ellipse
-          rx="26"
-          ry="8"
+          rx="24"
+          ry="7"
           fill="none"
           stroke="#ffdca8"
           strokeWidth="1.4"
@@ -180,10 +164,10 @@ export default function EmberkeepAnimatedFlags({ windGust = 1 }) {
         {/* Hand-Drawn Molten Crystal Energy Core (3D Rotating with Incandescent Heat) */}
         <image
           href="/ember_crystal_core.png"
-          x="-32"
+          x="-28"
           y="-36"
-          width="64"
-          height="71"
+          width="56"
+          height="73"
           className="rotating-crystal-image"
         />
       </g>

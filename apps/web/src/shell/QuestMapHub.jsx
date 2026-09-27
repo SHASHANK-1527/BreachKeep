@@ -40,12 +40,14 @@ export default function QuestMapHub({ user }) {
         Welcome, {user?.username || 'Initiate'} — face the gate to begin.
       </p>
 
-      {/* The Oni Gate — static, exactly as in the asset (no label, no motion) */}
+      {/* The Oni Gate — themed to match the sanctum stone pedestal & crimson harvest moon */}
       <div className="bk-oni-wrapper bk-oni-static bk-oni-still">
+        <div className="bk-oni-pedestal-shadow" aria-hidden="true" />
+        <div className="bk-oni-ambient-aura" aria-hidden="true" />
         <img
           src="/assets/oni-mask.png"
           alt="Oni Gate"
-          className="bk-oni-graphic"
+          className="bk-oni-graphic bk-oni-themed"
         />
       </div>
     </div>
