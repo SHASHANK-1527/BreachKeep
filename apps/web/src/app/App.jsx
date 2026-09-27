@@ -12,6 +12,7 @@ import IntroductionModule from '../features/introduction-module/IntroductionModu
 import CodeEntryView from '../components/CodeEntryView.jsx'
 import Maintenance from '../pages/Maintenance.jsx'
 import TestPanel from '../components/TestPanel.jsx'
+import PageTransition from '../components/PageTransition.jsx'
 import useMaintenance from './useMaintenance.js'
 
 import { useState, useEffect, useRef } from 'react'
@@ -336,12 +337,14 @@ function AppRoutes() {
   // Show landing only if NOT logged in AND no gate access
   if (!loading && !user && !hasAccess) {
     return (
-      <CodeEntryView
-        onSuccess={() => {
-          setHasAccess(true)
-          sessionStorage.setItem('bk_has_access', 'true')
-        }}
-      />
+      <PageTransition>
+        <CodeEntryView
+          onSuccess={() => {
+            setHasAccess(true)
+            sessionStorage.setItem('bk_has_access', 'true')
+          }}
+        />
+      </PageTransition>
     )
   }
 
@@ -366,20 +369,22 @@ function AppRoutes() {
     <>
       {!isAtmosphericPage && <Header user={user} onLogout={logout} />}
       <main style={{ paddingTop: isAtmosphericPage ? '0' : '56px', minHeight: '100vh' }}>
-        <Routes>
-          <Route path={ADMIN_PATH} element={<AdminPanel />} />
-          <Route
-            path="/enter"
-            element={user ? <Navigate to="/dashboard" replace /> : <Enter />}
-          />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/onboarding" element={<RequireSession><Onboarding /></RequireSession>} />
-          <Route path="/dashboard" element={<RequireSession><Dashboard /></RequireSession>} />
-          <Route path="/dashboard/introduction/*" element={<RequireSession><IntroductionModule /></RequireSession>} />
-          <Route path="/dungeons/:dungeonId/*" element={<RequireSession><Dungeon /></RequireSession>} />
-          <Route path="/account" element={<RequireSession><Account /></RequireSession>} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
+        <PageTransition>
+          <Routes location={loc}>
+            <Route path={ADMIN_PATH} element={<AdminPanel />} />
+            <Route
+              path="/enter"
+              element={user ? <Navigate to="/dashboard" replace /> : <Enter />}
+            />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/onboarding" element={<RequireSession><Onboarding /></RequireSession>} />
+            <Route path="/dashboard" element={<RequireSession><Dashboard /></RequireSession>} />
+            <Route path="/dashboard/introduction/*" element={<RequireSession><IntroductionModule /></RequireSession>} />
+            <Route path="/dungeons/:dungeonId/*" element={<RequireSession><Dungeon /></RequireSession>} />
+            <Route path="/account" element={<RequireSession><Account /></RequireSession>} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </PageTransition>
       </main>
     </>
   )
