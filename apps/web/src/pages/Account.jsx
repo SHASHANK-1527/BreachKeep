@@ -163,7 +163,7 @@ export default function Account() {
 
   return (
     <div
-      className="bk-code-page"
+      className="bk-account-page"
       style={{
         minHeight: '100vh',
         width: '100%',

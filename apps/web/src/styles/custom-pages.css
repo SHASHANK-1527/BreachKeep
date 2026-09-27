@@ -145,85 +145,99 @@
 .bk-code-modal {
   position: relative;
   z-index: 10;
-  width: min(90vw, 440px);
-  padding: 3rem 2.6rem 2.8rem;
-  border-radius: 24px;
-  background: rgba(165, 195, 225, 0.22);
+  width: min(92vw, 490px);
+  padding: 3.2rem 2.8rem 2.8rem;
+  border-radius: 26px;
+  background: rgba(185, 195, 208, 0.22);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  border: 1.5px solid rgba(255, 255, 255, 0.38);
-  box-shadow: 0 20px 50px rgba(7, 18, 38, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  border: 1.5px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.45);
   text-align: center;
   animation: bk-fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 .bk-code-heading {
-  font-size: 2.3rem;
-  font-weight: 500;
-  color: #0f1626;
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: #0a0f18;
   margin: 0;
   letter-spacing: -0.01em;
 }
 
 .bk-code-underline {
-  width: 58px;
+  width: 62px;
   height: 2px;
-  background: #0f1626;
-  margin: 4px auto 1.8rem;
+  background: #0a0f18;
+  margin: 6px auto 2.2rem;
   border-radius: 1px;
 }
 
 .bk-code-input {
   width: 100%;
-  background: #d8dde3;
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: 12px;
-  padding: 0.95rem 1.25rem;
+  background: #d6d8d7;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 14px;
+  padding: 1rem 1.35rem;
   font-size: 1.05rem;
   font-family: var(--font-inter);
   color: #1e293b;
   outline: none;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.08);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06);
   transition: all 0.2s ease;
-  margin-bottom: 1.4rem;
+  margin-bottom: 1.8rem;
   box-sizing: border-box;
 }
 
 .bk-code-input::placeholder {
-  color: #5d6778;
-  font-size: 1rem;
+  color: #64748b;
+  font-size: 1.02rem;
 }
 
 .bk-code-input:focus {
-  background: #e2e6ec;
+  background: #e2e5e4;
   border-color: rgba(99, 102, 241, 0.4);
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
 }
 
 .bk-code-btn {
   display: inline-block;
-  background: #dedfe3;
-  border: 1px solid rgba(0, 0, 0, 0.45);
-  border-radius: 8px;
-  padding: 0.6rem 2.8rem;
+  background: #cdb28c;
+  border: 1px solid rgba(80, 60, 40, 0.45);
+  border-radius: 10px;
+  padding: 0.65rem 3.2rem;
   font-family: var(--font-inter);
   font-size: 1.05rem;
   font-weight: 500;
-  color: #0f172a;
+  color: #1e1610;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
 }
 
 .bk-code-btn:hover:not(:disabled) {
-  background: #e8eaee;
+  background: #d8bf9e;
   transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.16);
+  box-shadow: 0 4px 12px rgba(80, 60, 40, 0.22);
 }
 
 .bk-code-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* Account Page — moonlit ruins scene (account.jpg) */
+.bk-account-page {
+  position: relative;
+  width: 100vw;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  background: url('/assets/account.jpg') center center / cover no-repeat;
+  overflow-y: auto;
+  font-family: var(--font-inter);
 }
 
 .bk-code-error {
@@ -785,62 +799,50 @@
   user-select: none;
 }
 
+.bk-questmap-progress {
+  position: absolute;
+  top: 5.6rem;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  margin: 0 auto;
+  width: fit-content;
+  max-width: 90vw;
+  padding: 0.35rem 1.2rem;
+  text-align: center;
+  font-family: var(--font-cinzel);
+  font-size: 0.95rem;
+  letter-spacing: 0.05em;
+  color: #ffdca8;
+  background: rgba(13, 21, 44, 0.9);
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  border-radius: 999px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+}
+
 .qm-gate {
   position: absolute;
-  width: 10%;
-  max-width: 160px;
   transform: translate(-50%, -50%);
   z-index: 20;
-  filter: drop-shadow(0 8px 22px rgba(0, 0, 0, 0.7));
-  pointer-events: none;
-  transition: filter 0.3s ease, opacity 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  padding: 0;
+  pointer-events: auto;
+  cursor: pointer;
+  outline: none;
 }
 
-/* Gates grounded on terrain with subtle perspective */
-.qm-gate .qm-gate-img {
-  display: block;
-  width: 100%;
-  height: auto;
-  pointer-events: none;
-  user-select: none;
-  /* Subtle ambient occlusion at base for grounding on terrain */
-  -webkit-mask-image: linear-gradient(to top, 
-    rgba(0, 0, 0, 0.22) 0%, 
-    rgba(0, 0, 0, 0.08) 12%,
-    black 22%,
-    black 100%);
-  mask-image: linear-gradient(to top, 
-    rgba(0, 0, 0, 0.22) 0%, 
-    rgba(0, 0, 0, 0.08) 12%,
-    black 22%,
-    black 100%);
-}
-
-/* Gates positioned on lower elevations appear slightly lower */
-.qm-gate:nth-child(1), .qm-gate:nth-child(2), .qm-gate:nth-child(3) {
-  transform: translate(-50%, -48%);
-}
-
-.qm-gate:nth-child(4), .qm-gate:nth-child(5), .qm-gate:nth-child(6) {
-  transform: translate(-50%, -42%);
-}
-
-/* Hover states for all gates */
-.qm-gate-tappable:hover {
-  transform: translate(-50%, -50%) scale(1.06);
-  filter: drop-shadow(0 8px 22px rgba(0, 0, 0, 0.75)) drop-shadow(0 0 20px rgba(126, 180, 255, 0.6));
-}
-
-.qm-gate:nth-child(1).qm-gate-tappable:hover,
-.qm-gate:nth-child(2).qm-gate-tappable:hover,
-.qm-gate:nth-child(3).qm-gate-tappable:hover {
-  transform: translate(-50%, -48%) scale(1.06);
-}
-
-.qm-gate:nth-child(4).qm-gate-tappable:hover,
-.qm-gate:nth-child(5).qm-gate-tappable:hover,
-.qm-gate:nth-child(6).qm-gate-tappable:hover {
-  transform: translate(-50%, -42%) scale(1.06);
+/* Static gates: strictly no popping, scaling, jumping, or glowing */
+.qm-gate-tappable:hover,
+.qm-gate-tappable:active {
+  transform: translate(-50%, -50%);
+  filter: none;
 }
 
 .qm-gate-img {
@@ -851,22 +853,27 @@
   user-select: none;
 }
 
+.qm-gate-tappable:hover .qm-gate-img {
+  filter: none;
+}
+
 .qm-gate-num {
   position: absolute;
-  bottom: -7%;
+  bottom: -6px;
   left: 50%;
   transform: translateX(-50%);
   font-family: var(--font-cinzel);
-  font-size: clamp(0.6rem, 1.6vw, 0.85rem);
+  font-size: clamp(0.62rem, 1.4vw, 0.85rem);
   font-weight: 700;
   color: #ffdca8;
-  background: rgba(13, 21, 42, 0.92);
-  border: 1px solid rgba(212, 175, 55, 0.55);
+  background: rgba(13, 21, 42, 0.94);
+  border: 1px solid rgba(212, 175, 55, 0.65);
   border-radius: 999px;
   padding: 1px 8px;
   line-height: 1.4;
   white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.65);
+  z-index: 25;
 }
 
 /* ========================================================
@@ -906,40 +913,21 @@
   display: none;
 }
 
-/* Living gates: soft breathing glow + hover reveal */
+/* Static interactive gates */
 .qm-gate-live {
   pointer-events: auto;
-  cursor: default;
+  cursor: pointer;
 }
 
 .qm-gate-glow {
-  position: absolute;
-  inset: -18%;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(126, 180, 255, 0.28) 0%, transparent 65%);
-  opacity: 0;
-  animation: qm-gatePulse 3.6s ease-in-out infinite;
-  pointer-events: none;
-}
-
-.qm-gate-live:nth-child(odd) .qm-gate-glow {
-  animation-delay: 1.4s;
-}
-
-@keyframes qm-gatePulse {
-  0%, 100% { opacity: 0.25; transform: scale(0.95); }
-  50% { opacity: 0.85; transform: scale(1.06); }
-}
-
-.qm-gate-hover {
-  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 14px rgba(126, 180, 255, 0.65));
+  display: none !important;
 }
 
 .qm-gate-tooltip {
   position: absolute;
   bottom: calc(100% + 8px);
   left: 50%;
-  transform: translate(-50%, 4px);
+  transform: translate(-50%, 0);
   font-family: var(--font-cinzel);
   font-size: clamp(0.72rem, 1.8vw, 0.95rem);
   font-weight: 600;
@@ -952,17 +940,17 @@
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition: opacity 0.2s ease;
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55), 0 0 12px rgba(212, 175, 55, 0.2);
   z-index: 30;
 }
 
+.qm-gate-tappable:hover .qm-gate-tooltip,
 .qm-gate-tooltip.show {
   opacity: 1;
-  transform: translate(-50%, 0);
 }
 
-/* Tappable gates (introduction page): whole gate is a button */
+/* Tappable gates (introduction page): whole gate is a button, fully static */
 .qm-gate-tappable {
   pointer-events: auto;
   cursor: pointer;
@@ -972,33 +960,10 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-.qm-gate-tappable:hover {
-  transform: translate(-50%, -50%) scale(1.08);
-  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.55)) drop-shadow(0 0 16px rgba(126, 180, 255, 0.75));
-}
-
-/* Central gate hover maintains integration with rocks (per 3rd-page reference) */
-.qm-gate:nth-child(4).qm-gate-tappable:hover {
-  transform: translate(-50%, -38%) scale(1.04);
-}
-
-/* Contact shadow enhancement on hover for central gate */
-.qm-gate:nth-child(4).qm-gate-tappable:hover .qm-gate-img {
-  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.55)) drop-shadow(0 22px 36px rgba(0, 0, 0, 0.65));
-}
-
-.qm-gate:nth-child(4).qm-gate-tappable:hover::after {
-  bottom: -1%;
-  height: 16px;
-  background: radial-gradient(ellipse, 
-    rgba(0, 0, 0, 0.9) 0%, 
-    rgba(0, 0, 0, 0.6) 35%,
-    rgba(0, 0, 0, 0.25) 65%,
-    transparent 90%);
-}
-
+.qm-gate-tappable:hover,
 .qm-gate-tappable:active {
-  transform: translate(-50%, -50%) scale(0.96);
+  transform: translate(-50%, -50%);
+  filter: none;
 }
 
 .qm-gate-tappable:hover .qm-gate-tooltip {
