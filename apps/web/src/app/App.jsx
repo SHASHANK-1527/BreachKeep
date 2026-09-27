@@ -11,6 +11,7 @@ import AdminPanel from '../pages/admin/AdminPanel.jsx'
 import IntroductionModule from '../features/introduction-module/IntroductionModule.jsx'
 import CodeEntryView from '../components/CodeEntryView.jsx'
 import Maintenance from '../pages/Maintenance.jsx'
+import TestPanel from '../components/TestPanel.jsx'
 import useMaintenance from './useMaintenance.js'
 
 import { useState, useEffect, useRef } from 'react'
@@ -223,12 +224,17 @@ function AppRoutes() {
   )
 }
 
+const TEST_MODE = import.meta.env.VITE_TEST_MODE === 'true'
+
 export default function App() {
   return (
     <GateProvider>
       <AuthProvider>
         <BrowserRouter>
           <AppRoutes />
+          {/* Outside <Routes> so it survives every dashboard phase. It still
+              renders nothing unless the API confirms test mode. */}
+          {TEST_MODE && <TestPanel />}
         </BrowserRouter>
       </AuthProvider>
     </GateProvider>

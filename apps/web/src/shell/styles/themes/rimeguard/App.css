@@ -1,8 +1,0 @@
-.app-viewport {
-  position: relative;
-  width: 100%;
-  min-height: 100vh;
-  overflow-x: hidden;
-  overflow-y: auto;
-  background-color: #040812;
-}

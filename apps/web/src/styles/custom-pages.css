@@ -137,9 +137,24 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: url('/assets/code-bg.png') center center / cover no-repeat;
+  /* The keep's gate. The solid colour is the sky's own purple, so a slow
+     connection sees the right tone instead of a white flash before the art
+     lands. */
+  background-color: #241539;
+  background-image: url('/assets/gate-bg.jpg');
+  background-position: center center;
+  background-size: cover;
+  background-repeat: no-repeat;
   overflow: hidden;
   font-family: var(--font-inter);
+}
+
+/* Phones and small tablets get a 1600px cut instead of the 2400px one —
+   a third of the bytes, and no visible difference at that width. */
+@media (max-width: 900px) {
+  .bk-code-page {
+    background-image: url('/assets/gate-bg-sm.jpg');
+  }
 }
 
 .bk-code-modal {

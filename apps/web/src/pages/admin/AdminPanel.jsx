@@ -92,9 +92,24 @@ export default function AdminPanel() {
   }, [flash])
 
   const load = useCallback(async () => {
-    try { await api.get('/admin/state'); setAuthed(true) } catch { setAuthed(false) }
+    // /admin/state doubles as the "am I still an admin?" probe. Keep what it
+    // returns — it carries the kill-switch and gate flags, and throwing it away
+    // meant the panel refetched the same thing on the next tab change.
+    try { setState(await api.get('/admin/state')); setAuthed(true) }
+    catch { setState(null); setAuthed(false) }
   }, [])
   useEffect(() => { load() }, [load])
+
+  // Keep the kill-switch message/ETA boxes in step with whatever is stored.
+  // MUST live here with the other hooks: React requires the same hooks to run
+  // on every render, and there is an early `return` for the login screen below.
+  // Placing it after that return changed the hook count the moment you logged
+  // in, which crashed the whole panel to a blank page (React error #310).
+  useEffect(() => {
+    if (!state) return
+    setMMsg(state.maintenanceMessage || '')
+    setMEta(state.maintenanceEta || '')
+  }, [state?.maintenanceMessage, state?.maintenanceEta])
 
   // Load the active tab's data on demand.
   useEffect(() => {
@@ -132,13 +147,6 @@ export default function AdminPanel() {
       </div>
     )
   }
-
-  // Keep the message/ETA boxes in step with whatever is stored.
-  useEffect(() => {
-    if (!state) return
-    setMMsg(state.maintenanceMessage || '')
-    setMEta(state.maintenanceEta || '')
-  }, [state?.maintenanceMessage, state?.maintenanceEta])
 
   const down = !!state?.maintenance
 

@@ -10,3 +10,6 @@ coverage/
 # Deliberately untracked: they hold live URLs, codes and one-off steps that
 # are none of the repo's business.
 _ops/
+
+# Files the Claude desktop app drops into the folder
+Claude outputs/
