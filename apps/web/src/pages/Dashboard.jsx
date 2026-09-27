@@ -16,7 +16,7 @@ import DungeonsComing from '../shell/DungeonsComing.jsx'
 //  C) sorted=true                    -> full house-themed hub
 export default function Dashboard() {
   const nav = useNavigate()
-  const { user, refresh } = useAuth()
+  const { user, refresh, setUser } = useAuth()
   const [progress, setProgress] = useState({ solved: [], unlocked: [] })
   const [phase, setPhase] = useState('loading')
   const [assignedHouse, setAssignedHouse] = useState(null)
@@ -26,18 +26,29 @@ export default function Dashboard() {
     try {
       status = await api.get('/intro/status')
     } catch {
-      // Session is gone (account deleted, cookie expired, logged out in another
-      // tab). Without this the rejection left phase stuck on 'loading' forever.
-      sessionStorage.removeItem('bk_has_access')
-      nav('/enter', { replace: true })
-      return
+      // In dev mode, if session is missing, attempt auto-dev login once
+      if (import.meta.env.DEV) {
+        try {
+          const authRes = await api.post('/auth/google', { idToken: 'mock-google-token' })
+          if (authRes?.user) {
+            if (setUser) setUser(authRes.user)
+            status = await api.get('/intro/status')
+          }
+        } catch {}
+      }
+      if (!status) {
+        sessionStorage.removeItem('bk_has_access')
+        if (setUser) setUser(null)
+        nav('/enter', { replace: true })
+        return
+      }
     }
     const prog = await api.get('/progress').catch(() => ({ solved: [], unlocked: [] }))
     setProgress(prog)
     if (!status.introComplete) { setPhase('A'); return }
     if (status.introComplete && !user?.sorted) { setPhase('B'); return }
     setPhase('C')
-  }, [user?.sorted, nav])
+  }, [user?.sorted, nav, setUser])
 
   useEffect(() => { load() }, [load])
 

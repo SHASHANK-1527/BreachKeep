@@ -12,6 +12,7 @@ import IntroductionModule from '../features/introduction-module/IntroductionModu
 import CodeEntryView from '../components/CodeEntryView.jsx'
 import Maintenance from '../pages/Maintenance.jsx'
 import TestPanel from '../components/TestPanel.jsx'
+import PageTransition from '../components/PageTransition.jsx'
 import useMaintenance from './useMaintenance.js'
 
 import { useState, useEffect, useRef } from 'react'
@@ -209,17 +210,19 @@ function Header({ user, onLogout }) {
       position: 'fixed',
       top: 0, left: 0, right: 0,
       height: 56,
-      background: '#0a0403',
-      borderBottom: '1px solid rgba(255,122,0,0.22)',
+      background: 'rgba(8, 14, 28, 0.96)',
+      borderBottom: '1px solid rgba(212, 175, 55, 0.25)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
       padding: '0 1.5rem',
       zIndex: 100,
-      color: '#e9d9d1',
-      fontFamily: 'system-ui, sans-serif',
+      color: '#ffdca8',
+      fontFamily: "var(--font-cinzel), 'Cinzel', serif",
+      letterSpacing: '0.05em',
+      backdropFilter: 'blur(12px)',
     }}>
-      <div style={{ fontWeight: 600, color: '#ffdca8' }}>
+      <div style={{ fontWeight: 600, color: '#ffdca8', fontSize: '0.98rem', textShadow: '0 0 10px rgba(212,175,55,0.25)' }}>
         {user.username} · {user.house || 'unsorted'}
       </div>
 
@@ -231,15 +234,17 @@ function Header({ user, onLogout }) {
           aria-label="Account menu"
           style={{
             display: 'flex', alignItems: 'center', gap: '0.5rem',
-            background: 'transparent', border: '1px solid rgba(255,122,0,0.22)',
-            borderRadius: '999px', padding: '0.2rem 0.7rem 0.2rem 0.2rem',
+            background: 'rgba(18, 28, 56, 0.65)', border: '1px solid rgba(212, 175, 55, 0.35)',
+            borderRadius: '999px', padding: '0.2rem 0.75rem 0.2rem 0.25rem',
             cursor: 'pointer', color: '#ffdca8', fontFamily: 'inherit', fontSize: '0.85rem',
+            transition: 'all 0.2s ease',
+            boxShadow: '0 0 10px rgba(0,0,0,0.3)',
           }}
         >
           <span style={{
             width: 30, height: 30, borderRadius: '50%', overflow: 'hidden',
-            background: 'rgba(255,122,0,0.18)', display: 'grid', placeItems: 'center',
-            fontWeight: 700, fontSize: '0.85rem', flexShrink: 0,
+            background: 'rgba(212, 175, 55, 0.18)', border: '1px solid rgba(212, 175, 55, 0.3)', display: 'grid', placeItems: 'center',
+            fontWeight: 700, fontSize: '0.85rem', flexShrink: 0, color: '#ffdca8',
           }}>
             {user.avatar
               ? <img src={user.avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -332,12 +337,14 @@ function AppRoutes() {
   // Show landing only if NOT logged in AND no gate access
   if (!loading && !user && !hasAccess) {
     return (
-      <CodeEntryView
-        onSuccess={() => {
-          setHasAccess(true)
-          sessionStorage.setItem('bk_has_access', 'true')
-        }}
-      />
+      <PageTransition>
+        <CodeEntryView
+          onSuccess={() => {
+            setHasAccess(true)
+            sessionStorage.setItem('bk_has_access', 'true')
+          }}
+        />
+      </PageTransition>
     )
   }
 
@@ -362,20 +369,22 @@ function AppRoutes() {
     <>
       {!isAtmosphericPage && <Header user={user} onLogout={logout} />}
       <main style={{ paddingTop: isAtmosphericPage ? '0' : '56px', minHeight: '100vh' }}>
-        <Routes>
-          <Route path={ADMIN_PATH} element={<AdminPanel />} />
-          <Route
-            path="/enter"
-            element={user ? <Navigate to="/dashboard" replace /> : <Enter />}
-          />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/onboarding" element={<RequireSession><Onboarding /></RequireSession>} />
-          <Route path="/dashboard" element={<RequireSession><Dashboard /></RequireSession>} />
-          <Route path="/dashboard/introduction/*" element={<RequireSession><IntroductionModule /></RequireSession>} />
-          <Route path="/dungeons/:dungeonId/*" element={<RequireSession><Dungeon /></RequireSession>} />
-          <Route path="/account" element={<RequireSession><Account /></RequireSession>} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
+        <PageTransition>
+          <Routes location={loc}>
+            <Route path={ADMIN_PATH} element={<AdminPanel />} />
+            <Route
+              path="/enter"
+              element={user ? <Navigate to="/dashboard" replace /> : <Enter />}
+            />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/onboarding" element={<RequireSession><Onboarding /></RequireSession>} />
+            <Route path="/dashboard" element={<RequireSession><Dashboard /></RequireSession>} />
+            <Route path="/dashboard/introduction/*" element={<RequireSession><IntroductionModule /></RequireSession>} />
+            <Route path="/dungeons/:dungeonId/*" element={<RequireSession><Dungeon /></RequireSession>} />
+            <Route path="/account" element={<RequireSession><Account /></RequireSession>} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </PageTransition>
       </main>
     </>
   )

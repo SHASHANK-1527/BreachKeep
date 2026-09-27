@@ -10,7 +10,7 @@ import React, { useEffect, useRef } from 'react';
  * - Fixed pool of 60 particles for zero GC allocation spikes at 60fps
  * - Zero em dashes in documentation or code
  */
-export default function EmberdriftCanvas() {
+export default function EmberkeepCinderCanvas() {
   const canvasRef = useRef(null);
 
   useEffect(() => {

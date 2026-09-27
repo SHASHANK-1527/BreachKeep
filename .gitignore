@@ -13,3 +13,6 @@ _ops/
 
 # Files the Claude desktop app drops into the folder
 Claude outputs/
+
+.mongo-data/
+new theme/

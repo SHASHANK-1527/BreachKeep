@@ -1,0 +1,149 @@
+/* ========================================================
+   BREACHKEEP CINEMATIC PAGE TRANSITIONS
+   Fluid, atmospheric travel transitions between keep chambers
+   ======================================================== */
+
+/* 1. Main Page Content Container */
+.bk-page-travel-container {
+  width: 100%;
+  min-height: 100%;
+  animation: bkPageTravelIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: opacity, transform;
+}
+
+.bk-page-travel-container.bk-page-travel-settled {
+  animation: none;
+  transform: none;
+  will-change: auto;
+}
+
+@keyframes bkPageTravelIn {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.996);
+  }
+  60% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* 2. Gate Travel Shroud & Atmospheric Veil */
+.bk-travel-veil {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  overflow: hidden;
+}
+
+.bk-travel-veil-mist {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 45%, rgba(20, 10, 35, 0.38) 0%, rgba(6, 3, 8, 0.72) 100%);
+  opacity: 0;
+  animation: bkVeilMistPulse 0.44s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+[data-house="emberkeep"] .bk-travel-veil-mist {
+  background: radial-gradient(circle at 50% 45%, rgba(46, 18, 8, 0.42) 0%, rgba(10, 4, 3, 0.75) 100%);
+}
+
+[data-house="arcweave"] .bk-travel-veil-mist {
+  background: radial-gradient(circle at 50% 45%, rgba(32, 16, 62, 0.42) 0%, rgba(8, 4, 21, 0.75) 100%);
+}
+
+[data-house="rimeguard"] .bk-travel-veil-mist {
+  background: radial-gradient(circle at 50% 45%, rgba(12, 34, 52, 0.42) 0%, rgba(4, 12, 18, 0.75) 100%);
+}
+
+[data-house="voltgrid"] .bk-travel-veil-mist {
+  background: radial-gradient(circle at 50% 45%, rgba(8, 38, 32, 0.42) 0%, rgba(2, 14, 12, 0.75) 100%);
+}
+
+@keyframes bkVeilMistPulse {
+  0% {
+    opacity: 0;
+    filter: blur(8px);
+  }
+  30% {
+    opacity: 0.65;
+    filter: blur(3px);
+  }
+  100% {
+    opacity: 0;
+    filter: blur(0px);
+  }
+}
+
+/* 3. Glowing Horizontal Travel Beam */
+.bk-travel-beam {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2.5px;
+  background: linear-gradient(90deg, transparent 0%, #ff5a1f 30%, #ffdca8 50%, #c084fc 70%, transparent 100%);
+  box-shadow: 0 0 14px rgba(255, 90, 31, 0.85), 0 0 24px rgba(192, 132, 252, 0.6);
+  opacity: 0;
+  animation: bkBeamSweep 0.48s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+[data-house="emberkeep"] .bk-travel-beam {
+  background: linear-gradient(90deg, transparent 0%, #ff5a1f 25%, #ffdca8 50%, #ff7a00 75%, transparent 100%);
+  box-shadow: 0 0 16px rgba(255, 90, 31, 0.95), 0 0 30px rgba(255, 220, 168, 0.65);
+}
+
+[data-house="arcweave"] .bk-travel-beam {
+  background: linear-gradient(90deg, transparent 0%, #a855f7 25%, #ffffff 50%, #c084fc 75%, transparent 100%);
+  box-shadow: 0 0 16px rgba(168, 85, 247, 0.95), 0 0 30px rgba(216, 180, 254, 0.65);
+}
+
+[data-house="rimeguard"] .bk-travel-beam {
+  background: linear-gradient(90deg, transparent 0%, #38bdf8 25%, #ffffff 50%, #7dd3fc 75%, transparent 100%);
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.95), 0 0 30px rgba(186, 230, 253, 0.65);
+}
+
+[data-house="voltgrid"] .bk-travel-beam {
+  background: linear-gradient(90deg, transparent 0%, #10b981 25%, #6ee7b7 50%, #059669 75%, transparent 100%);
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.95), 0 0 30px rgba(110, 231, 183, 0.65);
+}
+
+@keyframes bkBeamSweep {
+  0% {
+    opacity: 0;
+    transform: scaleX(0.2) translateX(-50%);
+  }
+  25% {
+    opacity: 1;
+    transform: scaleX(0.7) translateX(0%);
+  }
+  75% {
+    opacity: 0.85;
+    transform: scaleX(1) translateX(15%);
+  }
+  100% {
+    opacity: 0;
+    transform: scaleX(1) translateX(35%);
+  }
+}
+
+/* Reduced motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .bk-page-travel-container {
+    animation: bkSimpleFade 0.2s ease-out both;
+    transform: none !important;
+  }
+  .bk-travel-veil-mist,
+  .bk-travel-beam {
+    display: none !important;
+  }
+}
+
+@keyframes bkSimpleFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

@@ -2,191 +2,227 @@ import React from 'react';
 import './ArcweaveAnimatedFlags.css';
 
 /**
- * ArcweaveAnimatedFlags
- * Renders the authentic hand-drawn flags from the citadel illustration
- * animated with organic cloth wind-wave displacement physics and
- * graded in House Arcweave's mystical twilight violet & celestial palette.
+ * ArcweaveAnimatedFlags (Master Purple Lightning & Plasma Citadel Scene)
  * 
- * Anchored with 100% pixel-perfect native alignment inside the 1376x768 master SVG.
+ * Living background illustration of House Arcweave:
+ * - High-definition 1376x768 citadel artwork
+ * - Choreographed atmospheric purple lightning strikes and sky ambient flashes
+ * - Floating plasma singularity with concentric magnetic confinement rings
+ * - High-energy ionized plasma cascades tumbling over castle cliffs
+ * - Weightless floating anti-gravity oscillation
+ * - Zero em dashes in documentation or code
  */
-export default function ArcweaveAnimatedFlags({ windGust = 1 }) {
-  // Gentle, realistic cloth ripple scale (prevents harsh jitter or over-distortion)
-  const rippleScale = windGust > 1.2 ? 3.0 : 2.0;
+export default function ArcweaveAnimatedFlags() {
+  // Electrical waterfall particle streams
+  const plasmaCascadeParticles = [
+    { cx: 388, cy: 615, r: 1.8, dur: '2.4s', delay: '0s', dx: 6, dy: 140 },
+    { cx: 402, cy: 605, r: 2.1, dur: '2.1s', delay: '0.5s', dx: 4, dy: 155 },
+    { cx: 415, cy: 618, r: 1.6, dur: '2.6s', delay: '1.1s', dx: -5, dy: 145 },
+    { cx: 428, cy: 625, r: 2.0, dur: '2.3s', delay: '0.3s', dx: 8, dy: 135 },
+    { cx: 395, cy: 660, r: 2.2, dur: '2.0s', delay: '0.8s', dx: -4, dy: 105 },
+    { cx: 412, cy: 670, r: 1.7, dur: '2.5s', delay: '1.4s', dx: 6, dy: 95 },
+    { cx: 846, cy: 725, r: 1.6, dur: '2.2s', delay: '0.4s', dx: 2, dy: 45 },
+    { cx: 852, cy: 735, r: 1.9, dur: '2.0s', delay: '0.9s', dx: -3, dy: 35 }
+  ];
 
   return (
     <svg
       className="arcweave-master-scene-svg"
       viewBox="0 0 1376 768"
       preserveAspectRatio="xMidYMax slice"
-      aria-hidden="true"
+      aria-label="Illustration of House Arcweave Lightning Citadel and Plasma Sanctums"
     >
       <defs>
-        {/* Organic Wind Wave Turbulence Filter with Zero Pole Drift */}
-        <filter id="wind-cloth-wave" x="-10%" y="-10%" width="120%" height="120%">
-          <feTurbulence
-            type="fractalNoise"
-            baseFrequency="0.015 0.035"
-            numOctaves="2"
-            seed="5"
-            result="waveNoise"
-          >
-            <animate
-              attributeName="baseFrequency"
-              dur="4.2s"
-              values="0.013 0.030; 0.018 0.042; 0.014 0.033; 0.013 0.030"
-              repeatCount="indefinite"
-            />
-          </feTurbulence>
-          {/* Neutralize Red channel to 0.5 so horizontal displacement is exactly 0.
-              This locks the cloth permanently to the flagpole without detaching or drifting. */}
-          <feColorMatrix
-            in="waveNoise"
-            type="matrix"
-            values="0 0 0 0 0.5
-                    0 1 0 0 0
-                    0 0 1 0 0
-                    0 0 0 1 0"
-            result="transverseWave"
-          />
-          <feDisplacementMap
-            in="SourceGraphic"
-            in2="transverseWave"
-            scale={rippleScale}
-            xChannelSelector="R"
-            yChannelSelector="G"
-          />
-        </filter>
-
-        {/* 14 Authentic Hand-Drawn Flags in the Illustration Artwork (exact 1px past pole) */}
-        <clipPath id="authentic-flags-clip">
-          {/* 1. West Watchtower Roof Flag (pole at 427) */}
-          <rect x="429" y="276" width="32" height="20" />
-          {/* 2. East Watchtower Roof Flag (pole at 960) */}
-          <rect x="962" y="291" width="32" height="20" />
-          {/* 3. Castle High Left Spire - Sun Circle (pole at 602) */}
-          <rect x="604" y="153" width="33" height="22" />
-          {/* 4. Castle High Right Spire - Silver Sigil (pole at 775) */}
-          <rect x="777" y="153" width="33" height="22" />
-          {/* 5. Castle Mid-Left Conical Tower Flag (pole at 557) */}
-          <rect x="559" y="214" width="26" height="18" />
-          {/* 6. Castle Mid-Right Conical Tower Flag (pole at 819) */}
-          <rect x="821" y="215" width="26" height="18" />
-          {/* 7. Castle Outer West Wall Turret Flag (pole at 526) */}
-          <rect x="528" y="307" width="24" height="15" />
-          {/* 8. Castle Outer East Wall Turret Flag (pole at 850) */}
-          <rect x="852" y="307" width="24" height="15" />
-          {/* 9. Castle Inner Keep Crimson Streamer Left (pole at 627) */}
-          <rect x="629" y="264" width="25" height="15" />
-          {/* 10. Castle Inner Keep Crimson Streamer Right (pole at 749) */}
-          <rect x="751" y="264" width="25" height="15" />
-          {/* 11. Causeway Front Left Parapet Post Flag (pole at 538) */}
-          <rect x="541" y="474" width="42" height="28" />
-          {/* 12. Causeway Front Right Parapet Post Flag - Sun Sigil (pole at 831) */}
-          <rect x="835" y="459" width="54" height="30" />
-          {/* 13. Causeway Gatehouse-Approach Left Flag (pole at 631) */}
-          <rect x="633" y="440" width="23" height="17" />
-          {/* 14. Causeway Gatehouse-Approach Right Flag (pole at 734) */}
-          <rect x="736" y="440" width="23" height="17" />
-        </clipPath>
-
-        {/* Arcweave Celestial Violet & Amethyst Energy Glow Gradient */}
-        <radialGradient id="core-energy-glow-grad" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.95" />
-          <stop offset="30%" stopColor="#c4b5fd" stopOpacity="0.8" />
-          <stop offset="65%" stopColor="#8b5cf6" stopOpacity="0.4" />
-          <stop offset="100%" stopColor="#4c1d95" stopOpacity="0" />
+        {/* Central Stabilized Plasma Singularity Gradient */}
+        <radialGradient id="plasma-singularity-core" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
+          <stop offset="25%" stopColor="#f3e8ff" stopOpacity="0.95" />
+          <stop offset="55%" stopColor="#c084fc" stopOpacity="0.8" />
+          <stop offset="80%" stopColor="#a855f7" stopOpacity="0.45" />
+          <stop offset="100%" stopColor="#581c87" stopOpacity="0" />
         </radialGradient>
+
+        {/* Secondary Orb Glow Gradient */}
+        <radialGradient id="plasma-secondary-orb" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#ffffff" stopOpacity="0.95" />
+          <stop offset="35%" stopColor="#d8b4fe" stopOpacity="0.85" />
+          <stop offset="70%" stopColor="#9333ea" stopOpacity="0.5" />
+          <stop offset="100%" stopColor="#3b0764" stopOpacity="0" />
+        </radialGradient>
+
+        {/* Lightning Contact Point Bloom Filter */}
+        <filter id="plasma-glow-filter" x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur stdDeviation="4" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
       </defs>
 
-      {/* 1. Base Pristine Illustration Artwork (Clean sky for moving clouds and energy core) */}
-      <image
-        href="/rimeguard_fortress_scene_cleansky.jpg"
-        x="0"
-        y="0"
-        width="1376"
-        height="768"
-        preserveAspectRatio="none"
-        className="arcweave-scene-artwork"
-      />
-
-      {/* 2. Authentic Hand-Drawn Flags in Living Transverse Wind Motion */}
-      <g clipPath="url(#authentic-flags-clip)">
+      {/* ========================================================
+          1. CITADEL FLOATING BASE GROUP
+          Pristine artwork of the purple lightning citadel
+          ======================================================== */}
+      <g className="arcweave-citadel-floating-group">
         <image
-          href="/rimeguard_fortress_scene.jpg"
+          href="/arcweave_lightning_citadel.jpg"
           x="0"
           y="0"
           width="1376"
           height="768"
           preserveAspectRatio="none"
-          filter="url(#wind-cloth-wave)"
-          className="arcweave-scene-artwork"
-        />
-      </g>
-
-      {/* 3. Floating Rotational Arcane Energy Core Crystal (Hovering above Central Spire) */}
-      <g className="energy-core-crystal-group" transform="translate(688, 96)">
-        {/* Pulsing Luminous Violet Energy Aura */}
-        <circle r="36" fill="url(#core-energy-glow-grad)" className="core-energy-aura-pulse" />
-
-        {/* Vertical Energy Conduit Tether Connecting Spire Tip at (688, 143) to Core */}
-        <line
-          x1="0"
-          y1="28"
-          x2="0"
-          y2="46"
-          stroke="#c4b5fd"
-          strokeWidth="1.8"
-          strokeDasharray="3,3"
-          className="core-energy-tether"
+          className="arcweave-clean-citadel-artwork"
         />
 
-        {/* Orbiting Concentric Crystalline Energy Rings */}
-        <ellipse
-          rx="38"
-          ry="11"
-          fill="none"
-          stroke="#9b7bff"
-          strokeWidth="1.2"
-          opacity="0.65"
-          className="core-orbital-ring-outer"
-        />
-        <ellipse
-          rx="26"
-          ry="8"
-          fill="none"
-          stroke="#c4b5fd"
-          strokeWidth="1.4"
-          opacity="0.85"
-          className="core-orbital-ring-inner"
+        {/* Sky Ambient Lightning Flash Wash */}
+        <rect
+          x="0"
+          y="0"
+          width="1376"
+          height="450"
+          fill="#c084fc"
+          className="sky-lightning-ambient-flash"
+          pointerEvents="none"
         />
 
-        {/* Ambient Rising Arcane Starlight & Golden Sparks */}
-        <circle cx="-14" cy="-8" r="1.5" fill="#ffcf70" opacity="0.85">
-          <animate attributeName="cy" values="-8;-18;-8" dur="3s" repeatCount="indefinite" />
-          <animate attributeName="opacity" values="0.3;0.9;0.3" dur="3s" repeatCount="indefinite" />
-        </circle>
-        <circle cx="16" cy="4" r="1.3" fill="#e9d5ff" opacity="0.85">
-          <animate attributeName="cy" values="4;-6;4" dur="2.4s" repeatCount="indefinite" />
-          <animate attributeName="opacity" values="0.4;1;0.4" dur="2.4s" repeatCount="indefinite" />
-        </circle>
-        <circle cx="-6" cy="22" r="1.2" fill="#c4b5fd" opacity="0.75">
-          <animate attributeName="cy" values="22;12;22" dur="2.8s" repeatCount="indefinite" />
-          <animate attributeName="opacity" values="0.2;0.8;0.2" dur="2.8s" repeatCount="indefinite" />
-        </circle>
-        <circle cx="8" cy="20" r="1.4" fill="#ffcf70" opacity="0.8">
-          <animate attributeName="cy" values="20;10;20" dur="2.2s" repeatCount="indefinite" />
-          <animate attributeName="opacity" values="0.3;0.85;0.3" dur="2.2s" repeatCount="indefinite" />
-        </circle>
+        {/* ========================================================
+            2. CHOREOGRAPHED ATMOSPHERIC PURPLE LIGHTNING STRIKES
+            ======================================================== */}
+        <g className="lightning-arcs-layer" pointerEvents="none">
+          {/* Main Strike to Central Tesla Apex (638, 70) */}
+          <path
+            d="M615,0 L622,25 L618,35 L632,52 L628,58 L638,70"
+            fill="none"
+            stroke="#ffffff"
+            strokeWidth="2.5"
+            strokeLinejoin="miter"
+            className="lightning-bolt lightning-main-apex"
+            filter="url(#plasma-glow-filter)"
+          />
+          <path
+            d="M622,25 L640,32 L648,48"
+            fill="none"
+            stroke="#d8b4fe"
+            strokeWidth="1.4"
+            className="lightning-bolt lightning-main-apex-branch"
+          />
 
-        {/* Hand-Drawn Crystal Energy Core (3D Rotating with Arcweave Refraction) */}
-        <image
-          href="/crystal_core.png"
-          x="-32"
-          y="-36"
-          width="64"
-          height="71"
-          className="rotating-crystal-image"
-        />
+          {/* Left Spire Strike (320, 260) */}
+          <path
+            d="M360,20 L350,75 L362,110 L342,160 L352,195 L330,230 L320,260"
+            fill="none"
+            stroke="#ffffff"
+            strokeWidth="2.2"
+            strokeLinejoin="miter"
+            className="lightning-bolt lightning-left-spire"
+            filter="url(#plasma-glow-filter)"
+          />
+
+          {/* Right Floating Island Plasma Conduit Arc */}
+          <path
+            d="M740,240 Q715,260 670,265"
+            fill="none"
+            stroke="#c084fc"
+            strokeWidth="2.2"
+            strokeDasharray="6,4"
+            className="plasma-conduit-arc-right"
+          />
+
+          {/* Left Floating Island Plasma Conduit Arc */}
+          <path
+            d="M480,290 Q515,310 560,312"
+            fill="none"
+            stroke="#c084fc"
+            strokeWidth="2.2"
+            strokeDasharray="6,4"
+            className="plasma-conduit-arc-left"
+          />
+        </g>
+
+        {/* ========================================================
+            3. PLASMA SINGULARITY ORBS & MAGNETIC RINGS
+            ======================================================== */}
+        <g className="plasma-orbs-group" pointerEvents="none">
+          {/* Central Master Plasma Singularity at (605, 462) */}
+          <g transform="translate(605, 462)">
+            <circle
+              r="34"
+              fill="url(#plasma-singularity-core)"
+              className="singularity-pulsing-aura"
+            />
+            <ellipse
+              rx="42"
+              ry="14"
+              fill="none"
+              stroke="#c084fc"
+              strokeWidth="1.2"
+              strokeDasharray="5,6"
+              className="singularity-magnetic-ring-1"
+            />
+            <ellipse
+              rx="28"
+              ry="10"
+              fill="none"
+              stroke="#ffffff"
+              strokeWidth="1.0"
+              strokeDasharray="4,4"
+              className="singularity-magnetic-ring-2"
+            />
+            <circle cx="-6" cy="-4" r="1.5" fill="#ffffff" />
+            <circle cx="8" cy="5" r="1.2" fill="#fef08a" />
+          </g>
+
+          {/* Secondary Plasma Orb Left at (504, 418) */}
+          <g transform="translate(504, 418)">
+            <circle r="22" fill="url(#plasma-secondary-orb)" className="satellite-plasma-pulse" />
+            <ellipse
+              rx="26"
+              ry="9"
+              fill="none"
+              stroke="#d8b4fe"
+              strokeWidth="0.9"
+              strokeDasharray="4,5"
+              className="singularity-magnetic-ring-1"
+            />
+          </g>
+
+          {/* Secondary Plasma Orb Right at (718, 422) */}
+          <g transform="translate(718, 422)">
+            <circle r="22" fill="url(#plasma-secondary-orb)" className="satellite-plasma-pulse" />
+            <ellipse
+              rx="26"
+              ry="9"
+              fill="none"
+              stroke="#d8b4fe"
+              strokeWidth="0.9"
+              strokeDasharray="4,5"
+              className="singularity-magnetic-ring-2"
+            />
+          </g>
+        </g>
+
+        {/* ========================================================
+            4. IONIZED PLASMA CASCADE PARTICLES
+            ======================================================== */}
+        <g className="plasma-cascades-layer" pointerEvents="none">
+          {plasmaCascadeParticles.map((p, idx) => (
+            <circle
+              key={`p-casc-${idx}`}
+              cx={p.cx}
+              cy={p.cy}
+              r={p.r}
+              fill={idx % 2 === 0 ? '#ffffff' : '#e9d5ff'}
+              className="plasma-stream-particle"
+              style={{
+                animationDuration: p.dur,
+                animationDelay: p.delay,
+                '--dx': `${p.dx}px`,
+                '--dy': `${p.dy}px`
+              }}
+            />
+          ))}
+        </g>
       </g>
     </svg>
   );

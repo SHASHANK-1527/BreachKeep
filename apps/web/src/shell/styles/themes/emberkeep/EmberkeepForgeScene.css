@@ -1,0 +1,46 @@
+/* ========================================================
+   EMBERKEEP MASTER SCENE : FORGE & FURNACE CITADEL
+   Strictly compliant with antislop and antislop-ui guidelines.
+   Locks master artwork and chimney fire layers
+   into 100% exact alignment on every display.
+   Zero floating glowing dots, zero overlay clutter.
+   ======================================================== */
+
+.emberkeep-master-scene-svg,
+.arcweave-master-scene-svg,
+.rimeguard-master-scene-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  display: block;
+}
+
+/* Master Castle Artwork : Pure sharp contrast, rich obsidian stone */
+.emberkeep-clean-citadel-artwork {
+  filter: contrast(1.05) saturate(1.04);
+}
+
+/* ========================================================
+   1. CITADEL REDUCED SMOOTH VOLCANIC DRIFT
+   Subtle, slow 2px breathing oscillation with zero jitter
+   ======================================================== */
+.emberkeep-citadel-floating-group {
+  animation: emberkeepCitadelSmoothDrift 14s ease-in-out infinite alternate;
+  transform-origin: 688px 450px;
+  will-change: transform;
+}
+
+@keyframes emberkeepCitadelSmoothDrift {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-2.2px);
+  }
+  100% {
+    transform: translateY(1.4px);
+  }
+}

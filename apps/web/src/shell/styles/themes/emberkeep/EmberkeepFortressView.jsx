@@ -1,94 +1,69 @@
 import React, { useState, useEffect } from 'react';
 import './EmberkeepFortressView.css';
-import EmberkeepAnimatedFlags from './EmberkeepAnimatedFlags';
+import EmberkeepForgeScene from './EmberkeepForgeScene';
 
 export default function EmberkeepFortressView({ children }) {
-  const [windGust, setWindGust] = useState(1);
+  const [mouseOffset, setMouseOffset] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
-    // Subtle periodic ambient wind gusts to vary flag flutter naturally
-    const interval = setInterval(() => {
-      setWindGust(1.4);
-      setTimeout(() => setWindGust(1), 2200);
-    }, 12000);
-    return () => clearInterval(interval);
+    const handleMouseMove = (e) => {
+      // Smooth cinematic parallax camera shift
+      const x = ((e.clientX / window.innerWidth) - 0.5) * 16;
+      const y = ((e.clientY / window.innerHeight) - 0.5) * 12;
+      setMouseOffset({ x, y });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
   return (
     <div className="emberkeep-viewport-stage">
-      {/* ========================================================
-          1. UNIFIED 2D SCENE CANVAS: ARTWORK & ANIMATED FLAGS
-          Unified within a single 1376x768 SVG coordinate system
-          with preserveAspectRatio="xMidYMax slice" so that all
-          flags are mathematically locked to their flagpoles on every screen.
-          ======================================================== */}
-      <div className="fortress-illustration-canvas">
-        <EmberkeepAnimatedFlags windGust={windGust} />
-
-        {/* ========================================================
-            2. SCENE CLOUD / SMOKE FORMATIONS IN CONTINUOUS MOTION
-            The authentic illustrated clouds from the artwork,
-            drifting and billowing with living thermal updraft motion.
-            ======================================================== */}
-        <div className="scene-illustrated-clouds-container" aria-hidden="true">
-          <div className="scene-cloud-wrapper cloud-left-wrapper">
-            <img
-              src="/ember_cloud_left.png"
-              alt=""
-              className="scene-cloud-sprite cloud-left-sprite"
-            />
-          </div>
-          <div className="scene-cloud-wrapper cloud-right-wrapper">
-            <img
-              src="/ember_cloud_right.png"
-              alt=""
-              className="scene-cloud-sprite cloud-right-sprite"
-            />
-          </div>
-        </div>
+      {/* Master 1376x768 SVG scene layer with smooth parallax tracking */}
+      <div
+        className="fortress-illustration-canvas"
+        style={{
+          transform: `translate3d(${mouseOffset.x}px, ${mouseOffset.y}px, 0) scale(1.025)`,
+          transition: 'transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)'
+        }}
+      >
+        <EmberkeepForgeScene />
       </div>
 
-      {/* ========================================================
-          3. CINEMATIC TITLE HEADER
-          Clean, weightless typography allowing sky and forge citadel to breathe
-          ======================================================== */}
+      {/* Cinematic Title Header */}
       <header className="emberkeep-cinematic-hud">
         <div className="hud-cinematic-title">
-          <div className="cinematic-crest-icon">
-            <svg width="26" height="30" viewBox="0 0 28 34" fill="none">
+          <div className="cinematic-crest-icon" aria-hidden="true">
+            <svg width="34" height="40" viewBox="0 0 34 40" fill="none">
               {/* Outer Volcanic Shield */}
               <path
-                d="M14 2 L26 6 V18 C26 27 14 33 14 33 C14 33 2 27 2 18 V6 Z"
-                fill="#240c08"
-                stroke="#4a150e"
+                d="M17 2 L31 7 V22 C31 32 17 38 17 38 C17 38 3 32 3 22 V7 Z"
+                fill="#160806"
+                stroke="#3a1510"
                 strokeWidth="2.2"
               />
-              {/* Inner Forge Chamber */}
+              {/* Inner Hearth Inset */}
               <path
-                d="M14 5 L23 8.5 V17.5 C23 24.5 14 29.5 14 29.5 C14 29.5 5 24.5 5 17.5 V8.5 Z"
-                fill="#3d130c"
+                d="M17 5 L28 9 V21 C28 29 17 34 17 34 C17 34 6 29 6 21 V9 Z"
+                fill="#240e0b"
                 stroke="#ff5a1f"
                 strokeWidth="1.2"
               />
-              {/* Anvil Base */}
+              {/* Anvil & Hearth Flame Symbol */}
               <path
-                d="M8 23 H20 V25 C20 26 18 27 14 27 C10 27 8 26 8 25 Z"
+                d="M10 24 H24 V27 C24 28 22 29 20 29 H14 C12 29 10 28 10 27 Z"
                 fill="#ffdca8"
               />
-              {/* Blazing Forge Flame Emblem */}
               <path
-                d="M14 8 C16 12 19 14 18 19 C17 21 15 22 14 22 C13 22 11 21 10 19 C9 15 12 13 14 8 Z"
+                d="M17 10 C14 14 13 17 15 21 C15.5 19.5 17 18 17 18 C17 18 18.5 19.5 19 21 C21 17 20 14 17 10 Z"
                 fill="#ff5a1f"
               />
-              <path
-                d="M14 12 C15 14 16.5 15.5 16 18 C15.5 19.5 14.5 20 14 20 C13.5 20 12.5 19.5 12 18 C11.5 15.5 13 14 14 12 Z"
-                fill="#ffdca8"
-              />
+              <circle cx="17" cy="18" r="1.8" fill="#ffffff" />
             </svg>
           </div>
           <div className="cinematic-title-text">
             <h1 className="cinematic-house-name">HOUSE EMBERKEEP</h1>
-            <span className="cinematic-realm-sub">THE VOLCANIC FORGE &bull; REALM OF FIRE &amp; FURNACE</span>
+            <span className="cinematic-realm-sub">THE FORGE CITADEL : REALM OF FURNACE & ANVIL</span>
           </div>
         </div>
       </header>
