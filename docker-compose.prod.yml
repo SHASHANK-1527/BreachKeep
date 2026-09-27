@@ -1,0 +1,62 @@
+# PRODUCTION stack for the VM. Local dev keeps using docker-compose.yml.
+# Start / update:  docker compose -f docker-compose.prod.yml up -d --build
+name: breachkeep
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "10m", max-file: "3" }
+
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    # No "ports:" on purpose. Only containers on this network can reach Mongo.
+    volumes: ["mongo_data:/data/db"]
+    logging: *logging
+
+  api:
+    build: ./apps/api
+    restart: unless-stopped
+    env_file: [.env]
+    depends_on: [mongo]
+    # No "ports:" on purpose. nginx reaches it as http://api:5000.
+    logging: *logging
+
+  provisioner:
+    build: ./apps/provisioner
+    restart: unless-stopped
+    env_file: [.env]
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./labs:/labs:ro
+    logging: *logging
+
+  web-build:
+    build: ./apps/web
+    env_file: [.env]
+    command: sh -c "npm run build && npm run build:landing"
+    volumes: ["web_dist:/app/dist"]
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on:
+      api: { condition: service_started }
+      provisioner: { condition: service_started }
+      web-build: { condition: service_completed_successfully }
+    ports: ["80:80", "443:443"]
+    environment:
+      # Only these two are substituted into the nginx template.
+      - NGINX_ENVSUBST_FILTER=^(DOMAIN|ADMIN_SECRET_PATH)$$
+      - DOMAIN=${DOMAIN:?set DOMAIN in .env}
+      - ADMIN_SECRET_PATH=${ADMIN_SECRET_PATH:?set ADMIN_SECRET_PATH in .env}
+    volumes:
+      - ./infra/nginx/breachkeep.prod.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - ./infra/nginx/proxy_common.conf:/etc/nginx/proxy_common.conf:ro
+      - web_dist:/usr/share/nginx/html:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    logging: *logging
+
+volumes:
+  mongo_data:
+  web_dist:

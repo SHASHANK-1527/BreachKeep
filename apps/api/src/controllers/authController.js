@@ -14,7 +14,7 @@ import Roster from '../models/Roster.js'
 import AccessConfig from '../models/AccessConfig.js'
 import { isValidEmailDomain } from '../utils/emailValidate.js'
 import { validatePassword, getTodayIST, getMidnightISTExpiry } from '../utils/auth.js'
-import { generateCode, sendVerificationEmail, sendSessionCodeEmail } from '../utils/email.js'
+import { generateCode, sendVerificationEmail, sendSessionCodeEmail, sendPasswordResetEmail } from '../utils/email.js'
 import { cookieOpts } from '../config/env.js'
 
 const SESSION_MAXAGE = 7 * 24 * 60 * 60 * 1000
