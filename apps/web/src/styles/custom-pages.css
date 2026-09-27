@@ -578,11 +578,11 @@
   opacity: 0.85;
 }
 
-/* Centerpiece Gate — Torii shrine gate themed to the stone sanctuary and harvest moon */
+/* Centerpiece Oni Gate — adjusted and harmonized to the stone sanctuary and harvest moon */
 .bk-oni-wrapper,
 .bk-gate-wrapper {
   position: absolute;
-  top: 53.6%;
+  top: 55.5%;
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 20;
@@ -598,10 +598,10 @@
 .bk-gate-pedestal-shadow {
   position: absolute;
   bottom: 0%;
-  left: 6%;
-  right: 6%;
+  left: 2%;
+  right: 2%;
   height: 18%;
-  background: radial-gradient(ellipse at 50% 50%, rgba(8, 4, 16, 0.95) 0%, rgba(12, 5, 22, 0.6) 50%, transparent 75%);
+  background: radial-gradient(ellipse at 50% 50%, rgba(6, 2, 12, 0.98) 0%, rgba(10, 4, 18, 0.75) 45%, transparent 75%);
   border-radius: 50%;
   pointer-events: none;
   filter: blur(10px);
@@ -611,11 +611,14 @@
 .bk-oni-ambient-aura,
 .bk-gate-ambient-aura {
   position: absolute;
-  inset: -12%;
-  background: radial-gradient(circle at 50% 50%, rgba(245, 158, 11, 0.26) 0%, rgba(220, 38, 38, 0.16) 42%, transparent 72%);
+  top: 5%;
+  left: -10%;
+  right: -10%;
+  height: 80%;
+  background: radial-gradient(ellipse at 50% 42%, rgba(245, 158, 11, 0.3) 0%, rgba(220, 38, 38, 0.18) 40%, rgba(88, 28, 135, 0.12) 65%, transparent 80%);
   border-radius: 50%;
   pointer-events: none;
-  filter: blur(24px);
+  filter: blur(28px);
   z-index: 0;
   animation: bk-oniShrineAura 5s ease-in-out infinite alternate;
 }
@@ -636,19 +639,19 @@
 .bk-torii-graphic {
   position: relative;
   z-index: 2;
-  width: clamp(320px, min(36vw, 50vh), 500px);
+  width: clamp(280px, min(32vw, 43vh), 420px);
   height: auto;
-  filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.78))
-         drop-shadow(0 0 25px rgba(245, 158, 11, 0.35))
-         drop-shadow(0 0 50px rgba(220, 38, 38, 0.22));
+  filter: drop-shadow(0 18px 28px rgba(4, 2, 8, 0.88))
+         drop-shadow(0 0 24px rgba(245, 158, 11, 0.35))
+         drop-shadow(0 0 48px rgba(220, 38, 38, 0.22));
 }
 
 .bk-oni-graphic.bk-oni-themed,
 .bk-torii-graphic {
-  filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.82))
-         drop-shadow(0 0 26px rgba(245, 158, 11, 0.4))
-         drop-shadow(0 0 52px rgba(220, 38, 38, 0.24))
-         contrast(1.04) brightness(1.02);
+  filter: drop-shadow(0 18px 28px rgba(4, 2, 8, 0.92))
+         drop-shadow(0 0 26px rgba(245, 158, 11, 0.38))
+         drop-shadow(0 0 54px rgba(220, 38, 38, 0.25))
+         contrast(1.04) brightness(1.01);
 }
 
 /* Static variant: pure scenery, no pointer affordance, no motion */
