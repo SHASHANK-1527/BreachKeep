@@ -186,3 +186,28 @@
   font-weight: 600;
   margin-top: 0.2rem;
 }
+/* The sanctum stone gate ships with hardcoded slate colours that clash with
+   every house palette. Inside a themed hub, re-tint it from the house vars. */
+.bk-dashboard[data-house] .sn-stone-gate .sn-arch {
+  fill: color-mix(in srgb, var(--house-accent, #6ea0ff) 12%, rgba(0, 0, 0, 0.55));
+  stroke: var(--border-active, rgba(255, 255, 255, 0.35));
+}
+
+.bk-dashboard[data-house] .sn-stone-gate .sn-door-leaf {
+  fill: rgba(0, 0, 0, 0.5);
+  stroke: var(--border-subtle, rgba(255, 255, 255, 0.2));
+}
+
+.bk-dashboard[data-house] .sn-stone-gate .sn-lock-seal {
+  fill: var(--house-accent, #ffdca8);
+}
+
+/* The hub no longer renders its own header bar — the fortress view supplies
+   the crest and the profile medallion floats above it. */
+.hub-shell {
+  padding-top: 0;
+}
+
+.hub-main {
+  padding-top: 0;
+}

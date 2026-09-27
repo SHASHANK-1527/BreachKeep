@@ -1,12 +1,13 @@
-// Theme-agnostic hub skeleton. Real GateCards/GuidePanel come from the ported
-// dungeon-hub shell; this wraps them and exposes named character slots.
+import HubProfileMenu from './HubProfileMenu.jsx'
+
+// Theme-agnostic hub skeleton. The fortress/city views already render the
+// house crest and name, so the only chrome here is the profile medallion —
+// which carries account settings and log out now that the global fixed
+// header is suppressed on /dashboard.
 export default function HubShell({ user, children }) {
   return (
     <div className="hub-shell">
-      <header className="hub-header">
-        <span className="hub-brand">BreachKeep</span>
-        <span className="hub-user">{user?.username} · {user?.house || 'unsorted'}</span>
-      </header>
+      <HubProfileMenu user={user} />
       <main className="hub-main">{children}</main>
       <div className="guide-character-anchor" data-slot="guide" />
     </div>

@@ -8,6 +8,7 @@ import SortingCeremony from '../shell/SortingCeremony.jsx'
 import ParticleField from '../sanctum/ParticleField.jsx'
 import StoneGate from '../sanctum/StoneGate.jsx'
 import ThemeStage from '../shell/styles/themes/ThemeStage.jsx'
+import DungeonsComing from '../shell/DungeonsComing.jsx'
 
 // State machine:
 //  A) introComplete=false            -> sanctum scene with the sealed Oni gate
@@ -70,14 +71,7 @@ export default function Dashboard() {
           <HubShell user={user}>
             <div className="bk-gates">
               {progress.unlocked.length === 0 ? (
-                <div className="bk-no-dungeons-card thaw-in">
-                  <h3 style={{ margin: '0 0 0.5rem', color: 'var(--house-accent, #ffdca8)', letterSpacing: '0.06em' }}>
-                    Chambers Awaiting Trial
-                  </h3>
-                  <p className="bk-note" style={{ margin: 0 }}>
-                    No dungeons are live yet. Check back before class.
-                  </p>
-                </div>
+                <DungeonsComing house={user.house} />
               ) : (
                 <div className="unlocked-gates-grid">
                   {progress.unlocked.map((dungeonId) => (
@@ -120,7 +114,7 @@ export default function Dashboard() {
       <HubShell user={user}>
         {phase === 'C' && (
           <div className="bk-gates">
-            {progress.unlocked.length === 0 && <p className="bk-note">No dungeons are live yet. Check back before class.</p>}
+            {progress.unlocked.length === 0 && <DungeonsComing house={user?.house} />}
           </div>
         )}
       </HubShell>

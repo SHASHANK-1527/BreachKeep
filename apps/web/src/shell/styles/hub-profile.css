@@ -1,0 +1,206 @@
+/* Themed profile medallion for the house hub. Colours come from the
+   [data-house] custom properties, so it re-skins itself per house. */
+
+.hub-profile {
+  position: fixed;
+  top: 18px;
+  right: 22px;
+  z-index: 120;
+}
+
+.hub-profile-trigger {
+  position: relative;
+  width: 54px;
+  height: 54px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hub-profile-trigger:hover,
+.hub-profile-trigger.is-open {
+  transform: scale(1.06);
+}
+
+.hub-profile-trigger:focus-visible {
+  outline: 2px solid var(--house-accent, #ffdca8);
+  outline-offset: 4px;
+  border-radius: 50%;
+}
+
+/* Slow-turning rune ring around the portrait */
+.hub-profile-ring {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1.5px dashed var(--house-accent, #ffdca8);
+  opacity: 0.55;
+  animation: hub-profile-spin 18s linear infinite;
+  pointer-events: none;
+}
+
+.hub-profile-trigger:hover .hub-profile-ring,
+.hub-profile-trigger.is-open .hub-profile-ring {
+  opacity: 0.95;
+}
+
+@keyframes hub-profile-spin {
+  to { transform: rotate(360deg); }
+}
+
+.hub-profile-face {
+  position: relative;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: var(--surface-card, rgba(12, 18, 32, 0.9));
+  border: 2px solid var(--house-accent, #ffdca8);
+  box-shadow: 0 0 18px var(--house-glow, rgba(255, 220, 168, 0.4)),
+              inset 0 0 12px rgba(0, 0, 0, 0.55);
+}
+
+.hub-profile-face img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.hub-profile-initial {
+  position: absolute;
+  font-family: var(--font-serif, Georgia, serif);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--house-accent-strong, #ffdca8);
+  letter-spacing: 0.04em;
+}
+
+/* ---------------- dropdown ---------------- */
+
+.hub-profile-menu {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  min-width: 246px;
+  padding: 0.5rem;
+  border-radius: var(--radius-card, 14px);
+  background: var(--surface-card, rgba(12, 18, 32, 0.94));
+  border: 1px solid var(--border-active, rgba(255, 220, 168, 0.4));
+  box-shadow: 0 22px 48px rgba(0, 0, 0, 0.65),
+              0 0 22px var(--house-glow, rgba(255, 220, 168, 0.18));
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: var(--text-bright, #f2f2f2);
+  font-family: var(--font-body, system-ui, sans-serif);
+  animation: hub-profile-drop 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top right;
+}
+
+@keyframes hub-profile-drop {
+  from { opacity: 0; transform: translateY(-6px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.hub-profile-head {
+  padding: 0.65rem 0.7rem 0.75rem;
+  border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.12));
+  margin-bottom: 0.4rem;
+}
+
+.hub-profile-name {
+  font-family: var(--font-serif, Georgia, serif);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-pure, #fff);
+  letter-spacing: 0.02em;
+}
+
+.hub-profile-email {
+  font-size: 0.74rem;
+  color: var(--text-muted, rgba(255, 255, 255, 0.55));
+  margin-top: 2px;
+  word-break: break-all;
+}
+
+.hub-profile-house {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 2px 10px;
+  border-radius: 9999px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--house-accent, #ffdca8);
+  background: color-mix(in srgb, var(--house-accent, #ffdca8) 12%, transparent);
+  border: 1px solid var(--border-active, rgba(255, 220, 168, 0.35));
+}
+
+.hub-profile-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border: 0;
+  border-radius: var(--radius-sm, 8px);
+  background: transparent;
+  color: var(--text-bright, #eee);
+  font-family: inherit;
+  font-size: 0.87rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.16s ease, color 0.16s ease;
+}
+
+.hub-profile-item:hover {
+  background: color-mix(in srgb, var(--house-accent, #ffdca8) 14%, transparent);
+  color: var(--text-pure, #fff);
+}
+
+.hub-profile-item-ico {
+  width: 18px;
+  text-align: center;
+  color: var(--house-accent, #ffdca8);
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.hub-profile-item.is-danger {
+  color: #f87171;
+}
+
+.hub-profile-item.is-danger .hub-profile-item-ico {
+  color: #f87171;
+}
+
+.hub-profile-item.is-danger:hover {
+  background: rgba(239, 68, 68, 0.14);
+  color: #fecaca;
+}
+
+.hub-profile-rule {
+  height: 1px;
+  margin: 0.35rem 0.3rem;
+  background: var(--border-subtle, rgba(255, 255, 255, 0.1));
+}
+
+@media (max-width: 768px) {
+  .hub-profile { top: 12px; right: 12px; }
+  .hub-profile-trigger { width: 46px; height: 46px; }
+  .hub-profile-face { width: 42px; height: 42px; }
+  .hub-profile-menu { min-width: 216px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hub-profile-ring { animation: none; }
+  .hub-profile-menu { animation: none; }
+}
