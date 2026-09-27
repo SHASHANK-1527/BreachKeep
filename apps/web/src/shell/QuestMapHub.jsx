@@ -4,9 +4,9 @@ import FloatingLeaves from '../components/FloatingLeaves.jsx'
 
 /**
  * Pre-sorting dashboard — the onboarding scene: sanctum background, floating
- * leaves, and the Oni Gate as static centerpiece art, exactly as in the
- * asset. The INTRODUCTION banner itself is the button that toggles to the
- * introduction page. No extra elements, no animations on the gate.
+ * leaves, and the Oni Gate as static centerpiece art, adjusted and harmonized
+ * to the sanctum stone pedestal & harvest moon scene. The INTRODUCTION banner
+ * itself is the button that toggles to the introduction page.
  */
 export default function QuestMapHub({ user }) {
   const nav = useNavigate()
@@ -40,7 +40,7 @@ export default function QuestMapHub({ user }) {
         Welcome, {user?.username || 'Initiate'} — face the gate to begin.
       </p>
 
-      {/* The Oni Gate — themed to match the sanctum stone pedestal & crimson harvest moon */}
+      {/* The Oni Gate — harmonized to match the sanctum stone pedestal & crimson harvest moon */}
       <div className="bk-oni-wrapper bk-oni-static bk-oni-still">
         <div className="bk-oni-pedestal-shadow" aria-hidden="true" />
         <div className="bk-oni-ambient-aura" aria-hidden="true" />

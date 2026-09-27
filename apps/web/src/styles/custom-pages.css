@@ -578,10 +578,11 @@
   opacity: 0.85;
 }
 
-/* Centerpiece Oni Gate — themed to the stone sanctuary and harvest moon */
-.bk-oni-wrapper {
+/* Centerpiece Oni Gate — adjusted and harmonized to the stone sanctuary and harvest moon */
+.bk-oni-wrapper,
+.bk-gate-wrapper {
   position: absolute;
-  top: 53.2%;
+  top: 50.4%;
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 20;
@@ -593,63 +594,52 @@
   user-select: none;
 }
 
-.bk-oni-pedestal-shadow {
+.bk-oni-pedestal-shadow,
+.bk-gate-pedestal-shadow {
   position: absolute;
   bottom: 0%;
-  left: 5%;
-  right: 5%;
-  height: 18%;
-  background: radial-gradient(ellipse at 50% 50%, rgba(10, 4, 18, 0.95) 0%, rgba(12, 5, 22, 0.6) 50%, transparent 75%);
+  left: 6%;
+  right: 6%;
+  height: 12%;
+  background: radial-gradient(ellipse at 50% 50%, rgba(0, 0, 0, 0.45) 0%, transparent 70%);
   border-radius: 50%;
   pointer-events: none;
-  filter: blur(10px);
+  filter: blur(5px);
   z-index: 1;
 }
 
-.bk-oni-ambient-aura {
-  position: absolute;
-  inset: -10%;
-  background: radial-gradient(circle at 50% 48%, rgba(220, 38, 38, 0.28) 0%, rgba(245, 158, 11, 0.16) 42%, transparent 72%);
-  border-radius: 50%;
-  pointer-events: none;
-  filter: blur(20px);
-  z-index: 0;
-  animation: bk-oniShrineAura 5s ease-in-out infinite alternate;
+.bk-oni-ambient-aura,
+.bk-gate-ambient-aura {
+  display: none;
 }
 
-@keyframes bk-oniShrineAura {
-  0% {
-    transform: scale(0.96);
-    opacity: 0.55;
-  }
-  100% {
-    transform: scale(1.05);
-    opacity: 0.9;
-  }
-}
-
-.bk-oni-graphic {
+.bk-oni-graphic,
+.bk-gate-graphic,
+.bk-torii-graphic {
   position: relative;
   z-index: 2;
-  width: clamp(340px, 34vw, 48vh);
+  width: clamp(250px, min(28vw, 44vh), 420px);
   height: auto;
-  filter: drop-shadow(0 0 20px rgba(220, 38, 38, 0.55)) drop-shadow(0 0 35px rgba(212, 175, 55, 0.3));
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.55))
+         drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35));
 }
 
-.bk-oni-graphic.bk-oni-themed {
-  filter: drop-shadow(0 14px 24px rgba(0, 0, 0, 0.92))
-         drop-shadow(0 0 22px rgba(220, 38, 38, 0.45))
-         drop-shadow(0 0 45px rgba(245, 158, 11, 0.28))
-         contrast(1.06) brightness(1.02);
+.bk-oni-graphic.bk-oni-themed,
+.bk-torii-graphic {
+  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.6))
+         drop-shadow(0 2px 6px rgba(0, 0, 0, 0.38));
 }
 
 /* Static variant: pure scenery, no pointer affordance, no motion */
-.bk-oni-wrapper.bk-oni-static {
+.bk-oni-wrapper.bk-oni-static,
+.bk-gate-wrapper.bk-gate-static {
   cursor: default;
   pointer-events: none;
 }
 
-.bk-oni-wrapper.bk-oni-still .bk-oni-graphic {
+.bk-oni-wrapper.bk-oni-still .bk-oni-graphic,
+.bk-gate-wrapper.bk-gate-static .bk-gate-graphic,
+.bk-gate-wrapper.bk-gate-static .bk-torii-graphic {
   animation: none;
   transition: none;
   transform: none;
