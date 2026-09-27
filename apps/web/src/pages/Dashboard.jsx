@@ -11,7 +11,7 @@ import ThemeStage from '../shell/styles/themes/ThemeStage.jsx'
 import DungeonsComing from '../shell/DungeonsComing.jsx'
 
 // State machine:
-//  A) introComplete=false            -> sanctum scene with the sealed Oni gate
+//  A) introComplete=false            -> sanctum scene with the Torii gate
 //  B) introComplete=true, sorted=false, returning -> run sorting ceremony
 //  C) sorted=true                    -> full house-themed hub
 export default function Dashboard() {
