@@ -1,0 +1,185 @@
+.voltgrid-master-scene-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  display: block;
+  pointer-events: none;
+}
+
+.voltgrid-clean-citadel-artwork {
+  filter: contrast(1.05) brightness(1.02);
+}
+
+.voltgrid-citadel-floating-group {
+  animation: citadelSubtleDrift 11s ease-in-out infinite alternate;
+  transform-origin: 688px 450px;
+}
+
+@keyframes citadelSubtleDrift {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-2.5px);
+  }
+  100% {
+    transform: translateY(1.5px);
+  }
+}
+
+.sky-electric-ambient-flash {
+  opacity: 0;
+  animation: skyElectricFlashPulse 8.5s ease-out infinite 1.4s;
+}
+
+@keyframes skyElectricFlashPulse {
+  0%, 92%, 100% {
+    opacity: 0;
+  }
+  93% {
+    opacity: 0.12;
+  }
+  94% {
+    opacity: 0.03;
+  }
+  95% {
+    opacity: 0.18;
+  }
+  97% {
+    opacity: 0;
+  }
+}
+
+.electric-arc-path {
+  opacity: 0;
+  stroke-dasharray: 200;
+  stroke-dashoffset: 200;
+}
+
+.arc-right-insulator {
+  animation: insulatorArcRight 6.8s cubic-bezier(0.1, 0.9, 0.2, 1) infinite 0.8s;
+}
+
+.arc-left-insulator {
+  animation: insulatorArcLeft 9.2s cubic-bezier(0.1, 0.9, 0.2, 1) infinite 3.5s;
+}
+
+.arc-distant-cloud {
+  animation: cloudArcFlash 8.5s cubic-bezier(0.1, 0.9, 0.2, 1) infinite 1.4s;
+}
+
+@keyframes insulatorArcRight {
+  0%, 94%, 100% {
+    opacity: 0;
+    stroke-dashoffset: 200;
+  }
+  95% {
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+  96% {
+    opacity: 0.3;
+    stroke-dashoffset: 0;
+  }
+  97% {
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+  98.5% {
+    opacity: 0;
+    stroke-dashoffset: -200;
+  }
+}
+
+@keyframes insulatorArcLeft {
+  0%, 95%, 100% {
+    opacity: 0;
+    stroke-dashoffset: 200;
+  }
+  96% {
+    opacity: 0.95;
+    stroke-dashoffset: 0;
+  }
+  97% {
+    opacity: 0.2;
+    stroke-dashoffset: 0;
+  }
+  98% {
+    opacity: 1;
+    stroke-dashoffset: 0;
+  }
+  99% {
+    opacity: 0;
+    stroke-dashoffset: -200;
+  }
+}
+
+@keyframes cloudArcFlash {
+  0%, 92%, 100% {
+    opacity: 0;
+    stroke-dashoffset: 200;
+  }
+  93% {
+    opacity: 0.9;
+    stroke-dashoffset: 0;
+  }
+  94% {
+    opacity: 0.2;
+    stroke-dashoffset: 0;
+  }
+  95% {
+    opacity: 0.95;
+    stroke-dashoffset: 0;
+  }
+  97% {
+    opacity: 0;
+    stroke-dashoffset: -200;
+  }
+}
+
+.grid-conduit-pulse {
+  animation: conduitCurrentFlow 3.2s ease-in-out infinite alternate;
+}
+
+@keyframes conduitCurrentFlow {
+  0% {
+    opacity: 0.45;
+    stroke-width: 1.4;
+  }
+  100% {
+    opacity: 0.9;
+    stroke-width: 2.2;
+  }
+}
+
+.causeway-light-point {
+  animation: causewayGleam 2.8s ease-in-out infinite alternate;
+}
+
+@keyframes causewayGleam {
+  0% {
+    opacity: 0.4;
+    r: 1.2;
+  }
+  100% {
+    opacity: 0.95;
+    r: 2.0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .voltgrid-citadel-floating-group,
+  .sky-electric-ambient-flash,
+  .arc-right-insulator,
+  .arc-left-insulator,
+  .arc-distant-cloud,
+  .grid-conduit-pulse,
+  .causeway-light-point {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
