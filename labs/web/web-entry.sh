@@ -24,4 +24,4 @@ chown student:student /home/student/README.txt 2>/dev/null || true
 # Student shell: no BK_FLAG / BK_ROOM in its environment.
 BASE_ARG=(); [ -n "${BK_BASE:-}" ] && BASE_ARG=(-b "$BK_BASE")
 exec setpriv --reuid student --regid student --init-groups env -u BK_FLAG -u BK_ROOM \
-  ttyd -p 7681 -i 0.0.0.0 "${BASE_ARG[@]}" bash
+  ttyd -W -p 7681 -i 0.0.0.0 "${BASE_ARG[@]}" bash

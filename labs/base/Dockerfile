@@ -15,4 +15,4 @@ RUN useradd -m -s /bin/bash student
 USER student
 WORKDIR /home/student
 EXPOSE 7681
-CMD ["ttyd", "-p", "7681", "-i", "0.0.0.0", "bash"]
+CMD ["ttyd", "-W", "-p", "7681", "-i", "0.0.0.0", "bash"]

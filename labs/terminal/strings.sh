@@ -26,4 +26,4 @@ unset BK_FLAG
 # ttyd base path so assets + /ws resolve behind the /labs/<name> proxy.
 BASE_ARG=()
 [ -n "${BK_BASE:-}" ] && BASE_ARG=(-b "$BK_BASE")
-exec env -u BK_FLAG ttyd -p 7681 -i 0.0.0.0 "${BASE_ARG[@]}" bash
+exec env -u BK_FLAG ttyd -W -p 7681 -i 0.0.0.0 "${BASE_ARG[@]}" bash

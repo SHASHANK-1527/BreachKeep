@@ -42,4 +42,4 @@ nohup /usr/local/bin/bkguard >/dev/null 2>&1 &
 unset BK_FLAG FLAG
 BASE_ARG=(); [ -n "${BK_BASE:-}" ] && BASE_ARG=(-b "$BK_BASE")
 exec setpriv --reuid student --regid student --init-groups env -u BK_FLAG \
-  ttyd -p 7681 -i 0.0.0.0 "${BASE_ARG[@]}" bash
+  ttyd -W -p 7681 -i 0.0.0.0 "${BASE_ARG[@]}" bash
