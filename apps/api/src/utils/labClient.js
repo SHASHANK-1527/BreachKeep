@@ -17,4 +17,5 @@ export const labClient = {
   provision: (studentId, roomId, flag) => call('/provision', { studentId, roomId, flag }),
   stop: (studentId, roomId) => call('/stop', { studentId, roomId }),
   setDungeon: (dungeonId, live) => call('/dungeon', { dungeonId, live }),
+  capstone: (action) => call('/capstone', { action }),
 }

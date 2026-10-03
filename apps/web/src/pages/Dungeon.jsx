@@ -1,12 +1,23 @@
 import { useParams } from 'react-router-dom'
 import { useAuth } from '../app/AuthContext.jsx'
+import { getDungeon } from '../features/dungeons/index.js'
+import DungeonView from '../features/dungeons/DungeonView.jsx'
+import CapstoneView from '../features/dungeons/capstone/CapstoneView.jsx'
 import FlagSubmit from '../components/FlagSubmit.jsx'
 
-// Room list + room view for a dungeon. Per-room content is built weekly under
-// features/dungeons/<id>/. This is the shared shell each room plugs into.
+// A dungeon with built frontend content renders through DungeonView (room list,
+// tiers, hints, terminal, flag). Capstone is a single shared target box, not a
+// tiered room set, so it has its own view. Anything else keeps the old stub.
 export default function Dungeon() {
   const { dungeonId } = useParams()
   const { user } = useAuth()
+
+  if (dungeonId === 'capstone') return <CapstoneView />
+
+  if (getDungeon(dungeonId)) {
+    return <DungeonView dungeonId={dungeonId} />
+  }
+
   return (
     <div className="bk-dungeon" data-house={user?.house || undefined}>
       <h1 className="bk-dungeon-title">{dungeonId}</h1>

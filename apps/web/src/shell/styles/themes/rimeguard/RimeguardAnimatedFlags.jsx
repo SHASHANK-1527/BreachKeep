@@ -100,7 +100,7 @@ export default function RimeguardAnimatedFlags({ windGust = 1 }) {
 
       {/* 1. Base Pristine Illustration Artwork (Clean sky for moving clouds and energy core) */}
       <image
-        href="/rimeguard_fortress_scene_cleansky.jpg"
+        href="/rimeguard_fortress_scene_cleansky.webp"
         x="0"
         y="0"
         width="1376"
@@ -111,7 +111,7 @@ export default function RimeguardAnimatedFlags({ windGust = 1 }) {
       {/* 2. Authentic Hand-Drawn Flags in Living Transverse Wind Motion */}
       <g clipPath="url(#authentic-flags-clip)">
         <image
-          href="/rimeguard_fortress_scene.jpg"
+          href="/rimeguard_fortress_scene.webp"
           x="0"
           y="0"
           width="1376"
@@ -178,7 +178,7 @@ export default function RimeguardAnimatedFlags({ windGust = 1 }) {
 
         {/* Hand-Drawn Crystal Energy Core (Scaled down to 60%, 3D Rotating) */}
         <image
-          href="/crystal_core.png"
+          href="/crystal_core.webp"
           x="-32"
           y="-36"
           width="64"

@@ -1,0 +1,16 @@
+#!/bin/bash
+# Student-facing: submit to the room guard. For "find/compute the answer" rooms
+# pass the answer (check <answer>); for "do the task / fix it" rooms just run
+# `check`. The root guard verifies and, if satisfied, reveals this student's flag.
+ans="$*"
+ans="$(printf '%s' "$ans" | tr -s ' ' ' ' | sed 's/^ *//; s/ *$//')"
+rm -f /home/student/.bk_result
+printf '%s' "$ans" > /home/student/.bk_answer
+for _ in $(seq 1 25); do [ -f /home/student/.bk_result ] && break; sleep 0.2; done
+r="$(cat /home/student/.bk_result 2>/dev/null)"; rm -f /home/student/.bk_result
+case "$r" in
+  NOPE)   echo "Not correct — re-check your answer and try again." ;;
+  FAIL:*) echo "Not yet: ${r#FAIL:}" ;;
+  "")     echo "The guard is not responding yet; wait a moment and retry." ;;
+  *)      echo "Correct! Submit this flag on the room page:"; echo "$r" ;;
+esac

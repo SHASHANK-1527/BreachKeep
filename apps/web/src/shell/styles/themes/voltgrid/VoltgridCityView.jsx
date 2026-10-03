@@ -33,14 +33,14 @@ export default function VoltgridCityView({ children }) {
         <div className="scene-illustrated-clouds-container" aria-hidden="true">
           <div className="scene-cloud-wrapper cloud-left-wrapper">
             <img
-              src="/voltgrid_cloud_left.png"
+              src="/voltgrid_cloud_left.webp"
               alt=""
               className="scene-cloud-sprite cloud-left-sprite"
             />
           </div>
           <div className="scene-cloud-wrapper cloud-right-wrapper">
             <img
-              src="/voltgrid_cloud_right.png"
+              src="/voltgrid_cloud_right.webp"
               alt=""
               className="scene-cloud-sprite cloud-right-sprite"
             />

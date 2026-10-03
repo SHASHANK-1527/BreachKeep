@@ -45,7 +45,7 @@ export default function QuestMapHub({ user }) {
         <div className="bk-oni-pedestal-shadow" aria-hidden="true" />
         <div className="bk-oni-ambient-aura" aria-hidden="true" />
         <img
-          src="/assets/oni-mask.png"
+          src="/assets/oni-mask.webp"
           alt="Oni Gate"
           className="bk-oni-graphic bk-oni-themed"
         />

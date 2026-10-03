@@ -3,8 +3,9 @@ import requireAdmin from '../middleware/requireAdmin.js'
 import { strictLimiter } from '../middleware/rateLimit.js'
 import {
   adminLogin, adminLogout, adminWhere, adminState, adminOverview,
-  setCommonCode, setRosterGate, setMaintenance, setRoster, getRoster, removeFromRoster, setDungeon,
+  setCommonCode, setRosterGate, setMaintenance, setRoster, getRoster, removeFromRoster, setDungeon, setCapstone,
   adminStudents, adminStudentDetail, adminAssignHouse, adminResetProgress, adminDeleteStudent,
+  setTesting, testIntro, testResetDungeon,
 } from '../controllers/adminController.js'
 
 const r = Router()
@@ -20,6 +21,10 @@ r.get('/roster', requireAdmin, getRoster)
 r.post('/roster', requireAdmin, setRoster)
 r.post('/roster-remove', requireAdmin, removeFromRoster)
 r.post('/dungeons', requireAdmin, setDungeon)
+r.post('/capstone', requireAdmin, setCapstone)
+r.post('/testing', requireAdmin, setTesting)
+r.post('/test/intro', requireAdmin, testIntro)
+r.post('/test/reset-dungeon', requireAdmin, testResetDungeon)
 
 // students (declared after /roster* so no path is shadowed)
 r.get('/students', requireAdmin, adminStudents)

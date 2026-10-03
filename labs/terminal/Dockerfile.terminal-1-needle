@@ -1,0 +1,11 @@
+FROM breachkeep/base
+# Room: Needle (hard). Needs useradd (passwd) + setpriv (util-linux). Root guard.
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends util-linux passwd \
+    && rm -rf /var/lib/apt/lists/*
+COPY --chown=root:root needle.sh  /usr/local/bin/room.sh
+COPY --chown=root:root bkguard.sh /usr/local/bin/bkguard
+COPY --chown=root:root check      /usr/local/bin/check
+RUN chmod 755 /usr/local/bin/room.sh /usr/local/bin/bkguard /usr/local/bin/check
+WORKDIR /home/student
+CMD ["bash", "/usr/local/bin/room.sh"]

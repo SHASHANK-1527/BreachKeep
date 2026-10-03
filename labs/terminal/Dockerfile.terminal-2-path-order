@@ -1,0 +1,12 @@
+FROM breachkeep/base
+# terminal-2 room: terminal-2-path-order
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends util-linux \
+    && rm -rf /var/lib/apt/lists/*
+COPY --chown=root:root t2-path-order.sh /usr/local/bin/room.sh
+COPY --chown=root:root bkverify.sh /usr/local/bin/bkverify
+COPY --chown=root:root check      /usr/local/bin/check
+RUN chmod 755 /usr/local/bin/room.sh /usr/local/bin/bkverify /usr/local/bin/check
+WORKDIR /home/student
+# starts as root; room.sh sets up, then drops to 'student' via setpriv.
+CMD ["bash", "/usr/local/bin/room.sh"]

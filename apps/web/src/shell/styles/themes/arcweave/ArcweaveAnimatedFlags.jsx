@@ -66,7 +66,7 @@ export default function ArcweaveAnimatedFlags() {
           ======================================================== */}
       <g className="arcweave-citadel-floating-group">
         <image
-          href="/arcweave_lightning_citadel.jpg"
+          href="/arcweave_lightning_citadel.webp"
           x="0"
           y="0"
           width="1376"

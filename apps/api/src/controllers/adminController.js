@@ -9,15 +9,19 @@ import { labClient } from '../utils/labClient.js'
 import { houseCounts as _houseCounts } from './houseController.js'
 import { cookieOpts } from '../config/env.js'
 import { invalidateMaintenanceCache } from '../middleware/maintenance.js'
+import { INTRO_ROOMS } from './introController.js'
 
 const MAX_LIVE = 2
 
 // POST /api/admin/login  { password }
 export async function adminLogin(req, res) {
   const { password } = req.body
-  const hash = process.env.ADMIN_PASSWORD_HASH
+  let hash = process.env.ADMIN_PASSWORD_HASH
   if (!hash) return res.status(500).json({ error: 'Admin password not configured' })
-  const ok = await bcrypt.compare(password || '', hash)
+  // collapse $$ -> $ in case the hash was doubled in .env (see config/env.js)
+  while (hash.includes('$$')) hash = hash.replace(/\$\$/g, '$')
+  let ok = false
+  try { ok = await bcrypt.compare(password || '', hash) } catch { ok = false }
   if (!ok) return res.status(401).json({ error: 'Wrong password' })
   const token = jwt.sign({ scope: 'admin' }, process.env.JWT_SECRET, { expiresIn: '8h' })
   res.cookie('bk_admin', token, { ...cookieOpts(), maxAge: 8 * 60 * 60 * 1000 })
@@ -46,6 +50,8 @@ export async function adminState(req, res) {
     commonCodeEnabled: cfg.commonCodeEnabled,
     rosterGateEnabled: cfg.rosterGateEnabled,
     maintenance: !!cfg.maintenance,
+    capstoneArmed: !!cfg.capstoneArmed,
+    testingEnabled: !!cfg.testingEnabled,
     maintenanceMessage: cfg.maintenanceMessage || '',
     maintenanceEta: cfg.maintenanceEta || '',
     dungeons,
@@ -264,4 +270,68 @@ export async function setDungeon(req, res) {
     return res.status(502).json({ error: 'Saved, but provisioner did not respond', detail: String(e.message) })
   }
   return res.json({ ok: true, dungeonId, live: !!live })
+}
+
+// POST /api/admin/capstone  { armed }
+// Arms/disarms the capstone target box: flips the state the dungeon page reads,
+// and tells the provisioner to start/stop the single shared target container.
+export async function setCapstone(req, res) {
+  const cfg = await AccessConfig.get()
+  cfg.capstoneArmed = !!req.body.armed
+  if (typeof req.body.host === 'string') cfg.capstoneTargetHost = req.body.host.slice(0, 200)
+  cfg.updatedAt = new Date()
+  await cfg.save()
+  try {
+    await labClient.capstone(cfg.capstoneArmed ? 'start' : 'stop')
+  } catch (e) {
+    return res.status(502).json({ error: 'Saved, but provisioner did not respond', detail: String(e.message) })
+  }
+  console.log(`[admin] capstone ${cfg.capstoneArmed ? 'ARMED — target box up' : 'disarmed — target box down'}`)
+  return res.json({ ok: true, capstoneArmed: cfg.capstoneArmed })
+}
+
+// ---- testing tools (Warden) ----
+const DUNGEON_ROOM_PREFIX = {
+  'terminal-1': 'terminal-1-', 'terminal-2': 'terminal-2-', 'network': 'network-',
+  'web': 'web-', 'secure-coding': 'secure-', 'capstone': 'capstone-',
+}
+
+async function testingGate(res) {
+  const cfg = await AccessConfig.get()
+  if (!cfg.testingEnabled) { res.status(403).json({ error: 'Testing tools are disabled' }); return null }
+  return cfg
+}
+
+// POST /api/admin/testing { enabled }
+export async function setTesting(req, res) {
+  const cfg = await AccessConfig.get()
+  cfg.testingEnabled = !!req.body.enabled
+  cfg.updatedAt = new Date()
+  await cfg.save()
+  return res.json({ ok: true, testingEnabled: cfg.testingEnabled })
+}
+
+// POST /api/admin/test/intro { id, action: 'complete'|'reset' }
+export async function testIntro(req, res) {
+  if (!(await testingGate(res))) return
+  const { id, action } = req.body
+  const user = await User.findById(id)
+  if (!user) return res.status(404).json({ error: 'Student not found' })
+  if (action === 'complete') { user.introComplete = true; user.introRooms = [...INTRO_ROOMS] }
+  else if (action === 'reset') { user.introComplete = false; user.introRooms = [] }
+  else return res.status(400).json({ error: "action must be 'complete' or 'reset'" })
+  await user.save()
+  return res.json({ ok: true, introComplete: user.introComplete })
+}
+
+// POST /api/admin/test/reset-dungeon { id, dungeonId }
+export async function testResetDungeon(req, res) {
+  if (!(await testingGate(res))) return
+  const { id, dungeonId } = req.body
+  const prefix = DUNGEON_ROOM_PREFIX[dungeonId]
+  if (!prefix) return res.status(400).json({ error: 'unknown dungeon' })
+  const user = await User.findById(id)
+  if (!user) return res.status(404).json({ error: 'Student not found' })
+  const { deletedCount } = await Progress.deleteMany({ userId: user._id, roomId: new RegExp('^' + prefix) })
+  return res.json({ ok: true, removed: deletedCount })
 }

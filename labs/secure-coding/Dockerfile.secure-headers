@@ -1,0 +1,18 @@
+FROM node:20-slim
+# Secure-coding room: secure-headers (grades fixes to the Trading Post via a harness).
+# The grader runs as ROOT and holds the flag; it runs the student's edited code
+# as the unprivileged 'runner' uid (setpriv) so that code can never read the
+# flag from the grader's environment. No student shell.
+ENV DEBIAN_FRONTEND=noninteractive
+WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends util-linux \
+    && rm -rf /var/lib/apt/lists/*
+COPY app/package.json ./
+RUN npm install --omit=dev
+COPY app/server.js app/seed.js app/secure-harness.mjs app/grader.mjs ./
+RUN useradd -r -s /usr/sbin/nologin runner \
+    && mkdir -p /app/.orig && chmod -R a+rX /app
+ENV BK_ROOM=headers
+EXPOSE 8080
+# runs as root (holds the flag); harness drops to 'runner'
+CMD ["node", "/app/grader.mjs"]

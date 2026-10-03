@@ -1,4 +1,5 @@
 import Database from 'better-sqlite3'
+import { reward } from './bkflag.js'
 export function makeDb() {
   const db = new Database(':memory:')
   db.exec(`
@@ -9,7 +10,9 @@ export function makeDb() {
   db.prepare('INSERT INTO users VALUES (1,?,?,?)').run('alice', 'wonderland1', 'user')
   db.prepare('INSERT INTO users VALUES (2,?,?,?)').run('admin', 'super-secret-pw', 'admin')
   db.prepare('INSERT INTO orders VALUES (1042,?,?,?)').run('alice', 'Widget', 'nothing here')
-  db.prepare('INSERT INTO orders VALUES (1337,?,?,?)').run('admin', 'Vault Key', process.env.BK_FLAG || 'BK{dev-idor}')
-  db.prepare('INSERT INTO secrets VALUES (1,?,?)').run('union-flag', process.env.BK_FLAG || 'BK{dev-union}')
+  // The admin's order secret is the IDOR room's prize.
+  db.prepare('INSERT INTO orders VALUES (1337,?,?,?)').run('admin', 'Vault Key', reward('idor'))
+  // Union-based SQLi can read this secrets table (sqli room's prize).
+  db.prepare('INSERT INTO secrets VALUES (1,?,?)').run('union-flag', reward('sqli'))
   return db
 }

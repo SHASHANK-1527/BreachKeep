@@ -1,0 +1,12 @@
+FROM breachkeep/base
+# Room: Pipes (medium). Root guard holds the flag; drops to student via setpriv.
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends util-linux \
+    && rm -rf /var/lib/apt/lists/*
+COPY --chown=root:root pipes.sh    /usr/local/bin/room.sh
+COPY --chown=root:root bkguard.sh  /usr/local/bin/bkguard
+COPY --chown=root:root check       /usr/local/bin/check
+RUN chmod 755 /usr/local/bin/room.sh /usr/local/bin/bkguard /usr/local/bin/check
+WORKDIR /home/student
+# Stays root at launch; room.sh drops to student for the shell.
+CMD ["bash", "/usr/local/bin/room.sh"]

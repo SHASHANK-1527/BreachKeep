@@ -16,6 +16,7 @@ import flagRoutes from './routes/flags.js'
 import progressRoutes from './routes/progress.js'
 import houseRoutes from './routes/house.js'
 import adminRoutes from './routes/admin.js'
+import labsRoutes from './routes/labs.js'
 
 const env = loadEnv()
 const app = express()
@@ -65,6 +66,7 @@ app.use('/api/flags', flagRoutes)
 app.use('/api/progress', progressRoutes)
 app.use('/api/house', houseRoutes)
 app.use('/api/admin', adminRoutes)
+app.use('/api/labs', labsRoutes)
 
 // Test-mode helpers. The route simply does not exist unless test mode is on,
 // so in production this is a 404 like any other unknown path.

@@ -81,7 +81,7 @@ export default function VoltgridAnimatedFlags({ windGust = 1 }) {
 
       {/* 1. Base Cybercity Illustration Artwork */}
       <image
-        href="/voltgrid_cybercity_scene.jpg"
+        href="/voltgrid_cybercity_scene.webp"
         x="0"
         y="0"
         width="1376"
@@ -92,7 +92,7 @@ export default function VoltgridAnimatedFlags({ windGust = 1 }) {
       {/* 2. Authentic Cyber Banners in Living Transverse Wind Motion */}
       <g clipPath="url(#authentic-flags-clip)" className="animated-banner-group">
         <image
-          href="/voltgrid_cybercity_scene.jpg"
+          href="/voltgrid_cybercity_scene.webp"
           x="0"
           y="0"
           width="1376"

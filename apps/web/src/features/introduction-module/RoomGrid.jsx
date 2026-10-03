@@ -138,7 +138,7 @@ export default function RoomGrid() {
       <div className="qm-map qm-map-immersive">
         {/* Base Map Graphic — Mounted first as foundational background */}
         <img
-          src="/assets/introduction-bg.png"
+          src="/assets/introduction-bg.webp"
           alt="Introduction Quest Map"
           className="qm-map-bg qm-map-bg-plain"
           draggable="false"

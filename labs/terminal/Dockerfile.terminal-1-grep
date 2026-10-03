@@ -1,0 +1,8 @@
+FROM breachkeep/base
+# Room: grep (mandatory).
+COPY --chown=root:root grep.sh /usr/local/bin/room.sh
+USER root
+RUN chmod 755 /usr/local/bin/room.sh
+USER student
+WORKDIR /home/student
+CMD ["bash", "/usr/local/bin/room.sh"]

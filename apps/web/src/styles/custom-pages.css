@@ -173,7 +173,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #171a45 url('/assets/gate-bg.jpg') center center / 100% 100% no-repeat;
+  background: #171a45 url('/assets/gate-bg.webp') center center / 100% 100% no-repeat;
   overflow: hidden;
   font-family: var(--font-inter);
 }
@@ -182,7 +182,7 @@
    a third of the bytes, and no visible difference at that width. */
 @media (max-width: 900px) {
   .bk-code-page {
-    background-image: url('/assets/gate-bg-sm.jpg');
+    background-image: url('/assets/gate-bg-sm.webp');
     background-size: cover;
   }
 }
@@ -280,7 +280,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  background: url('/assets/account.jpg') center center / cover no-repeat;
+  background: url('/assets/account.webp') center center / cover no-repeat;
   overflow-y: auto;
   font-family: var(--font-inter);
 }
@@ -305,7 +305,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: url('/assets/signin-bg.jpg') center center / cover no-repeat;
+  background: url('/assets/signin-bg.webp') center center / cover no-repeat;
   overflow: hidden;
   font-family: var(--font-inter);
 }
@@ -455,7 +455,7 @@
   position: relative;
   width: 100vw;
   min-height: 100vh;
-  background: url('/assets/sanctum-bg.png') center bottom / cover no-repeat;
+  background: url('/assets/sanctum-bg.webp') center bottom / cover no-repeat;
   overflow: hidden;
   font-family: var(--font-inter);
 }

@@ -58,7 +58,7 @@ export default function HubProfileMenu({ user }) {
         <span className="hub-profile-face">
           {user?.avatar
             ? <img src={user.avatar} alt="" />
-            : <img src="/assets/avatar_icon.png" alt="" onError={(e) => { e.currentTarget.style.display = 'none' }} />}
+            : <img src="/assets/avatar_icon.webp" alt="" onError={(e) => { e.currentTarget.style.display = 'none' }} />}
           {!user?.avatar && <span className="hub-profile-initial">{initial}</span>}
         </span>
       </button>

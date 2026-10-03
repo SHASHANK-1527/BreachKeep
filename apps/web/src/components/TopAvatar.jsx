@@ -36,7 +36,7 @@ export default function TopAvatar() {
         aria-expanded={open}
         aria-label="User Profile"
       >
-        <img src="/assets/avatar_icon.png" alt="Dragon crest avatar" />
+        <img src="/assets/avatar_icon.webp" alt="Dragon crest avatar" />
       </button>
 
       {open && (

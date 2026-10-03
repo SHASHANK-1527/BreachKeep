@@ -24,7 +24,7 @@ export default function EmberkeepForgeScene() {
           ======================================================== */}
       <g className="emberkeep-citadel-floating-group">
         <image
-          href="/emberkeep_forge_citadel.jpg"
+          href="/emberkeep_forge_citadel.webp"
           x="0"
           y="0"
           width="1376"

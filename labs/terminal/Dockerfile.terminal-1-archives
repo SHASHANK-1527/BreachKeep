@@ -1,0 +1,11 @@
+FROM breachkeep/base
+# Room: archives (medium). Needs tar/gzip/xz and `file`.
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      tar gzip xz-utils file \
+    && rm -rf /var/lib/apt/lists/*
+COPY --chown=root:root archives.sh /usr/local/bin/room.sh
+RUN chmod 755 /usr/local/bin/room.sh
+USER student
+WORKDIR /home/student
+CMD ["bash", "/usr/local/bin/room.sh"]

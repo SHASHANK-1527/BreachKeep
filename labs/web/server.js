@@ -1,9 +1,16 @@
 // ⚠️ DELIBERATELY VULNERABLE. Web Dungeon target + Secure Coding subject.
 // Each vulnerability is tagged // VULN: <room>. The Secure Coding harness reruns
 // these exploits; a fix passes when the exploit fails and the app still works.
+//
+// Flags are per-room via reward() (see bkflag.js): in the Web Dungeon each room
+// runs with BK_ROOM set so only its intended vuln yields the real flag. With
+// BK_ROOM unset (local dev / Secure-Coding harness) every reward() returns the
+// real flag, exactly as before — the vulnerabilities themselves are unchanged.
 import express from 'express'
 import cookieParser from 'cookie-parser'
+import crypto from 'crypto'
 import { makeDb } from './seed.js'
+import { reward } from './bkflag.js'
 
 const db = makeDb()
 const app = express()
@@ -13,14 +20,41 @@ app.use(cookieParser())
 
 const FLAG = process.env.BK_FLAG || 'BK{dev-web}'
 
-// Room 1 — view source / robots
-app.get('/robots.txt', (_req, res) => res.type('text/plain').send('User-agent: *\nDisallow: /portal-8f2c/'))
-app.get('/', (_req, res) => res.send(`<!-- hint: try /robots.txt --><h1>Trading Post</h1>`))
+// ---- in-memory state for the stored/reflected XSS rooms ----
+const solved = {}                 // room -> true once a payload has reported in
+const NONCE = crypto.randomBytes(6).toString('hex')  // embedded in pages; the
+// injected script reads it and sends it back, so a blind curl to /xss-report
+// (without rendering the page) is not the intended path.
+const guestbook = []              // stored comments (rendered unescaped)
+
+// Room 1 — recon: robots discloses paths that should have stayed quiet
+app.get('/robots.txt', (_req, res) =>
+  res.type('text/plain').send('User-agent: *\nDisallow: /portal-8f2c/\nDisallow: /keep-backup/\nDisallow: /keep-admin/'))
+
+app.get('/', (_req, res) => res.send(
+  `<!-- hint: try /robots.txt --><h1>Trading Post</h1><p>Welcome. Nothing to see on the front page.</p>`))
+
+// Room: recon — the "hidden" path from robots.txt
+app.get('/keep-backup', (_req, res) =>
+  res.type('text/plain').send(`internal backup index\n(nothing sensitive here except this) ${reward('recon')}\n`))
+
+// Room: devtools — the token rides in a response HEADER, invisible on the page
+app.get('/account', (_req, res) => {
+  res.set('X-Keep-Token', Buffer.from(reward('devtools')).toString('base64'))
+  res.type('text/plain').send('Account OK. Your session token is returned in the response headers, not the page body. (DevTools → Network, or curl -i)')
+})
+
+// Room: headers — the admin panel only answers if you SEND the right header
+app.get('/admin-panel', (req, res) => {
+  if ((req.headers['x-keep-role'] || '') === 'admin')
+    return res.type('text/plain').send(`admin panel unlocked. ${reward('headers')}`)
+  res.status(403).type('text/plain').send('forbidden: this panel requires the header  X-Keep-Role: admin')
+})
 
 // Room 3 — cookie tampering: server trusts the role cookie (VULN)
 app.get('/vault', (req, res) => {
   // VULN: cookie-tamper — trusts client-set role
-  if (req.cookies.role === 'admin') return res.send(`Welcome, warden. ${FLAG}`)
+  if (req.cookies.role === 'admin') return res.send(`Welcome, warden. ${reward('cookie-trust')}`)
   res.status(403).send('Members only. (role cookie = user)')
 })
 
@@ -28,7 +62,7 @@ app.get('/vault', (req, res) => {
 app.post('/checkout', (req, res) => {
   // VULN: client-trust — price comes from the request
   const price = Number(req.body.price)
-  if (price <= 0) return res.send(`Free order accepted. ${FLAG}`)
+  if (price <= 0) return res.send(`Free order accepted. ${reward('client-trust')}`)
   res.send(`Charged ${price}.`)
 })
 
@@ -47,7 +81,7 @@ app.post('/portal-8f2c/login', (req, res) => {
   const q = `SELECT * FROM users WHERE username = '${username}' AND password = '${password}'`
   try {
     const row = db.prepare(q).get()
-    if (row) return res.send(`Logged in as ${row.username}. ${FLAG}`)
+    if (row) return res.send(`Logged in as ${row.username}. ${reward('sqli')}`)
     res.status(401).send('Bad credentials')
   } catch (e) { res.status(500).send('Query error: ' + e.message) }
 })
@@ -55,9 +89,47 @@ app.post('/portal-8f2c/login', (req, res) => {
 // Room 9 — reflected XSS: unescaped reflection (VULN)
 app.get('/search', (req, res) => {
   // VULN: xss — reflects input unescaped
-  res.send(`<h1>Results for ${req.query.q || ''}</h1>`)
+  const q = req.query.q || ''
+  res.send(`<h1>Results for ${q}</h1>
+<script>window.KEEP_NONCE=${JSON.stringify(NONCE)}</script>
+<p>No products matched. (reflected search)</p>`)
+})
+
+// Stored XSS — guestbook renders comments unescaped (VULN)
+app.get('/guestbook', (_req, res) => {
+  const items = guestbook.map((c) => `<li>${c}</li>`).join('\n')
+  res.send(`<h1>Guestbook</h1>
+<script>window.KEEP_NONCE=${JSON.stringify(NONCE)}</script>
+<ul>${items}</ul>
+<form method="POST" action="guestbook"><input name="comment"><button>Post</button></form>`)
+})
+app.post('/guestbook', (req, res) => {
+  // VULN: stored-xss — comment stored and later rendered unescaped
+  guestbook.push(String(req.body.comment || ''))
+  res.redirect('guestbook')
+})
+
+// XSS callback: a payload that actually executed in the page reads window.KEEP_NONCE
+// and reports here. /xss-status then reveals that room's flag.
+app.get('/xss-report', (req, res) => {
+  const room = String(req.query.r || '')
+  if (req.query.nonce !== NONCE) return res.status(400).type('text/plain').send('missing/incorrect page nonce — this must run from the injected page')
+  if (room === 'reflected-xss' || room === 'stored-xss') solved[room] = true
+  res.type('text/plain').send('reported')
+})
+app.get('/xss-status', (req, res) => {
+  const room = String(req.query.r || '')
+  if (solved[room]) return res.type('text/plain').send(`solved. ${reward(room)}`)
+  res.type('text/plain').send('not solved yet — land a payload that calls /xss-report from the page')
+})
+
+// Room: chain — recon (find /keep-admin) + cookie-trust (become admin)
+app.get('/keep-admin/vault', (req, res) => {
+  if (req.cookies.role === 'admin')
+    return res.type('text/plain').send(`chained to the inner vault. ${reward('chain')}`)
+  res.status(403).type('text/plain').send('forbidden: admin only (how did the vault room get in?)')
 })
 
 const PORT = process.env.PORT || 8080
-app.listen(PORT, () => console.log(`[trading-post] VULNERABLE app on :${PORT}`))
+app.listen(PORT, () => console.log(`[trading-post] VULNERABLE app on :${PORT} room=${process.env.BK_ROOM || '(all)'}`))
 export default app

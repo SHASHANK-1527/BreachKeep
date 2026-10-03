@@ -2,6 +2,7 @@ import Progress from '../models/Progress.js'
 import DungeonState from '../models/DungeonState.js'
 import { checkFlag, flagFor } from '../utils/flags.js'
 import { INTRO_ROOMS } from './introController.js'
+import { judgeCapstone, CAPSTONE_ROOM } from '../config/capstone.js'
 
 // Rooms whose flag the server will hand to its owner on request. The nine
 // introduction scenes are client-side teasers: there is no server-side proof
@@ -28,6 +29,22 @@ export async function getRoomFlag(req, res) {
 export async function submitFlag(req, res) {
   const { roomId, flag } = req.body
   if (!roomId || !flag) return res.status(400).json({ error: 'roomId and flag required' })
+
+  // Capstone is a shared, admin-spawned target box: the flag is a fixed
+  // value (not a per-student HMAC), and known decoy flags return a
+  // path-aware hint instead of just "wrong".
+  if (roomId === CAPSTONE_ROOM) {
+    const r = judgeCapstone(flag)
+    if (r.correct) {
+      await Progress.updateOne(
+        { userId: req.user._id, roomId },
+        { $setOnInsert: { solvedAt: new Date() } },
+        { upsert: true }
+      )
+      return res.json({ correct: true })
+    }
+    return res.json({ correct: false, hint: r.hint })
+  }
   const correct = checkFlag(req.user._id.toString(), roomId, flag)
   if (!correct) return res.json({ correct: false })
   await Progress.updateOne(

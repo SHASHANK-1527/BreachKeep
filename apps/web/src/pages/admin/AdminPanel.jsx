@@ -79,6 +79,7 @@ export default function AdminPanel() {
   const [query, setQuery] = useState('')
   const [mMsg, setMMsg] = useState('')
   const [mEta, setMEta] = useState('')
+  const [testDungeon, setTestDungeon] = useState('terminal-1')
 
   const flash = useCallback((text, kind = 'ok') => setToast({ text, kind }), [])
   useEffect(() => { if (!toast) return; const t = setTimeout(() => setToast(null), 3000); return () => clearTimeout(t) }, [toast])
@@ -115,9 +116,9 @@ export default function AdminPanel() {
   useEffect(() => {
     if (!authed) return
     if (tab === 'overview') loadOverview()
-    if (tab === 'access' || tab === 'dungeons' || tab === 'site') loadState()
+    if (tab === 'access' || tab === 'dungeons' || tab === 'site' || tab === 'capstone' || tab === 'testing') loadState()
     if (tab === 'roster') loadRoster()
-    if (tab === 'students') loadStudents(query)
+    if (tab === 'students' || tab === 'testing') loadStudents(query)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab, authed])
 
@@ -170,6 +171,8 @@ export default function AdminPanel() {
           ['dungeons', 'castle', 'Dungeons'],
           ['students', 'users', 'Students'],
           ['site', 'power', 'Site'],
+          ['capstone', 'castle', 'Capstone'],
+          ['testing', 'power', 'Testing'],
         ].map(([id, icon, label]) => (
           <button key={id} style={{ ...s.tab, ...(tab === id ? s.tabActive : {}) }} onClick={() => setTab(id)}>
             <Icon name={icon} size={16} color={tab === id ? T.accent : T.dim} /> {label}
@@ -297,6 +300,87 @@ export default function AdminPanel() {
                 />
               ))}
             </div>
+          </>
+        )}
+
+        {tab === 'capstone' && (
+          <>
+            <h1 style={s.h1}>Capstone</h1>
+            <p style={s.sub}>Spawn the one shared target box on the day. Students attack it from their own Kali VMs.</p>
+            <div style={s.card}>
+              <div style={s.cardTitle}>Target box</div>
+              <Toggle
+                checked={state?.capstoneArmed}
+                onChange={(v) => act(async () => { await api.post('/admin/capstone', { armed: v }); await loadState() }, v ? 'Target box armed — students see the briefing and connect info' : 'Target box powered down')}
+                label="Arm the capstone target box"
+                hint="On: the box starts and the capstone page shows the briefing, connect instructions and the flag box. Off: students see 'wait for the day'."
+              />
+              <p style={{ fontSize: '0.78rem', color: T.dim, marginTop: '0.5rem' }}>
+                First make the capstone dungeon live on the Dungeons tab (that builds the target image). Then arm it here on the day.
+              </p>
+            </div>
+          </>
+        )}
+
+        {tab === 'testing' && (
+          <>
+            <h1 style={s.h1}>Testing</h1>
+            <p style={s.sub}>Dev tools for walking the flows yourself — skip or restart the intro, wipe a dungeon's progress. Works on a chosen account.</p>
+
+            <div style={s.card}>
+              <div style={s.cardTitle}>Testing tools</div>
+              <Toggle
+                checked={state?.testingEnabled}
+                onChange={(v) => act(async () => { await api.post('/admin/testing', { enabled: v }); await loadState() }, v ? 'Testing tools enabled' : 'Testing tools disabled')}
+                label="Enable testing tools"
+                hint="When off, the actions below are refused by the server. Turn on only while testing, off for class."
+              />
+            </div>
+
+            {state?.testingEnabled && (
+              <>
+                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+                  <input
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && loadStudents(query)}
+                    placeholder="Find the account to test on (name or email)…"
+                    style={s.input}
+                  />
+                  <button style={{ ...s.btn, ...s.btnGhost, whiteSpace: 'nowrap' }} onClick={() => loadStudents(query)}>Search</button>
+                </div>
+
+                <div style={s.card}>
+                  <div style={s.cardTitle}>Reset a dungeon's progress</div>
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.85rem', color: T.dim }}>Dungeon:</span>
+                    <select value={testDungeon} onChange={(e) => setTestDungeon(e.target.value)} style={{ ...s.input, width: 'auto' }}>
+                      {DUNGEONS.map((d) => <option key={d} value={d}>{d}</option>)}
+                    </select>
+                    <span style={{ fontSize: '0.78rem', color: T.dim }}>applies to the "Reset dungeon" button on each row below</span>
+                  </div>
+                </div>
+
+                <div style={{ ...s.card, overflowX: 'auto' }}>
+                  {!students.length && <div style={{ color: T.dim, fontSize: '0.85rem' }}>Search for an account above.</div>}
+                  {students.map((u) => (
+                    <div key={u.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', padding: '0.6rem 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                      <span style={{ flex: '1 1 180px', minWidth: 0 }}>
+                        <span style={{ color: T.cream, fontSize: '0.9rem' }}>{u.username}</span>
+                        <span style={{ color: T.dim, fontSize: '0.78rem', display: 'block' }}>{u.email}</span>
+                      </span>
+                      <span style={{ ...s.pill, color: u.introComplete ? T.green : T.dim, borderColor: u.introComplete ? T.green : T.border }}>
+                        intro {u.introComplete ? 'done' : 'not done'}
+                      </span>
+                      <button style={{ ...s.btn, ...s.btnGhost }} onClick={() => act(async () => { await api.post('/admin/test/intro', { id: u.id, action: 'complete' }); await loadStudents(query) }, `${u.username}: intro skipped`)}>Skip intro</button>
+                      <button style={{ ...s.btn, ...s.btnGhost }} onClick={() => act(async () => { await api.post('/admin/test/intro', { id: u.id, action: 'reset' }); await loadStudents(query) }, `${u.username}: intro restarted`)}>Restart intro</button>
+                      <button style={{ ...s.btn, ...s.btnGhost }} onClick={() => act(async () => { await api.post('/admin/test/reset-dungeon', { id: u.id, dungeonId: testDungeon }); await loadStudents(query) }, `${u.username}: ${testDungeon} wiped`)}>Reset {testDungeon}</button>
+                      <button style={{ ...s.btn, ...s.btnRed }} onClick={() => { if (!window.confirm(`Wipe ALL progress + intro for ${u.username}?`)) return; act(async () => { await api.post(`/admin/students/${u.id}/reset-progress`); await loadStudents(query) }, `${u.username}: all progress reset`) }}>Reset all</button>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </>
         )}
 

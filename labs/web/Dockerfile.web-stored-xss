@@ -1,0 +1,22 @@
+FROM node:20-slim
+# Web dungeon room: web-stored-xss  (vuln: stored-xss)
+# The Trading Post (vulnerable app) runs as 'webapp'; the student gets a ttyd
+# shell as 'student'. Starts as root to drop privileges with setpriv.
+ENV DEBIAN_FRONTEND=noninteractive
+WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      ca-certificates wget util-linux passwd curl procps \
+    && rm -rf /var/lib/apt/lists/*
+ARG TTYD_VERSION=1.7.4
+RUN wget -qO /usr/local/bin/ttyd \
+      https://github.com/tsl0922/ttyd/releases/download/${TTYD_VERSION}/ttyd.x86_64 \
+    && chmod +x /usr/local/bin/ttyd
+RUN useradd -m -s /bin/bash student && useradd -r -s /usr/sbin/nologin webapp
+COPY package.json ./
+RUN npm install --omit=dev
+COPY server.js seed.js bkflag.js ./
+COPY --chown=root:root web-entry.sh /usr/local/bin/room.sh
+RUN chmod 755 /usr/local/bin/room.sh
+ENV BK_ROOM=stored-xss
+WORKDIR /home/student
+CMD ["bash", "/usr/local/bin/room.sh"]

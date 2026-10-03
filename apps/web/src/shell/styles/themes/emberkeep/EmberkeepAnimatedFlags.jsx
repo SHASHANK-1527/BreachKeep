@@ -85,7 +85,7 @@ export default function EmberkeepAnimatedFlags({ windGust = 1 }) {
 
       {/* 1. Base Pristine Illustration Artwork (Clean sky for moving clouds and energy core) */}
       <image
-        href="/emberkeep_fortress_scene_cleansky.jpg"
+        href="/emberkeep_fortress_scene_cleansky.webp"
         x="0"
         y="0"
         width="1376"
@@ -96,7 +96,7 @@ export default function EmberkeepAnimatedFlags({ windGust = 1 }) {
       {/* 2. Authentic Hand-Drawn Crimson & Ember Flags in Living Transverse Wind Motion */}
       <g clipPath="url(#authentic-flags-clip)">
         <image
-          href="/emberkeep_fortress_scene.jpg"
+          href="/emberkeep_fortress_scene.webp"
           x="0"
           y="0"
           width="1376"
@@ -163,7 +163,7 @@ export default function EmberkeepAnimatedFlags({ windGust = 1 }) {
 
         {/* Hand-Drawn Molten Crystal Energy Core (3D Rotating with Incandescent Heat) */}
         <image
-          href="/ember_crystal_core.png"
+          href="/ember_crystal_core.webp"
           x="-28"
           y="-36"
           width="56"

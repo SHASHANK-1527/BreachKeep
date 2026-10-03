@@ -1,0 +1,14 @@
+FROM breachkeep/base
+# network room: network-http
+USER root
+ENV DEBIAN_FRONTEND=noninteractive
+RUN echo 'wireshark-common wireshark-common/install-setuid boolean false' | debconf-set-selections \
+    && apt-get update && apt-get install -y --no-install-recommends util-linux python3 curl ncat \
+    && rm -rf /var/lib/apt/lists/*
+RUN mkdir -p /usr/local/lib/bk
+COPY --chown=root:root netlib.py /usr/local/lib/bk/netlib.py
+COPY --chown=root:root http.sh /usr/local/bin/room.sh
+RUN chmod 755 /usr/local/bin/room.sh
+WORKDIR /home/student
+# starts as root (launches target services), drops to student for the shell.
+CMD ["bash", "/usr/local/bin/room.sh"]

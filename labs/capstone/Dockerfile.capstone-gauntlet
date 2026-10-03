@@ -1,0 +1,14 @@
+# Capstone target box: a single, shared, rootable machine the class attacks from
+# their own Kali VMs. Runs real sshd + a recon web server. Built when the Warden
+# turns the capstone dungeon live; started/stopped by the admin "arm" control.
+# DELIBERATELY VULNERABLE + EXPOSED — run only on an isolated host.
+FROM debian:bookworm-slim
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      openssh-server sudo python3 iproute2 procps less nano ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd /var/www
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod 755 /usr/local/bin/entrypoint.sh
+EXPOSE 80 22
+CMD ["bash", "/usr/local/bin/entrypoint.sh"]

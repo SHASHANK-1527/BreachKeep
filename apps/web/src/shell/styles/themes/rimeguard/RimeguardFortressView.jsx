@@ -33,14 +33,14 @@ export default function RimeguardFortressView({ children }) {
         <div className="scene-illustrated-clouds-container" aria-hidden="true">
           <div className="scene-cloud-wrapper cloud-left-wrapper">
             <img
-              src="/cloud_left.png"
+              src="/cloud_left.webp"
               alt=""
               className="scene-cloud-sprite cloud-left-sprite"
             />
           </div>
           <div className="scene-cloud-wrapper cloud-right-wrapper">
             <img
-              src="/cloud_right.png"
+              src="/cloud_right.webp"
               alt=""
               className="scene-cloud-sprite cloud-right-sprite"
             />

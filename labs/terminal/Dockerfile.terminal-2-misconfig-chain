@@ -1,0 +1,10 @@
+FROM breachkeep/base
+# terminal-2 room: terminal-2-misconfig-chain
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends util-linux \
+    && rm -rf /var/lib/apt/lists/*
+COPY --chown=root:root t2-misconfig-chain.sh /usr/local/bin/room.sh
+RUN chmod 755 /usr/local/bin/room.sh
+WORKDIR /home/student
+# starts as root; room.sh sets up, then drops to 'student' via setpriv.
+CMD ["bash", "/usr/local/bin/room.sh"]

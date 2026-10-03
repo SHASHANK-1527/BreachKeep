@@ -10,7 +10,11 @@ Do NOT run this from the build agent — it needs your real credentials.
    - `EMAIL_USER` / `EMAIL_PASS` (Gmail app password)
    - `GOOGLE_CLIENT_ID` (+ add your prod origin in Google Cloud Console)
    - `COMMON_ACCESS_CODE`, `ADMIN_LANDING_CODE`, `ADMIN_SECRET_PATH`
-   - `ADMIN_PASSWORD_HASH` — run `npm run hash-admin "yourpassword"` in apps/api
+   - `ADMIN_PASSWORD_HASH` — run `npm run hash-admin "yourpassword"` in apps/api.
+     Paste the output into `.env` VERBATIM, keeping single `$` characters. Do NOT
+     escape them to `$$` — env_file values are literal, so doubling corrupts the
+     hash and admin login fails with "Wrong password". (The API now also
+     tolerates a doubled hash by collapsing `$$`→`$`, but keep it single.)
    - long random `JWT_SECRET`, `FLAG_HMAC_SECRET`, `PROVISIONER_SHARED_SECRET`
    - set `VITE_ADMIN_PATH` = `ADMIN_SECRET_PATH` before building the web bundle
 4. **Build the base lab image**: `docker build -t breachkeep/base labs/base`
