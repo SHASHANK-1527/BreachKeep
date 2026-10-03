@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation, Link } from 'react-router-dom'
 import { AuthProvider, useAuth } from './AuthContext.jsx'
 import { GateProvider } from './GateContext.jsx'
+import { CastleProvider } from './CastleContext.jsx'
 import Enter from '../pages/Enter.jsx'
 import Dashboard from '../pages/Dashboard.jsx'
 import Onboarding from '../pages/Onboarding.jsx'
@@ -357,12 +358,15 @@ function AppRoutes() {
   // the gold avatar medallion). The fixed header would stack on top of them.
   // The individual introduction rooms are ordinary panels, not scenes, so they
   // keep the header — it is their only route to logout and account settings.
+  // Dungeon pages are scenes too: they draw the house hall behind the rooms and
+  // carry their own "back to the hall" control and profile medallion.
+  const cleanPath = loc.pathname.replace(/\/+$/, '') || '/'
   const isAtmosphericPage = [
     '/enter',
     '/onboarding',
     '/dashboard',
     '/dashboard/introduction',
-  ].includes(loc.pathname.replace(/\/+$/, '') || '/')
+  ].includes(cleanPath) || cleanPath.startsWith('/dungeons/')
 
   // User is logged in OR has gate access - show full app with header
   return (
@@ -396,12 +400,14 @@ export default function App() {
   return (
     <GateProvider>
       <AuthProvider>
-        <BrowserRouter>
-          <AppRoutes />
-          {/* Outside <Routes> so it survives every dashboard phase. It still
-              renders nothing unless the API confirms test mode. */}
-          {TEST_MODE && <TestPanel />}
-        </BrowserRouter>
+        <CastleProvider>
+          <BrowserRouter>
+            <AppRoutes />
+            {/* Outside <Routes> so it survives every dashboard phase. It still
+                renders nothing unless the API confirms test mode. */}
+            {TEST_MODE && <TestPanel />}
+          </BrowserRouter>
+        </CastleProvider>
       </AuthProvider>
     </GateProvider>
   )

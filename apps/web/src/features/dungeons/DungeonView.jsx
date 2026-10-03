@@ -1,28 +1,38 @@
-import { useEffect, useMemo, useState, useCallback } from 'react'
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { api } from '../../app/api.js'
-import { useAuth } from '../../app/AuthContext.jsx'
 import { getDungeon, tierUnlocks } from './index.js'
+import { DOOR_ORDER, NUMERALS, dungeonMeta } from './hall/hallConfig.js'
+import DungeonShell from './DungeonShell.jsx'
 import './dungeons.css'
 
 const TIER_ORDER = ['mandatory', 'medium', 'hard']
 
+// /dungeons/:dungeonId            -> the room list behind the door
+// /dungeons/:dungeonId/:roomId    -> one room (brief, machine, hints, flag)
+// The room lives in the URL so refresh and the browser back button both work.
 export default function DungeonView({ dungeonId }) {
-  const { user } = useAuth()
+  const nav = useNavigate()
+  const params = useParams()
+  const roomParam = (params['*'] || '').split('/')[0] || null
   const dungeon = getDungeon(dungeonId)
   const [solved, setSolved] = useState(() => new Set())
-  const [selectedId, setSelectedId] = useState(null)
+  const [live, setLive] = useState(null) // null = still checking
   const [loading, setLoading] = useState(true)
 
   const loadProgress = useCallback(async () => {
     try {
       const prog = await api.get('/progress')
       setSolved(new Set(prog?.solved || []))
+      setLive((prog?.unlocked || []).includes(dungeonId))
     } catch {
-      /* keep whatever we have; room is still browsable */
+      // Keep what we have; if we never heard back, let them browse — the
+      // Connect button reports a sealed dungeon on its own.
+      setLive((v) => (v === null ? true : v))
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [dungeonId])
 
   useEffect(() => { loadProgress() }, [loadProgress])
 
@@ -33,74 +43,120 @@ export default function DungeonView({ dungeonId }) {
 
   if (!dungeon) {
     return (
-      <div className="bkd-scope" data-house={user?.house || undefined}>
-        <div className="bkd-wrap">
-          <h1 className="bkd-title">{dungeonId}</h1>
-          <p className="bkd-note">This dungeon has no chambers built yet.</p>
-        </div>
-      </div>
+      <DungeonShell dungeonId={dungeonId}>
+        <section className="bkd-sealed">
+          <h1 className="bkd-title">No chambers here yet</h1>
+          <p className="bkd-note">This dungeon has no rooms built yet.</p>
+        </section>
+      </DungeonShell>
     )
   }
 
-  const selected = selectedId ? dungeon.roomById[selectedId] : null
+  if (loading && live === null) {
+    return (
+      <DungeonShell dungeonId={dungeonId}>
+        <div className="bkd-loading"><span className="bkd-spinner" aria-hidden="true" /> Opening the door…</div>
+      </DungeonShell>
+    )
+  }
+
+  if (live === false) {
+    return (
+      <DungeonShell dungeonId={dungeonId}>
+        <SealedDoor dungeonId={dungeonId} onRetry={loadProgress} />
+      </DungeonShell>
+    )
+  }
+
+  const room = roomParam ? dungeon.roomById[roomParam] : null
+  const roomOpen = room ? unlocks[room.tier] : false
+  const goRoom = (id) => nav(`/dungeons/${dungeonId}/${id}`)
+  const goList = () => nav(`/dungeons/${dungeonId}`)
+
+  if (room && roomOpen) {
+    return (
+      <DungeonShell dungeonId={dungeonId}>
+        <RoomView
+          room={room}
+          solved={solved.has(room.id)}
+          onBack={goList}
+          onSolved={() => { setSolved((s) => new Set(s).add(room.id)); loadProgress() }}
+        />
+      </DungeonShell>
+    )
+  }
+
+  const idx = DOOR_ORDER.indexOf(dungeonId)
+  const total = dungeon.rooms.length
+  const cleared = dungeon.rooms.filter((r) => solved.has(r.id)).length
 
   return (
-    <div className="bkd-scope" data-house={user?.house || undefined}>
-      <div className="bkd-wrap">
-        {!selected ? (
-          <>
-            <header className="bkd-head">
-              <p className="bkd-eyebrow">Dungeon</p>
-              <h1 className="bkd-title">{dungeon.title}</h1>
-              <p className="bkd-blurb">{dungeon.blurb}</p>
-              {loading && <p className="bkd-note">Loading your progress…</p>}
-            </header>
-
-            {TIER_ORDER.map((tier) => {
-              const rooms = dungeon.rooms.filter((r) => r.tier === tier)
-              if (rooms.length === 0) return null
-              const meta = dungeon.tiers[tier]
-              const open = unlocks[tier]
-              return (
-                <section key={tier} className={`bkd-tier ${open ? '' : 'is-locked'}`}>
-                  <div className="bkd-tier-head">
-                    <h2>{meta.label}</h2>
-                    <span className="bkd-tier-note">{open ? meta.note : `🔒 ${meta.note}`}</span>
-                  </div>
-                  <div className="bkd-grid">
-                    {rooms.map((room) => {
-                      const done = solved.has(room.id)
-                      return (
-                        <button
-                          key={room.id}
-                          className={`bkd-card ${done ? 'is-done' : ''} ${open ? '' : 'is-locked'}`}
-                          onClick={() => open && setSelectedId(room.id)}
-                          disabled={!open}
-                        >
-                          <span className="bkd-num">{room.num}</span>
-                          <span className="bkd-card-title">{room.title}</span>
-                          <span className="bkd-card-concept">{room.concept}</span>
-                          <span className="bkd-pill">
-                            {done ? 'Cleared' : open ? 'Enter' : 'Locked'}
-                          </span>
-                        </button>
-                      )
-                    })}
-                  </div>
-                </section>
-              )
-            })}
-          </>
-        ) : (
-          <RoomView
-            room={selected}
-            solved={solved.has(selected.id)}
-            onBack={() => setSelectedId(null)}
-            onSolved={() => { setSolved((s) => new Set(s).add(selected.id)); loadProgress() }}
-          />
+    <DungeonShell dungeonId={dungeonId}>
+      <header className="bkd-head">
+        <p className="bkd-eyebrow">Door {NUMERALS[idx] || ''} · {dungeonMeta(dungeonId).subject}</p>
+        <h1 className="bkd-title">{dungeon.title}</h1>
+        <p className="bkd-blurb">{dungeon.blurb}</p>
+        <div className="bkd-progress" role="progressbar" aria-valuemin={0} aria-valuemax={total} aria-valuenow={cleared}>
+          <div className="bkd-progress-bar"><span style={{ width: `${total ? (cleared / total) * 100 : 0}%` }} /></div>
+          <span className="bkd-progress-label">{cleared} of {total} chambers cleared</span>
+        </div>
+        {roomParam && !roomOpen && (
+          <p className="bkd-warn">That chamber is still locked — clear the rooms before it first.</p>
         )}
-      </div>
-    </div>
+      </header>
+
+      {TIER_ORDER.map((tier) => {
+        const rooms = dungeon.rooms.filter((r) => r.tier === tier)
+        if (rooms.length === 0) return null
+        const meta = dungeon.tiers[tier]
+        const open = unlocks[tier]
+        const tierCleared = rooms.filter((r) => solved.has(r.id)).length
+        return (
+          <section key={tier} className={`bkd-tier is-${tier} ${open ? '' : 'is-locked'}`}>
+            <div className="bkd-tier-head">
+              <h2>{meta.label}</h2>
+              <span className="bkd-tier-count">{tierCleared}/{rooms.length}</span>
+              <span className="bkd-tier-note">{open ? meta.note : `🔒 ${meta.note}`}</span>
+            </div>
+            <div className="bkd-grid">
+              {rooms.map((r, i) => {
+                const done = solved.has(r.id)
+                return (
+                  <button
+                    key={r.id}
+                    className={`bkd-card ${done ? 'is-done' : ''} ${open ? '' : 'is-locked'}`}
+                    onClick={() => open && goRoom(r.id)}
+                    disabled={!open}
+                    style={{ animationDelay: `${i * 45}ms` }}
+                  >
+                    <span className="bkd-card-top">
+                      <span className="bkd-num">{r.num}</span>
+                      <span className="bkd-pill">{done ? '✓ Cleared' : open ? 'Enter' : '🔒 Locked'}</span>
+                    </span>
+                    <span className="bkd-card-title">{r.title}</span>
+                    <span className="bkd-card-concept">{r.concept}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </section>
+        )
+      })}
+    </DungeonShell>
+  )
+}
+
+function SealedDoor({ dungeonId, onRetry }) {
+  const meta = dungeonMeta(dungeonId)
+  return (
+    <section className="bkd-sealed">
+      <span className="bkd-sealed-icon" aria-hidden="true">🔒</span>
+      <h1 className="bkd-title">{meta.title} is sealed</h1>
+      <p className="bkd-note">
+        The Warden hasn’t unsealed this dungeon yet. It opens when your class reaches it.
+      </p>
+      <button className="bkd-btn bkd-btn-ghost" onClick={onRetry}>Check again</button>
+    </section>
   )
 }
 
@@ -110,27 +166,75 @@ function RoomView(props) {
   return props.room.editor ? <SecureEditorRoom {...props} /> : <MachineRoom {...props} />
 }
 
+// Shown in the new tab while the container boots, so the student sees
+// something instead of a blank page (and the pop-up isn't blocked: the tab is
+// opened synchronously inside the click, before the API call).
+const BOOT_HTML = `<!doctype html><title>Booting your machine…</title>
+<body style="margin:0;height:100vh;display:grid;place-items:center;background:#05070d;color:#7ee787;font:14px/1.6 ui-monospace,Menlo,monospace">
+<div><div>[ breachkeep ] allocating a private container…</div><div style="opacity:.6">this tab becomes your terminal in a moment</div></div></body>`
+
+const BOOT_STEPS = [
+  'Forging your private container…',
+  'Planting your personal flag…',
+  'Binding the terminal…',
+  'Opening the gate…',
+]
+
+function BootSequence() {
+  const [step, setStep] = useState(0)
+  useEffect(() => {
+    const t = setInterval(() => setStep((s) => Math.min(s + 1, BOOT_STEPS.length - 1)), 1100)
+    return () => clearInterval(t)
+  }, [])
+  return (
+    <div className="bkd-boot" role="status" aria-live="polite">
+      <span className="bkd-spinner" aria-hidden="true" />
+      <ol className="bkd-boot-steps">
+        {BOOT_STEPS.map((s, i) => (
+          <li key={s} className={i < step ? 'is-done' : i === step ? 'is-now' : ''}>{s}</li>
+        ))}
+      </ol>
+    </div>
+  )
+}
+
 function MachineRoom({ room, solved, onBack, onSolved }) {
   const [revealed, setRevealed] = useState(0) // how many hints shown
   const [lab, setLab] = useState({ state: 'idle', url: '', appUrl: '', msg: '' })
+  const mounted = useRef(true)
+  useEffect(() => () => { mounted.current = false }, [])
 
   const openTab = (url) => window.open(url, '_blank', 'noopener,noreferrer')
 
   const connect = useCallback(async () => {
+    // Open the tab now, inside the click, so pop-up blockers allow it; point
+    // it at the terminal once the API answers.
+    let tab = null
+    try {
+      tab = window.open('', '_blank')
+      if (tab) { tab.document.write(BOOT_HTML); tab.document.close() }
+    } catch { /* blocked — we fall back to the buttons */ }
+
     setLab({ state: 'loading', url: '', appUrl: '', msg: '' })
     try {
       // Boots (or reuses) this student's container and returns the tokened
-      // terminal URL (and, for web rooms, the web-app URL). Opens a NEW TAB.
+      // terminal URL (and, for web rooms, the web-app URL).
       const res = await api.post('/labs/open', { roomId: room.id })
       if (!res?.url) {
-        setLab({ state: 'error', url: '', appUrl: '', msg: 'No terminal URL came back — try again.' })
+        if (tab) tab.close()
+        if (mounted.current) setLab({ state: 'error', url: '', appUrl: '', msg: 'No terminal URL came back — try again.' })
         return
       }
       // For a web room, open the app tab; otherwise open the terminal tab.
       const first = room.app && res.appUrl ? res.appUrl : res.url
-      const win = openTab(first)
-      setLab({ state: 'ready', url: res.url, appUrl: res.appUrl || '', msg: win ? '' : 'popup-blocked' })
+      let opened = false
+      if (tab && !tab.closed) {
+        try { tab.opener = null; tab.location.replace(first); opened = true } catch { /* ignore */ }
+      }
+      if (!opened) opened = !!openTab(first)
+      if (mounted.current) setLab({ state: 'ready', url: res.url, appUrl: res.appUrl || '', msg: opened ? '' : 'popup-blocked' })
     } catch (e) {
+      if (tab) tab.close()
       const code = e?.data?.error
       const msg =
         code === 'dungeon_not_live'
@@ -138,13 +242,14 @@ function MachineRoom({ room, solved, onBack, onSolved }) {
           : code === 'lab_unavailable'
             ? 'The lab service could not start your machine. Give it a moment and retry.'
             : 'Could not start the machine. Try again shortly.'
-      setLab({ state: 'error', url: '', appUrl: '', msg })
+      if (mounted.current) setLab({ state: 'error', url: '', appUrl: '', msg })
     }
   }, [room.id, room.app])
 
   const stop = useCallback(async () => {
+    setLab((l) => ({ ...l, state: 'stopping' }))
     try { await api.post('/labs/stop', { roomId: room.id }) } catch { /* ignore */ }
-    setLab({ state: 'idle', url: '', appUrl: '', msg: '' })
+    if (mounted.current) setLab({ state: 'idle', url: '', appUrl: '', msg: '' })
   }, [room.id])
 
   return (
@@ -157,80 +262,87 @@ function MachineRoom({ room, solved, onBack, onSolved }) {
           <h1 className="bkd-title">{room.title}</h1>
           <p className="bkd-tag">{room.tier.toUpperCase()} · {room.concept}</p>
         </div>
-        {solved && <span className="bkd-done-badge">Cleared</span>}
+        {solved && <span className="bkd-done-badge">✓ Cleared</span>}
       </header>
 
-      <section className="bkd-panel">
-        <h3>Brief</h3>
-        <p>{room.brief}</p>
-        <h3>Your objective</h3>
-        <p className="bkd-objective">{room.objective}</p>
-      </section>
+      <div className="bkd-room-grid">
+        <div className="bkd-room-main">
+          <section className="bkd-panel">
+            <h3>Brief</h3>
+            <p>{room.brief}</p>
+            <h3>Your objective</h3>
+            <p className="bkd-objective">{room.objective}</p>
+          </section>
 
-      <section className="bkd-panel">
-        <h3>The machine</h3>
-        <div className="bkd-term-placeholder">
-          {lab.state === 'ready' ? (
-            <>
-              <p className="bkd-connected">● Your machine is running{room.app ? ' — opened in a new tab.' : ' — the terminal opened in a new tab.'}</p>
-              <div className="bkd-term-actions">
-                {room.app && lab.appUrl && (
-                  <button className="bkd-btn" onClick={() => openTab(lab.appUrl)}>Open web app</button>
-                )}
-                <button className={room.app ? 'bkd-btn bkd-btn-ghost' : 'bkd-btn'} onClick={() => openTab(lab.url)}>Open terminal</button>
-                <button className="bkd-btn bkd-btn-ghost" onClick={stop}>Stop machine</button>
-              </div>
-              {lab.msg === 'popup-blocked' && (
-                <p className="bkd-warn">
-                  Your browser blocked the pop-up. Use the buttons above to open the
-                  {room.app ? ' web app / terminal.' : ' terminal.'}
-                </p>
-              )}
-            </>
-          ) : (
-            <>
-              <button className="bkd-btn" onClick={connect} disabled={lab.state === 'loading'}>
-                {lab.state === 'loading' ? 'Starting your machine…' : 'Connect to machine'}
+          <section className="bkd-panel">
+            <h3>Hints</h3>
+            <p className="bkd-note">Stuck? Reveal them one at a time — try the step before opening the next.</p>
+            <ol className="bkd-hints">
+              {room.hints.map((h, i) => (
+                <li key={i} className={i < revealed ? 'is-open' : 'is-closed'}>
+                  {i < revealed ? h : <span className="bkd-hint-hidden">Hint {i + 1} hidden</span>}
+                </li>
+              ))}
+            </ol>
+            {revealed < room.hints.length && (
+              <button className="bkd-btn bkd-btn-ghost" onClick={() => setRevealed((n) => n + 1)}>
+                Reveal hint {revealed + 1}
               </button>
-              {lab.state === 'error' && <p className="bkd-warn">{lab.msg}</p>}
-              {lab.state === 'idle' && (
-                <p className="bkd-note">{room.app
-                  ? 'Boots your own vulnerable web app + a terminal, each in a new tab.'
-                  : 'Boots your own private container and opens a full terminal in a new tab.'}</p>
-              )}
-            </>
+            )}
+          </section>
+
+          {solved && (
+            <section className="bkd-panel bkd-debrief">
+              <h3>What you just did</h3>
+              <p>{room.debrief}</p>
+            </section>
           )}
         </div>
-      </section>
 
-      <section className="bkd-panel">
-        <h3>Hints</h3>
-        <p className="bkd-note">Stuck? Reveal them one at a time — try the step before opening the next.</p>
-        <ol className="bkd-hints">
-          {room.hints.map((h, i) => (
-            <li key={i} className={i < revealed ? 'is-open' : 'is-closed'}>
-              {i < revealed ? h : <span className="bkd-hint-hidden">Hint {i + 1} hidden</span>}
-            </li>
-          ))}
-        </ol>
-        {revealed < room.hints.length && (
-          <button className="bkd-btn bkd-btn-ghost" onClick={() => setRevealed((n) => n + 1)}>
-            Reveal hint {revealed + 1}
-          </button>
-        )}
-      </section>
+        <aside className="bkd-room-side">
+          <section className={`bkd-panel bkd-machine is-${lab.state}`}>
+            <h3>The machine</h3>
+            {lab.state === 'ready' || lab.state === 'stopping' ? (
+              <>
+                <p className="bkd-connected"><span className="bkd-live-dot" aria-hidden="true" /> Your machine is running</p>
+                <p className="bkd-note">{room.app ? 'The web app opened in a new tab.' : 'The terminal opened in a new tab.'} Solve it there, then bring the flag back here.</p>
+                <div className="bkd-term-actions">
+                  {room.app && lab.appUrl && (
+                    <button className="bkd-btn" onClick={() => openTab(lab.appUrl)}>Open web app</button>
+                  )}
+                  <button className={room.app ? 'bkd-btn bkd-btn-ghost' : 'bkd-btn'} onClick={() => openTab(lab.url)}>Open terminal</button>
+                  <button className="bkd-btn bkd-btn-ghost" onClick={stop} disabled={lab.state === 'stopping'}>
+                    {lab.state === 'stopping' ? 'Stopping…' : 'Stop machine'}
+                  </button>
+                </div>
+                {lab.msg === 'popup-blocked' && (
+                  <p className="bkd-warn">
+                    Your browser blocked the new tab. Use the buttons above to open the
+                    {room.app ? ' web app / terminal.' : ' terminal.'}
+                  </p>
+                )}
+              </>
+            ) : lab.state === 'loading' ? (
+              <BootSequence />
+            ) : (
+              <div className="bkd-term-placeholder">
+                <button className="bkd-btn bkd-btn-lg" onClick={connect}>⚡ Connect to machine</button>
+                {lab.state === 'error' && <p className="bkd-warn">{lab.msg}</p>}
+                {lab.state === 'idle' && (
+                  <p className="bkd-note">{room.app
+                    ? 'Boots your own vulnerable web app + a terminal, each in a new tab.'
+                    : 'Boots your own private container and opens a full terminal in a new tab.'}</p>
+                )}
+              </div>
+            )}
+          </section>
 
-      <section className="bkd-panel">
-        <h3>Submit the flag</h3>
-        <RoomFlag roomId={room.id} onSolved={onSolved} alreadySolved={solved} />
-      </section>
-
-      {solved && (
-        <section className="bkd-panel bkd-debrief">
-          <h3>What you just did</h3>
-          <p>{room.debrief}</p>
-        </section>
-      )}
+          <section className="bkd-panel">
+            <h3>Submit the flag</h3>
+            <RoomFlag roomId={room.id} onSolved={onSolved} alreadySolved={solved} />
+          </section>
+        </aside>
+      </div>
     </div>
   )
 }

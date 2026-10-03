@@ -6,9 +6,8 @@ import HubShell from '../shell/HubShell.jsx'
 import QuestMapHub from '../shell/QuestMapHub.jsx'
 import SortingCeremony from '../shell/SortingCeremony.jsx'
 import ParticleField from '../sanctum/ParticleField.jsx'
-import StoneGate from '../sanctum/StoneGate.jsx'
-import ThemeStage from '../shell/styles/themes/ThemeStage.jsx'
 import DungeonsComing from '../shell/DungeonsComing.jsx'
+import CastleExperience from '../shell/CastleExperience.jsx'
 
 // State machine:
 //  A) introComplete=false            -> sanctum scene with the Oni gate
@@ -18,6 +17,7 @@ export default function Dashboard() {
   const nav = useNavigate()
   const { user, refresh, setUser } = useAuth()
   const [progress, setProgress] = useState({ solved: [], unlocked: [] })
+  const [capstoneArmed, setCapstoneArmed] = useState(false)
   const [phase, setPhase] = useState('loading')
   const [assignedHouse, setAssignedHouse] = useState(null)
   const [loadError, setLoadError] = useState('')
@@ -51,8 +51,12 @@ export default function Dashboard() {
       inFlight.current = false
       return
     }
-    const prog = await api.get('/progress').catch(() => ({ solved: [], unlocked: [] }))
-    setProgress(prog)
+    const [prog, cap] = await Promise.all([
+      api.get('/progress').catch(() => ({ solved: [], unlocked: [] })),
+      api.get('/labs/capstone').catch(() => ({ armed: false })),
+    ])
+    setProgress({ solved: prog?.solved || [], unlocked: prog?.unlocked || [] })
+    setCapstoneArmed(!!cap?.armed)
     setLoadError('')
     if (!status.introComplete) { setPhase('A') }
     else if (!user?.sorted) { setPhase('B') }
@@ -99,37 +103,11 @@ export default function Dashboard() {
     return <SortingCeremony house={assignedHouse} onStart={runCeremony} />
   }
 
+  // Sorted: house fortress -> hall of six doors -> a dungeon's rooms.
   if (phase === 'C' && user?.house) {
     return (
       <div className="bk-dashboard" data-house={user.house}>
-        <ThemeStage house={user.house}>
-          <HubShell user={user}>
-            <div className="bk-gates">
-              {progress.unlocked.length === 0 ? (
-                <DungeonsComing house={user.house} />
-              ) : (
-                <div className="unlocked-gates-grid">
-                  {progress.unlocked.map((dungeonId) => (
-                    <div
-                      key={dungeonId}
-                      className="gate-card active-gate thaw-in"
-                      onClick={() => nav(`/dungeons/${dungeonId}`)}
-                      role="button"
-                      tabIndex={0}
-                      onKeyDown={(e) => { if (e.key === 'Enter') nav(`/dungeons/${dungeonId}`) }}
-                    >
-                      <StoneGate status={progress.solved.includes(dungeonId) ? 'open' : 'unlocking'} />
-                      <span className="gate-name">{dungeonId}</span>
-                      <span className="gate-status-pill">
-                        {progress.solved.includes(dungeonId) ? 'Conquered' : 'Enter Chamber'}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </HubShell>
-        </ThemeStage>
+        <CastleExperience user={user} progress={progress} capstoneArmed={capstoneArmed} />
       </div>
     )
   }

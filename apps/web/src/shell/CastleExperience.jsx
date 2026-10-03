@@ -1,614 +1,302 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { useCastle, CASTLE_THEMES } from '../app/CastleContext.jsx'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useCastle } from '../app/CastleContext.jsx'
+import ThemeStage from './styles/themes/ThemeStage.jsx'
+import HubShell from './HubShell.jsx'
+import HubProfileMenu from './HubProfileMenu.jsx'
+import {
+  DOOR_ORDER,
+  NUMERALS,
+  hallFor,
+  dungeonMeta,
+  doorState,
+} from '../features/dungeons/hall/hallConfig.js'
 import './styles/castle-experience.css'
+import './styles/dungeon-hall.css'
 
 /**
- * CITADELS CONFIGURATION
- * Exact asset filenames per instructions:
- * Citadels: emberkeep_forge_citadel, arcweave_lightning_citadel, voltgrid_grid_citadel.webp, rimeguard_citadel
- * Halls: voltgrid_hall, emberkeep_hall, arcweave_hall, rimeguard_hall
- * Transition videos: arcweave_to_hall, rimeguard_to_hall, voltgrid_to_hall, emberkeep_to_hall
+ * The sorted student's home: their house fortress -> the house's "to hall"
+ * video -> the hall with six doors, one per dungeon. A live door opens into
+ * /dungeons/<id> (the room list); a sealed one explains why it is shut.
+ *
+ * Stage survives navigation through CastleContext (sessionStorage), so coming
+ * back from a dungeon lands straight in the hall without replaying the video.
  */
-export const CITADELS = {
-  emberkeep: {
-    id: 'emberkeep',
-    name: 'House Emberkeep',
-    shortName: 'Emberkeep',
-    gateName: 'The Forge Gate',
-    realmTitle: 'THE FORGE CITADEL',
-    sub: 'Realm of Furnace & Anvil',
-    citadelImg: '/emberkeep_forge_citadel.webp',
-    videoSrc: '/emberkeep_to_hall.mp4',
-    hallImg: '/emberkeep_hall.webp',
-    accent: '#ff5a1f',
-    glow: 'rgba(255, 90, 31, 0.65)',
-    rune: '🔥',
-    gateCoords: { left: '2.2%', top: '23%', width: '13.8%', height: '46%' },
-    desc: 'Hearth of Pyromantic Forging and Molten Metallurgy',
-  },
-  arcweave: {
-    id: 'arcweave',
-    name: 'House Arcweave',
-    shortName: 'Arcweave',
-    gateName: 'The Arcanum Gate',
-    realmTitle: 'THE LIGHTNING CITADEL',
-    sub: 'Realm of Plasma Arcana',
-    citadelImg: '/arcweave_lightning_citadel.webp',
-    videoSrc: '/arcweave_to_hall.mp4',
-    hallImg: '/arcweave_hall.webp',
-    accent: '#c084fc',
-    glow: 'rgba(192, 132, 252, 0.65)',
-    rune: '⚡',
-    gateCoords: { left: '18.2%', top: '23.5%', width: '13.8%', height: '44%' },
-    desc: 'Tapestry of Arcane Spells, Lightning & Plasma Tomes',
-  },
-  voltgrid: {
-    id: 'voltgrid',
-    name: 'House Voltgrid',
-    shortName: 'Voltgrid',
-    gateName: 'The Grid Gate',
-    realmTitle: 'HIGH-VOLTAGE CITADEL',
-    sub: 'Realm of the Electric Grid',
-    citadelImg: '/voltgrid_grid_citadel.webp',
-    videoSrc: '/voltgrid_to_hall.mp4',
-    hallImg: '/voltgrid_hall.webp',
-    accent: '#00e5ff',
-    glow: 'rgba(0, 229, 255, 0.65)',
-    rune: '💠',
-    gateCoords: { left: '33.8%', top: '25.5%', width: '13.5%', height: '40.5%' },
-    desc: 'High-Voltage Matrix, Cybernetic Relays & Synaptic Power',
-  },
-  rimeguard: {
-    id: 'rimeguard',
-    name: 'House Rimeguard',
-    shortName: 'Rimeguard',
-    gateName: 'The Frost Gate',
-    realmTitle: 'THE FROZEN CITADEL',
-    sub: 'Realm of Permafrost',
-    citadelImg: '/rimeguard_citadel.webp',
-    videoSrc: '/rimeguard_to_hall.mp4',
-    hallImg: '/rimeguard_hall.webp',
-    accent: '#6fd6ff',
-    glow: 'rgba(111, 214, 255, 0.65)',
-    rune: '❄',
-    gateCoords: { left: '52.8%', top: '25.5%', width: '13.5%', height: '40.5%' },
-    desc: 'Bastion of Glacial Fortitude and Ancient Frost Wards',
-  },
-}
+export default function CastleExperience({ user, progress, capstoneArmed = false }) {
+  const nav = useNavigate()
+  const { castleView, setCastleView } = useCastle()
+  const house = (user?.house || '').toLowerCase()
+  const hall = hallFor(house)
 
-export const SEALED_GATES = {
-  vault: {
-    id: 'vault',
-    gateName: 'The Deep Vault',
-    realmTitle: 'THE DEEP VAULT',
-    sub: 'Sealed Sub-Level',
-    rune: '🗝️',
-    accent: '#f59e0b',
-    glow: 'rgba(245, 158, 11, 0.6)',
-    gateCoords: { left: '67.8%', top: '23.5%', width: '13.8%', height: '44%' },
-    message:
-      'The Deep Vault remains sealed behind ancient adamantine wards. Only initiates who complete their introductory trials and earn their house crest may unlock these sub-chambers.',
-  },
-  astral: {
-    id: 'astral',
-    gateName: 'Astral Sanctum',
-    realmTitle: 'ASTRAL SANCTUM',
-    sub: 'Celestial Portal',
-    rune: '✨',
-    accent: '#ec4899',
-    glow: 'rgba(236, 72, 153, 0.6)',
-    gateCoords: { left: '83.8%', top: '23%', width: '13.8%', height: '46%' },
-    message:
-      'The Astral Sanctum slumbers in cosmic stasis. The planetary alignment has not yet arrived. The Warden will signal when the astral rift opens.',
-  },
-}
-
-export default function CastleExperience({ house }) {
-  const normPropHouse = (house || '').toLowerCase().trim()
-  const {
-    castleView,
-    setCastleView,
-    activeHouse,
-    setActiveHouse,
-  } = useCastle()
-
-  // Initial house selection: activeHouse from context, or house prop, or 'rimeguard'
-  const initialHouse = useMemo(() => {
-    if (activeHouse && CITADELS[activeHouse]) return activeHouse
-    if (normPropHouse && CITADELS[normPropHouse]) return normPropHouse
-    return 'rimeguard'
-  }, [activeHouse, normPropHouse])
-
-  // Current stage: 'entrance' | 'hall' | 'citadel_preview' | 'transition_video'
-  const [stage, setStage] = useState(() => {
-    return castleView === 'gates' ? 'hall' : 'entrance'
-  })
-
-  const [activeCitadel, setActiveCitadel] = useState(initialHouse)
-  const [targetCitadel, setTargetCitadel] = useState(initialHouse)
-  const [isTransitioning, setIsTransitioning] = useState(false)
+  const [stage, setStage] = useState(() => (castleView === 'gates' ? 'hall' : 'fortress'))
   const [videoFading, setVideoFading] = useState(false)
-  const [sealedNotice, setSealedNotice] = useState(null)
-
+  const [entering, setEntering] = useState(null) // { id, x, y } while the door-open zoom plays
+  const [sealed, setSealed] = useState(null) // dungeon id whose sealed notice is showing
   const videoRef = useRef(null)
-  const previewTimerRef = useRef(null)
+  const timers = useRef([])
 
-  // Preload all imagery immediately to prevent blank flashes or stutter
-  useEffect(() => {
-    const assetsToPreload = [
-      '/assets/gate-bg.webp',
-      '/assets/gate-bg-sm.webp',
-      ...Object.values(CITADELS).map((c) => c.hallImg),
-      ...Object.values(CITADELS).map((c) => c.citadelImg),
-    ]
+  useEffect(() => () => timers.current.forEach(clearTimeout), [])
+  const later = (fn, ms) => { timers.current.push(setTimeout(fn, ms)) }
 
-    assetsToPreload.forEach((src) => {
-      const img = new Image()
-      img.src = src
-    })
-  }, [])
+  const doors = useMemo(
+    () => DOOR_ORDER.map((id, i) => ({
+      id,
+      num: NUMERALS[i],
+      rect: hall.doors[i],
+      meta: dungeonMeta(id),
+      state: doorState(id, { ...progress, capstoneArmed }),
+    })),
+    [hall, progress, capstoneArmed]
+  )
+  const openCount = doors.filter((d) => d.state.open).length
 
-  // Sync when prop house changes
-  useEffect(() => {
-    if (normPropHouse && CITADELS[normPropHouse]) {
-      setActiveCitadel(normPropHouse)
-      setTargetCitadel(normPropHouse)
-    }
-  }, [normPropHouse])
+  // Warm the hall image while the student is still on the fortress.
+  useEffect(() => { const img = new Image(); img.src = hall.hallImg }, [hall.hallImg])
 
-  // Clean up timers on unmount
-  useEffect(() => {
-    return () => {
-      if (previewTimerRef.current) clearTimeout(previewTimerRef.current)
-    }
-  }, [])
-
-  // Handle Enter the Castle from Entrance
-  const handleEnterCastle = useCallback(() => {
-    if (isTransitioning) return
+  const goHall = useCallback(() => {
     setStage('hall')
-    if (setCastleView) setCastleView('gates')
-  }, [isTransitioning, setCastleView])
+    setCastleView('gates')
+  }, [setCastleView])
 
-  // Handle return to Castle Entrance
-  const handleExitToEntrance = useCallback(() => {
-    if (isTransitioning) return
-    setStage('entrance')
-    if (setCastleView) setCastleView('citadel')
-  }, [isTransitioning, setCastleView])
+  const enterHall = useCallback(() => {
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    if (reduce) { goHall(); return }
+    setStage('video')
+  }, [goHall])
 
-  // Trigger Citadel -> Transition Video -> Hall flow
-  const handleSelectCitadel = useCallback((citadelId) => {
-    if (isTransitioning) return
-
-    if (SEALED_GATES[citadelId]) {
-      setSealedNotice(SEALED_GATES[citadelId])
-      return
-    }
-
-    const nextCitadel = CITADELS[citadelId]
-    if (!nextCitadel) return
-
-    setIsTransitioning(true)
-    setTargetCitadel(citadelId)
-    setStage('citadel_preview')
-
-    // Brief cinematic Citadel title card, then video transition
-    previewTimerRef.current = setTimeout(() => {
-      setStage('transition_video')
-    }, 900)
-  }, [isTransitioning])
-
-  // Handle transition video finish
-  const handleTransitionComplete = useCallback(() => {
+  const finishVideo = useCallback(() => {
     setVideoFading(true)
-    setTimeout(() => {
-      setActiveCitadel(targetCitadel)
-      if (setActiveHouse) setActiveHouse(targetCitadel)
-      if (setCastleView) setCastleView('gates')
-      setStage('hall')
-      setIsTransitioning(false)
-      setVideoFading(false)
-    }, 350)
-  }, [targetCitadel, setActiveHouse, setCastleView])
+    later(() => { setVideoFading(false); goHall() }, 350)
+  }, [goHall])
 
-  // Handle replay for current citadel
-  const handleReplay = useCallback(() => {
-    if (isTransitioning) return
-    handleSelectCitadel(activeCitadel)
-  }, [isTransitioning, activeCitadel, handleSelectCitadel])
+  const toFortress = useCallback(() => {
+    setStage('fortress')
+    setCastleView('citadel')
+  }, [setCastleView])
 
-  // Keyboard navigation & escape listener
+  // Autoplay with sound when the browser allows it, muted otherwise; if even
+  // that fails, skip straight to the hall rather than leave a black screen.
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        if (sealedNotice) {
-          setSealedNotice(null)
-        } else if (stage === 'transition_video') {
-          handleTransitionComplete()
-        }
-      }
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [sealedNotice, stage, handleTransitionComplete])
+    if (stage !== 'video' || !videoRef.current) return
+    const v = videoRef.current
+    v.currentTime = 0
+    v.play().catch(() => {
+      v.muted = true
+      v.play().catch(() => finishVideo())
+    })
+  }, [stage, finishVideo])
 
-  // Play transition video with browser autoplay policy fallback
+  const openDoor = useCallback((door) => {
+    if (entering) return
+    if (!door.state.open) { setSealed(door.id); return }
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    if (reduce) { nav(`/dungeons/${door.id}`); return }
+    const { left, top, width, height } = door.rect
+    setEntering({ id: door.id, x: left + width / 2, y: top + height / 2 })
+    later(() => nav(`/dungeons/${door.id}`), 820)
+  }, [entering, nav])
+
   useEffect(() => {
-    if (stage === 'transition_video' && videoRef.current) {
-      const v = videoRef.current
-      v.currentTime = 0
-      v.play().catch(() => {
-        // Fallback for strict browser autoplay: mute and retry
-        v.muted = true
-        v.play().catch(() => {
-          handleTransitionComplete()
-        })
-      })
+    const onKey = (e) => {
+      if (e.key !== 'Escape') return
+      if (sealed) setSealed(null)
+      else if (stage === 'video') finishVideo()
     }
-  }, [stage, handleTransitionComplete])
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [sealed, stage, finishVideo])
 
-  const currentCitadelData = CITADELS[activeCitadel] || CITADELS.rimeguard
-  const targetCitadelData = CITADELS[targetCitadel] || CITADELS.rimeguard
+  const accentVars = { '--dh-accent': hall.accent, '--dh-glow': hall.glow }
 
   return (
-    <div
-      className="castle-exp-root"
-      style={{
-        '--hall-accent': currentCitadelData.accent,
-        '--hall-accent-glow': currentCitadelData.glow,
-      }}
-    >
-      <div className="castle-exp-viewport">
-        {/* ========================================================
-            STAGE 1: CASTLE ENTRANCE
-            ======================================================== */}
-        {stage === 'entrance' && (
-          <div className="castle-entrance-stage" role="region" aria-label="Castle Entrance">
-            <div className="castle-entrance-atmosphere" />
-            <div className="castle-entrance-fog" />
-
-            <div className="castle-entrance-content">
-              <div className="castle-entrance-header">
-                <p className="castle-entrance-eyebrow">BREACHKEEP ANCIENT FORTRESS</p>
-                <h1 className="castle-entrance-title">THE CASTLE GATES</h1>
-                <p className="castle-entrance-sub">
-                  Beyond these ironbound gates lie the Grand Halls and elemental Citadels of the Four Houses.
-                  Choose your gateway and cross the threshold.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                className="btn-enter-castle-master"
-                onClick={handleEnterCastle}
-                aria-label="Enter the Castle Hall"
-              >
-                <span className="btn-enter-glow-ring" aria-hidden="true" />
-                <svg
-                  className="btn-enter-icon"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  aria-hidden="true"
-                >
-                  <path d="M2 20h20v2H2v-2zm2-2V7l2.5 1.5L9 7v11H4zm7 0V3l2.5 1.5L16 3v15h-5zm7 0V7l2.5 1.5L22 7v11h-4zM6 14h2v2H6v-2zm7-8h2v2h-2V6zm0 4h2v2h-2v-2zm0 4h2v2h-2v-2zm7 0h2v2h-2v-2z" />
-                </svg>
-                <span>ENTER THE CASTLE</span>
+    <>
+      {stage !== 'hall' && (
+        <ThemeStage house={house}>
+          <HubShell user={user}>
+            <div className="dh-fortress-cta" style={accentVars}>
+              <p className="dh-cta-eyebrow">{hall.hallName}</p>
+              <button type="button" className="dh-enter-btn" onClick={enterHall}>
+                <span className="dh-enter-ring" aria-hidden="true" />
+                <span>Enter the Hall</span>
               </button>
-            </div>
-          </div>
-        )}
-
-        {/* ========================================================
-            STAGE 2: CASTLE HALL WITH 6 GATES
-            ======================================================== */}
-        {stage === 'hall' && (
-          <div className="castle-hall-stage" role="region" aria-label="Castle Hall with 6 Gates">
-            {/* Castle Hall Artwork as Background */}
-            <div className="hall-artwork-wrapper">
-              <img
-                src={encodeURI(currentCitadelData.hallImg)}
-                alt={`${currentCitadelData.name} Castle Hall`}
-                className="hall-artwork-image"
-              />
-              <div className="hall-atmosphere-overlay" />
-              <div className="hall-floor-fog" />
-            </div>
-
-            {/* Top HUD: Info & Navigation */}
-            <header className="hall-top-hud">
-              <div className="hall-hud-info">
-                <span className="hall-hud-icon" aria-hidden="true">{currentCitadelData.rune}</span>
-                <div className="hall-hud-titles">
-                  <h2 className="hall-hud-main-title">{currentCitadelData.name}</h2>
-                  <span className="hall-hud-sub-title">
-                    {currentCitadelData.gateName} &bull; {currentCitadelData.sub}
-                  </span>
-                </div>
-              </div>
-
-              <div className="hall-hud-actions">
-                <button
-                  type="button"
-                  className="hud-action-btn"
-                  onClick={handleReplay}
-                  disabled={isTransitioning}
-                  title="Replay entrance transition video"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M8 5v14l11-7z" />
-                  </svg>
-                  <span>Replay</span>
-                </button>
-
-                <button
-                  type="button"
-                  className="hud-action-btn"
-                  onClick={handleExitToEntrance}
-                  disabled={isTransitioning}
-                  title="Return to Castle Entrance"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  <span>Entrance</span>
-                </button>
-              </div>
-            </header>
-
-            {/* 6 Interactive Gate Hotspots across the Castle Hall Panorama */}
-            <div className="hall-gates-interactive-grid" role="group" aria-label="Castle Hall Gates">
-              {/* Gate 1: Emberkeep */}
-              <button
-                type="button"
-                className="hall-gate-hotspot"
-                style={{
-                  ...CITADELS.emberkeep.gateCoords,
-                  '--gate-accent': CITADELS.emberkeep.accent,
-                  '--gate-glow': CITADELS.emberkeep.glow,
-                }}
-                onClick={() => handleSelectCitadel('emberkeep')}
-                aria-label="Select Emberkeep Gate"
-              >
-                <div className="gate-beam-light" />
-                <div className="gate-floating-pill">
-                  <span className="gate-pill-rune">{CITADELS.emberkeep.rune}</span>
-                  <div className="gate-pill-text">
-                    <span className="gate-pill-title">{CITADELS.emberkeep.shortName}</span>
-                    <span className="gate-pill-sub">{CITADELS.emberkeep.gateName}</span>
-                  </div>
-                </div>
-              </button>
-
-              {/* Gate 2: Arcweave */}
-              <button
-                type="button"
-                className="hall-gate-hotspot"
-                style={{
-                  ...CITADELS.arcweave.gateCoords,
-                  '--gate-accent': CITADELS.arcweave.accent,
-                  '--gate-glow': CITADELS.arcweave.glow,
-                }}
-                onClick={() => handleSelectCitadel('arcweave')}
-                aria-label="Select Arcweave Gate"
-              >
-                <div className="gate-beam-light" />
-                <div className="gate-floating-pill">
-                  <span className="gate-pill-rune">{CITADELS.arcweave.rune}</span>
-                  <div className="gate-pill-text">
-                    <span className="gate-pill-title">{CITADELS.arcweave.shortName}</span>
-                    <span className="gate-pill-sub">{CITADELS.arcweave.gateName}</span>
-                  </div>
-                </div>
-              </button>
-
-              {/* Gate 3: Voltgrid */}
-              <button
-                type="button"
-                className="hall-gate-hotspot"
-                style={{
-                  ...CITADELS.voltgrid.gateCoords,
-                  '--gate-accent': CITADELS.voltgrid.accent,
-                  '--gate-glow': CITADELS.voltgrid.glow,
-                }}
-                onClick={() => handleSelectCitadel('voltgrid')}
-                aria-label="Select Voltgrid Gate"
-              >
-                <div className="gate-beam-light" />
-                <div className="gate-floating-pill">
-                  <span className="gate-pill-rune">{CITADELS.voltgrid.rune}</span>
-                  <div className="gate-pill-text">
-                    <span className="gate-pill-title">{CITADELS.voltgrid.shortName}</span>
-                    <span className="gate-pill-sub">{CITADELS.voltgrid.gateName}</span>
-                  </div>
-                </div>
-              </button>
-
-              {/* Gate 4: Rimeguard */}
-              <button
-                type="button"
-                className="hall-gate-hotspot"
-                style={{
-                  ...CITADELS.rimeguard.gateCoords,
-                  '--gate-accent': CITADELS.rimeguard.accent,
-                  '--gate-glow': CITADELS.rimeguard.glow,
-                }}
-                onClick={() => handleSelectCitadel('rimeguard')}
-                aria-label="Select Rimeguard Gate"
-              >
-                <div className="gate-beam-light" />
-                <div className="gate-floating-pill">
-                  <span className="gate-pill-rune">{CITADELS.rimeguard.rune}</span>
-                  <div className="gate-pill-text">
-                    <span className="gate-pill-title">{CITADELS.rimeguard.shortName}</span>
-                    <span className="gate-pill-sub">{CITADELS.rimeguard.gateName}</span>
-                  </div>
-                </div>
-              </button>
-
-              {/* Gate 5: Sealed Vault */}
-              <button
-                type="button"
-                className="hall-gate-hotspot is-sealed"
-                style={{
-                  ...SEALED_GATES.vault.gateCoords,
-                  '--gate-accent': SEALED_GATES.vault.accent,
-                  '--gate-glow': SEALED_GATES.vault.glow,
-                }}
-                onClick={() => handleSelectCitadel('vault')}
-                aria-label="Inspect The Deep Vault (Sealed)"
-              >
-                <div className="gate-beam-light" />
-                <div className="gate-floating-pill">
-                  <span className="gate-pill-rune">{SEALED_GATES.vault.rune}</span>
-                  <div className="gate-pill-text">
-                    <span className="gate-pill-title">{SEALED_GATES.vault.gateName}</span>
-                    <span className="gate-pill-sub">Sealed Chamber</span>
-                  </div>
-                </div>
-              </button>
-
-              {/* Gate 6: Astral Sanctum */}
-              <button
-                type="button"
-                className="hall-gate-hotspot is-sealed"
-                style={{
-                  ...SEALED_GATES.astral.gateCoords,
-                  '--gate-accent': SEALED_GATES.astral.accent,
-                  '--gate-glow': SEALED_GATES.astral.glow,
-                }}
-                onClick={() => handleSelectCitadel('astral')}
-                aria-label="Inspect Astral Sanctum (Sealed)"
-              >
-                <div className="gate-beam-light" />
-                <div className="gate-floating-pill">
-                  <span className="gate-pill-rune">{SEALED_GATES.astral.rune}</span>
-                  <div className="gate-pill-text">
-                    <span className="gate-pill-title">{SEALED_GATES.astral.gateName}</span>
-                    <span className="gate-pill-sub">Celestial Portal</span>
-                  </div>
-                </div>
-              </button>
-            </div>
-
-            {/* Bottom Citadel Selector Dock */}
-            <nav className="hall-bottom-dock" aria-label="Select Citadel">
-              {Object.values(CITADELS).map((c) => {
-                const isActive = activeCitadel === c.id
-                return (
-                  <button
-                    key={c.id}
-                    type="button"
-                    className={`dock-citadel-btn ${isActive ? 'is-active' : ''}`}
-                    style={{
-                      '--dock-accent': c.accent,
-                      '--dock-glow': c.glow,
-                    }}
-                    onClick={() => handleSelectCitadel(c.id)}
-                    disabled={isTransitioning}
-                    aria-pressed={isActive}
-                  >
-                    <span aria-hidden="true">{c.rune}</span>
-                    <span>{c.shortName}</span>
-                  </button>
-                )
-              })}
-            </nav>
-          </div>
-        )}
-
-        {/* ========================================================
-            STAGE 3: CITADEL PREVIEW
-            ======================================================== */}
-        {stage === 'citadel_preview' && (
-          <div
-            className="citadel-preview-stage"
-            role="status"
-            aria-label={`Approaching ${targetCitadelData.name}`}
-            style={{
-              '--preview-accent': targetCitadelData.accent,
-              '--preview-glow': targetCitadelData.glow,
-            }}
-          >
-            <img
-              src={encodeURI(targetCitadelData.citadelImg)}
-              alt={`${targetCitadelData.name} Citadel`}
-              className="citadel-preview-image"
-            />
-            <div className="citadel-preview-atmosphere" />
-
-            <div className="citadel-preview-banner">
-              <span className="preview-banner-rune" aria-hidden="true">{targetCitadelData.rune}</span>
-              <h2 className="preview-banner-title">{targetCitadelData.realmTitle}</h2>
-              <p className="preview-banner-sub">
-                {targetCitadelData.name} &bull; {targetCitadelData.sub}
+              <p className="dh-cta-sub">
+                Six doors, six dungeons · <strong>{openCount}</strong> unsealed
               </p>
             </div>
-          </div>
-        )}
-      </div>
+          </HubShell>
+        </ThemeStage>
+      )}
 
-      {/* ========================================================
-          STAGE 4: FULL-SCREEN TRANSITION VIDEO OVERLAY
-          ======================================================== */}
-      {stage === 'transition_video' && (
+      {stage === 'video' && (
         <div
           className={`exp-transition-overlay ${videoFading ? 'fade-out' : ''}`}
           role="dialog"
-          aria-label={`${targetCitadelData.name} Transition Video`}
+          aria-label={`Entering ${hall.hallName}`}
         >
           <video
             ref={videoRef}
-            src={encodeURI(targetCitadelData.videoSrc)}
+            src={hall.video}
             autoPlay
             playsInline
-            onEnded={handleTransitionComplete}
+            preload="auto"
+            onEnded={finishVideo}
+            onError={finishVideo}
             className="exp-transition-video"
           />
-
-          <button
-            type="button"
-            className="exp-skip-btn"
-            onClick={handleTransitionComplete}
-            aria-label="Skip transition video"
-          >
-            Skip Transition &rarr;
+          <button type="button" className="exp-skip-btn" onClick={finishVideo}>
+            Skip &rarr;
           </button>
         </div>
       )}
 
-      {/* ========================================================
-          SEALED GATE NOTICE MODAL (Gates 5 & 6)
-          ======================================================== */}
-      {sealedNotice && (
-        <div
-          className="sealed-gate-modal-backdrop"
-          onClick={() => setSealedNotice(null)}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="sealed-title"
-        >
+      {stage === 'hall' && (
+        <div className="dh-hall" style={accentVars} data-house={house}>
           <div
-            className="sealed-gate-modal"
-            style={{
-              '--sealed-accent': sealedNotice.accent,
-              '--sealed-glow': sealedNotice.glow,
-            }}
-            onClick={(e) => e.stopPropagation()}
+            className={`dh-cover ${entering ? 'is-entering' : ''}`}
+            style={entering ? { transformOrigin: `${entering.x}% ${entering.y}%` } : undefined}
           >
-            <span className="sealed-modal-icon" aria-hidden="true">{sealedNotice.rune}</span>
-            <h3 id="sealed-title" className="sealed-modal-title">{sealedNotice.realmTitle}</h3>
-            <p className="sealed-modal-desc">{sealedNotice.message}</p>
-            <button
-              type="button"
-              className="sealed-modal-close-btn"
-              onClick={() => setSealedNotice(null)}
-            >
-              Acknowledge
-            </button>
+            <img className="dh-hall-img" src={hall.hallImg} alt="" draggable="false" />
+            {doors.map((door, i) => (
+              <DoorHotspot
+                key={door.id}
+                door={door}
+                edge={i === 0 ? 'left' : i === doors.length - 1 ? 'right' : null}
+                active={entering?.id === door.id}
+                onOpen={() => openDoor(door)}
+              />
+            ))}
           </div>
+          <div className="dh-vignette" aria-hidden="true" />
+          <div className="dh-fog" aria-hidden="true" />
+
+          <header className="dh-hud">
+            <span className="dh-hud-rune" aria-hidden="true">{hall.rune}</span>
+            <div>
+              <h1 className="dh-hud-title">{hall.hallName}</h1>
+              <p className="dh-hud-sub">
+                {hall.name} · {openCount} of {doors.length} doors unsealed
+              </p>
+            </div>
+          </header>
+
+          <HubProfileMenu user={user} />
+
+          {/* Phones: the painting is too wide to aim at, so list the doors. */}
+          <ul className="dh-door-list">
+            {doors.map((door) => (
+              <li key={door.id}>
+                <button
+                  type="button"
+                  className={`dh-list-door ${door.state.open ? '' : 'is-sealed'}`}
+                  onClick={() => openDoor(door)}
+                >
+                  <span className="dh-list-num">{door.num}</span>
+                  <span className="dh-list-text">
+                    <span className="dh-list-title">{door.meta.title}</span>
+                    <span className="dh-list-sub">{door.meta.subject}</span>
+                  </span>
+                  <DoorStatus door={door} />
+                </button>
+              </li>
+            ))}
+          </ul>
+
+          <nav className="dh-dock" aria-label="Hall navigation">
+            <button type="button" className="dh-dock-btn" onClick={toFortress} disabled={!!entering}>
+              ← Fortress
+            </button>
+            <button type="button" className="dh-dock-btn" onClick={enterHall} disabled={!!entering}>
+              ↻ Replay entry
+            </button>
+          </nav>
+
+          {entering && <div className="dh-flash" aria-hidden="true" />}
         </div>
       )}
+
+      {sealed && (
+        <SealedNotice
+          door={doors.find((d) => d.id === sealed)}
+          accentVars={accentVars}
+          onClose={() => setSealed(null)}
+        />
+      )}
+    </>
+  )
+}
+
+function DoorHotspot({ door, edge, active, onOpen }) {
+  const { rect, state, meta } = door
+  return (
+    <button
+      type="button"
+      className={[
+        'dh-door',
+        state.open ? 'is-open' : 'is-sealed',
+        state.conquered ? 'is-conquered' : '',
+        active ? 'is-active' : '',
+      ].join(' ')}
+      style={{
+        left: `${rect.left}%`,
+        top: `${rect.top}%`,
+        width: `${rect.width}%`,
+        height: `${rect.height}%`,
+      }}
+      onClick={onOpen}
+      aria-label={`Door ${door.num}: ${meta.title} (${meta.subject}) — ${state.open ? 'open' : 'sealed'}`}
+    >
+      <span className="dh-door-glow" aria-hidden="true" />
+      {!state.open && <span className="dh-door-seal" aria-hidden="true">🔒</span>}
+
+      <span className={`dh-door-tip ${edge ? `edge-${edge}` : ''}`} aria-hidden="true">
+        <span className="dh-tip-subject">{meta.subject}</span>
+        <span className="dh-tip-blurb">{meta.blurb}</span>
+      </span>
+
+      <span className="dh-door-label" aria-hidden="true">
+        <span className="dh-label-num">{door.num}</span>
+        <span className="dh-label-title">{meta.title}</span>
+        <DoorStatus door={door} />
+      </span>
+    </button>
+  )
+}
+
+function DoorStatus({ door }) {
+  const { state, id } = door
+  if (!state.open) return <span className="dh-status is-sealed">Sealed</span>
+  if (id === 'capstone') return <span className="dh-status is-open">Armed</span>
+  if (state.conquered) return <span className="dh-status is-done">Conquered</span>
+  return (
+    <span className="dh-status is-open">
+      {state.cleared}/{state.total} cleared
+    </span>
+  )
+}
+
+function SealedNotice({ door, accentVars, onClose }) {
+  if (!door) return null
+  const capstone = door.id === 'capstone'
+  return (
+    <div className="sealed-gate-modal-backdrop" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="dh-sealed-title">
+      <div
+        className="sealed-gate-modal"
+        style={{ ...accentVars, '--sealed-accent': 'var(--dh-accent)', '--sealed-glow': 'var(--dh-glow)' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <span className="sealed-modal-icon" aria-hidden="true">🔒</span>
+        <h3 id="dh-sealed-title" className="sealed-modal-title">
+          Door {door.num} · {door.meta.title}
+        </h3>
+        <p className="sealed-modal-desc">
+          {capstone
+            ? 'The Gauntlet runs live, together, on the day. The Warden arms the target box when it begins — this door opens then.'
+            : `${door.meta.subject} is still sealed. The Warden unseals each dungeon when your class reaches it — come back once it has been announced.`}
+        </p>
+        <button type="button" className="sealed-modal-close-btn" onClick={onClose} autoFocus>
+          Understood
+        </button>
+      </div>
     </div>
   )
 }

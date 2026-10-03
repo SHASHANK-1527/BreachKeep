@@ -1,12 +1,10 @@
 import { useEffect, useState, useCallback } from 'react'
 import { api } from '../../../app/api.js'
-import { useAuth } from '../../../app/AuthContext.jsx'
-import '../dungeons.css'
+import DungeonShell from '../DungeonShell.jsx'
 
 const ROOM_ID = 'capstone-gauntlet'
 
 export default function CapstoneView() {
-  const { user } = useAuth()
   const [state, setState] = useState({ phase: 'loading', armed: false, target: null })
 
   const load = useCallback(async () => {
@@ -20,10 +18,9 @@ export default function CapstoneView() {
   useEffect(() => { load() }, [load])
 
   return (
-    <div className="bkd-scope" data-house={user?.house || undefined}>
-      <div className="bkd-wrap">
+    <DungeonShell dungeonId="capstone">
         <header className="bkd-head">
-          <p className="bkd-eyebrow">Capstone</p>
+          <p className="bkd-eyebrow">Door VI · Capstone</p>
           <h1 className="bkd-title">The Gauntlet</h1>
           <p className="bkd-blurb">
             One target machine. Everything you have learned — recon, the web, the shell, privilege.
@@ -38,8 +35,7 @@ export default function CapstoneView() {
 
         {state.phase === 'ready' && !state.armed && <WaitForDay onRefresh={load} />}
         {state.phase === 'ready' && state.armed && <Armed target={state.target} />}
-      </div>
-    </div>
+    </DungeonShell>
   )
 }
 

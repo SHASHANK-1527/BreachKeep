@@ -4,8 +4,17 @@ This is the whole path, from the "door" of rooms to a live terminal in a new tab
 
 ## What the student sees
 
-1. **The door** — the dungeon page lists every room as a card, grouped into
-   Mandatory / Medium / Hard. Locked tiers are greyed out.
+0. **The hall** — after sorting, the dashboard shows the student's house
+   fortress with an **Enter the Hall** button. It plays the house's
+   `<house>_to_hall.mp4`, then shows that house's hall: six painted doors, one
+   per dungeon (I Terminal-1, II Terminal-2, III Network, IV Web, V Secure
+   Coding, VI Capstone). Doors for dungeons the Warden hasn't made live are
+   dimmed and say *Sealed*; a live door shows `cleared/total` and zooms open
+   into `/dungeons/<id>`. (`apps/web/src/shell/CastleExperience.jsx`, door
+   positions per house in `features/dungeons/hall/hallConfig.js`.)
+1. **The door** — the dungeon page (`/dungeons/<id>`) lists every room as a card,
+   grouped into Mandatory / Medium / Hard. Locked tiers are greyed out. Each room
+   has its own URL (`/dungeons/<id>/<roomId>`), so refresh and Back work.
 2. **Click a room** — the card opens the room view: the story brief, the
    objective, a hint ladder, a **Connect to machine** button, and the flag box.
 3. **Click "Connect to machine"** — their own container boots and the full
@@ -17,7 +26,10 @@ This is the whole path, from the "door" of rooms to a live terminal in a new tab
 ## The pieces (and the one file each lives in)
 
 ```
+Hall of six doors ...... apps/web/src/shell/CastleExperience.jsx
+                         apps/web/src/features/dungeons/hall/hallConfig.js
 Door + room view ....... apps/web/src/pages/Dungeon.jsx
+                         apps/web/src/features/dungeons/DungeonShell.jsx
                          apps/web/src/features/dungeons/DungeonView.jsx
 Room content (data) .... apps/web/src/features/dungeons/<dungeon>/rooms.js
 Dungeon registry ....... apps/web/src/features/dungeons/index.js
