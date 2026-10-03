@@ -5,7 +5,7 @@ import {
   adminLogin, adminLogout, adminWhere, adminState, adminOverview,
   setCommonCode, setRosterGate, setMaintenance, setRoster, getRoster, removeFromRoster, setDungeon, setCapstone,
   adminStudents, adminStudentDetail, adminAssignHouse, adminResetProgress, adminDeleteStudent,
-  setTesting, testIntro, testResetDungeon,
+  setTesting, testIntro, testResetDungeon, setTestingGrant,
 } from '../controllers/adminController.js'
 
 const r = Router()
@@ -25,6 +25,7 @@ r.post('/capstone', requireAdmin, setCapstone)
 r.post('/testing', requireAdmin, setTesting)
 r.post('/test/intro', requireAdmin, testIntro)
 r.post('/test/reset-dungeon', requireAdmin, testResetDungeon)
+r.post('/test/grant', requireAdmin, setTestingGrant)
 
 // students (declared after /roster* so no path is shadowed)
 r.get('/students', requireAdmin, adminStudents)

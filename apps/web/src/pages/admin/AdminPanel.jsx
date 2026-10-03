@@ -325,7 +325,7 @@ export default function AdminPanel() {
         {tab === 'testing' && (
           <>
             <h1 style={s.h1}>Testing</h1>
-            <p style={s.sub}>Dev tools for walking the flows yourself — skip or restart the intro, wipe a dungeon's progress. Works on a chosen account.</p>
+            <p style={s.sub}>Dev tools for walking the flows yourself — grant an account the floating test panel, skip or restart the intro, wipe a dungeon's progress. Works on a chosen account.</p>
 
             <div style={s.card}>
               <div style={s.cardTitle}>Testing tools</div>
@@ -333,7 +333,7 @@ export default function AdminPanel() {
                 checked={state?.testingEnabled}
                 onChange={(v) => act(async () => { await api.post('/admin/testing', { enabled: v }); await loadState() }, v ? 'Testing tools enabled' : 'Testing tools disabled')}
                 label="Enable testing tools"
-                hint="When off, the actions below are refused by the server. Turn on only while testing, off for class."
+                hint="When off, the actions below are refused and no granted account sees the test panel. Turn on only while testing, off for class."
               />
             </div>
 
@@ -372,6 +372,15 @@ export default function AdminPanel() {
                       <span style={{ ...s.pill, color: u.introComplete ? T.green : T.dim, borderColor: u.introComplete ? T.green : T.border }}>
                         intro {u.introComplete ? 'done' : 'not done'}
                       </span>
+                      <span style={{ ...s.pill, color: u.testingRights ? T.gold : T.dim, borderColor: u.testingRights ? T.gold : T.border }}>
+                        {u.testingRights ? 'testing: granted' : 'testing: off'}
+                      </span>
+                      <button
+                        style={{ ...s.btn, ...(u.testingRights ? s.btnRed : s.btnGreen) }}
+                        onClick={() => act(async () => { await api.post('/admin/test/grant', { id: u.id, enabled: !u.testingRights }); await loadStudents(query) }, u.testingRights ? `${u.username}: testing revoked` : `${u.username}: testing granted — they see the panel`)}
+                      >
+                        {u.testingRights ? 'Revoke testing' : 'Grant testing'}
+                      </button>
                       <button style={{ ...s.btn, ...s.btnGhost }} onClick={() => act(async () => { await api.post('/admin/test/intro', { id: u.id, action: 'complete' }); await loadStudents(query) }, `${u.username}: intro skipped`)}>Skip intro</button>
                       <button style={{ ...s.btn, ...s.btnGhost }} onClick={() => act(async () => { await api.post('/admin/test/intro', { id: u.id, action: 'reset' }); await loadStudents(query) }, `${u.username}: intro restarted`)}>Restart intro</button>
                       <button style={{ ...s.btn, ...s.btnGhost }} onClick={() => act(async () => { await api.post('/admin/test/reset-dungeon', { id: u.id, dungeonId: testDungeon }); await loadStudents(query) }, `${u.username}: ${testDungeon} wiped`)}>Reset {testDungeon}</button>

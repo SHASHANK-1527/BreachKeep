@@ -97,6 +97,7 @@ export async function adminStudents(req, res) {
       introComplete: u.introComplete,
       verified: u.verified,
       hasGoogle: !!u.googleId,
+      testingRights: !!u.testingRights,
       solved: nBy.get(String(u._id)) || 0,
       createdAt: u.createdAt,
     })),
@@ -118,6 +119,7 @@ export async function adminStudentDetail(req, res) {
       introComplete: user.introComplete,
       verified: user.verified,
       hasGoogle: !!user.googleId,
+      testingRights: !!user.testingRights,
       createdAt: user.createdAt,
     },
     progress: progress.map((p) => ({ roomId: p.roomId, solvedAt: p.solvedAt })),
@@ -319,7 +321,15 @@ export async function testIntro(req, res) {
   const user = await User.findById(id)
   if (!user) return res.status(404).json({ error: 'Student not found' })
   if (action === 'complete') { user.introComplete = true; user.introRooms = [...INTRO_ROOMS] }
-  else if (action === 'reset') { user.introComplete = false; user.introRooms = [] }
+  else if (action === 'reset') {
+    // Full restart: clear the intro AND send them back before the sorting
+    // ceremony, so the dashboard actually returns to the introduction (phase A)
+    // instead of staying on the themed hub.
+    user.introComplete = false
+    user.introRooms = []
+    user.house = null
+    user.sorted = false
+  }
   else return res.status(400).json({ error: "action must be 'complete' or 'reset'" })
   await user.save()
   return res.json({ ok: true, introComplete: user.introComplete })
@@ -335,4 +345,18 @@ export async function testResetDungeon(req, res) {
   if (!user) return res.status(404).json({ error: 'Student not found' })
   const { deletedCount } = await Progress.deleteMany({ userId: user._id, roomId: new RegExp('^' + prefix) })
   return res.json({ ok: true, removed: deletedCount })
+}
+
+// POST /api/admin/test/grant { id, enabled }
+// Grant or revoke a particular account's testing rights. While the Warden has
+// testing enabled, a granted account sees the floating test panel (lower-right)
+// on the live site. Revoking (or turning global testing off) hides it again.
+export async function setTestingGrant(req, res) {
+  if (!(await testingGate(res))) return
+  const { id, enabled } = req.body
+  const user = await User.findById(id)
+  if (!user) return res.status(404).json({ error: 'Student not found' })
+  user.testingRights = !!enabled
+  await user.save()
+  return res.json({ ok: true, testingRights: user.testingRights })
 }

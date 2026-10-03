@@ -84,13 +84,13 @@ export default function RoomGrid() {
         } else if (res && typeof res.cleared === 'number') {
           rooms = SCENES.slice(0, res.cleared).map(s => s.to)
         }
-        setCompletedRooms((prev) => {
-          const combined = Array.from(new Set([...prev, ...rooms]))
-          try {
-            localStorage.setItem('bk_completed_intro_rooms', JSON.stringify(combined))
-          } catch {}
-          return combined
-        })
+        // The server is the source of truth. Replace (do NOT union with the old
+        // localStorage mirror) so an admin “Restart intro” / reset actually clears
+        // the quest map instead of the stale cache keeping every gate lit.
+        try {
+          localStorage.setItem('bk_completed_intro_rooms', JSON.stringify(rooms))
+        } catch {}
+        setCompletedRooms(rooms)
       }).catch(() => {})
     }
 

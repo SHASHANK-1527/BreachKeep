@@ -59,12 +59,21 @@ export default function TestPanel() {
   const [err, setErr] = useState('')
 
   const load = useCallback(async () => {
+    // The panel is allowed whenever the server lets this account hit
+    // /api/dev/state — either local env test mode, or an account the Warden has
+    // granted testing rights. A granted student sees the full panel on the live
+    // site; everyone else gets a 404 here and the panel stays hidden.
+    try {
+      const st = await api.get('/dev/state')
+      setOn(true); setState(st); return
+    } catch { /* not allowed for this account */ }
+    // Fallback: local env test mode with no student session in this tab (so the
+    // panel can still say “no session” on the access-code / Warden pages).
     try {
       const status = await api.get('/status')
-      setOn(!!status.testMode)
-      if (!status.testMode) { setState(null); return }
-    } catch { setOn(false); return }
-    try { setState(await api.get('/dev/state')) } catch { setState(null) }
+      if (status?.testMode) { setOn(true); setState(null); return }
+    } catch {}
+    setOn(false); setState(null)
   }, [])
 
   useEffect(() => { load() }, [load])

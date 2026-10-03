@@ -403,9 +403,10 @@ export default function App() {
         <CastleProvider>
           <BrowserRouter>
             <AppRoutes />
-            {/* Outside <Routes> so it survives every dashboard phase. It still
-                renders nothing unless the API confirms test mode. */}
-            {TEST_MODE && <TestPanel />}
+            {/* Outside <Routes> so it survives every dashboard phase. It self-gates:
+                it shows only when the server lets this account hit /api/dev/* — local
+                env test mode, or an account the Warden granted testing rights. */}
+            <TestPanel />
           </BrowserRouter>
         </CastleProvider>
       </AuthProvider>

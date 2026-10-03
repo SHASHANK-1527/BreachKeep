@@ -69,9 +69,11 @@ app.use('/api/house', houseRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/labs', labsRoutes)
 
-// Test-mode helpers. The route simply does not exist unless test mode is on,
-// so in production this is a 404 like any other unknown path.
-if (testMode) app.use('/api/dev', devRoutes)
+// Test tools. Always mounted, but every route inside is gated by requireTesting:
+// allowed in local env test mode, OR when the Warden has testing enabled globally
+// and this account has been granted testing rights. Everyone else gets a 404, so
+// the tools still "do not exist" for ordinary users.
+app.use('/api/dev', devRoutes)
 
 // unknown /api -> 404 (never confirm structure)
 app.use('/api', (req, res) => res.status(404).end())

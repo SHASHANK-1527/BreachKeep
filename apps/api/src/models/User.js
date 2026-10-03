@@ -34,6 +34,11 @@ const userSchema = new mongoose.Schema(
 
     role: { type: String, enum: ['student', 'admin'], default: 'student' },
 
+    // Per-account testing rights. When the Warden has testing enabled globally
+    // AND this flag is on, the account sees the floating test panel (lower-right)
+    // in production, exactly like VITE_TEST_MODE did during local development.
+    testingRights: { type: Boolean, default: false },
+
     // login throttling
     failedLogins: { type: Number, default: 0 },
     lockUntil: { type: Date },
