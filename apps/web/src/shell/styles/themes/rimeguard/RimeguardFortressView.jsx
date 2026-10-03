@@ -1,60 +1,32 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import './RimeguardFortressView.css';
 import RimeguardAnimatedFlags from './RimeguardAnimatedFlags';
 
+/**
+ * RimeguardFortressView
+ * Master viewport stage for House Rimeguard Frozen Citadel.
+ * Clean, weightless cinematic presentation with zero buttons or clutter.
+ */
 export default function RimeguardFortressView({ children }) {
-  const [windGust, setWindGust] = useState(1);
-
-  useEffect(() => {
-    // Subtle periodic ambient wind gusts to vary flag flutter naturally
-    const interval = setInterval(() => {
-      setWindGust(1.4);
-      setTimeout(() => setWindGust(1), 2200);
-    }, 12000);
-    return () => clearInterval(interval);
-  }, []);
-
   return (
     <div className="rimeguard-viewport-stage">
       {/* ========================================================
-          1. UNIFIED 2D SCENE CANVAS: ARTWORK & ANIMATED FLAGS
-          Unified within a single 1376x768 SVG coordinate system
-          with preserveAspectRatio="xMidYMax slice" so that all
-          flags are mathematically locked to their flagpoles on every screen.
+          1. MASTER 1376x768 SCENE CANVAS: ARTWORK & ANIMATED CITADEL
+          Unified SVG coordinate system with preserveAspectRatio="xMidYMax slice"
+          locking all frost cores, lightning arcs, and waterfalls in place.
           ======================================================== */}
       <div className="fortress-illustration-canvas">
-        <RimeguardAnimatedFlags windGust={windGust} includeBackground={true} />
-
-        {/* ========================================================
-            2. SCENE CLOUD FORMATIONS IN CONTINUOUS MOTION
-            The authentic illustrated clouds from the artwork itself,
-            drifting and billowing with living alpine wind motion.
-            ======================================================== */}
-        <div className="scene-illustrated-clouds-container" aria-hidden="true">
-          <div className="scene-cloud-wrapper cloud-left-wrapper">
-            <img
-              src="/cloud_left.webp"
-              alt=""
-              className="scene-cloud-sprite cloud-left-sprite"
-            />
-          </div>
-          <div className="scene-cloud-wrapper cloud-right-wrapper">
-            <img
-              src="/cloud_right.webp"
-              alt=""
-              className="scene-cloud-sprite cloud-right-sprite"
-            />
-          </div>
-        </div>
+        <RimeguardAnimatedFlags />
       </div>
 
       {/* ========================================================
-          3. CINEMATIC TITLE HEADER
-          Clean, weightless typography that lets the sky and peaks breathe
+          2. CINEMATIC TITLE HEADER
+          Clean, weightless typography that lets the sky and peaks breathe.
+          Zero buttons, zero extra text or overlays.
           ======================================================== */}
       <header className="rimeguard-cinematic-hud">
         <div className="hud-cinematic-title">
-          <div className="cinematic-crest-icon">
+          <div className="cinematic-crest-icon" aria-hidden="true">
             <svg width="26" height="30" viewBox="0 0 28 34" fill="none">
               <path
                 d="M14 2 L26 6 V18 C26 27 14 33 14 33 C14 33 2 27 2 18 V6 Z"
@@ -77,6 +49,7 @@ export default function RimeguardFortressView({ children }) {
           </div>
         </div>
       </header>
+
       {children && <div className="theme-stage-overlay">{children}</div>}
     </div>
   );

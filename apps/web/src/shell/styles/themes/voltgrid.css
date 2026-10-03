@@ -1,35 +1,36 @@
-/* Voltgrid — Neon Cybercity (teal/magenta). */
+/* Voltgrid — High-Voltage Electric Citadel (electric-cyan). */
 [data-house="voltgrid"], body[data-house="voltgrid"] {
-  --house-bg: #050608;
-  --house-surface: #0d1013;
-  --house-surface-locked: #0a0c0e;
-  --house-text: #d8f5f0;
-  --house-text-dim: rgba(216, 245, 240, 0.6);
-  --house-accent: #29e6c9;        /* idle / resting state */
-  --house-accent-strong: #ff3cf0;  /* hover / active / unlocked state */
-  --house-border: rgba(41, 230, 201, 0.22);
-  --house-focus-ring: #ff3cf0;
-  --house-glow: rgba(41, 230, 201, 0.5);
+  --house-bg: #05070a;
+  --house-surface: #0b0f14;
+  --house-surface-locked: #06090c;
+  --house-text: #e6f4f8;
+  --house-text-dim: rgba(230, 244, 248, 0.6);
+  --house-accent: #00e5ff;        /* electric cyan */
+  --house-accent-strong: #ffffff;  /* high-voltage flash */
+  --house-border: rgba(0, 229, 255, 0.22);
+  --house-focus-ring: #00e5ff;
+  --house-glow: rgba(0, 229, 255, 0.5);
 
-  --bg-dark: #050608;
-  --bg-deep: #080a0e;
-  --surface-card: rgba(13, 16, 19, 0.90);
-  --surface-card-hover: rgba(20, 26, 32, 0.96);
-  --surface-card-locked: rgba(10, 12, 14, 0.85);
-  
-  --border-subtle: rgba(41, 230, 201, 0.18);
-  --border-active: rgba(41, 230, 201, 0.45);
-  --border-strong: rgba(41, 230, 201, 0.85);
+  --bg-dark: #030407;
+  --bg-deep: #05070a;
+  --surface-card: rgba(11, 15, 20, 0.92);
+  --surface-card-hover: rgba(18, 24, 32, 0.96);
+  --surface-card-locked: rgba(6, 9, 12, 0.85);
 
-  --accent-cyan: #29e6c9;
-  --accent-glow: rgba(41, 230, 201, 0.35);
-  --accent-btn: #ff3cf0;
-  --accent-btn-glow: rgba(255, 60, 240, 0.45);
+  --border-subtle: rgba(0, 229, 255, 0.2);
+  --border-active: rgba(0, 229, 255, 0.5);
+  --border-strong: rgba(255, 255, 255, 0.85);
+
+  --accent-cyan: #00e5ff;
+  --accent-white: #ffffff;
+  --accent-glow: rgba(0, 229, 255, 0.35);
+  --accent-btn: #00e5ff;
+  --accent-btn-glow: rgba(0, 229, 255, 0.45);
 
   --text-pure: #ffffff;
-  --text-bright: #d8f5f0;
-  --text-muted: #7fa39d;
-  --text-dim: #435e58;
+  --text-bright: #e6f4f8;
+  --text-muted: #7a99a8;
+  --text-dim: #3a5462;
 
   --font-display: 'Space Grotesk', sans-serif;
   --font-body: 'Space Grotesk', sans-serif;
@@ -37,14 +38,14 @@
 
   --radius-card: 8px;
   --radius-pill: 9999px;
-  --radius-sm: 6px;
+  --radius-sm: 4px;
 
   --reveal-duration: 0.5s;
   --reveal-ease: steps(6, end);
 }
 
 [data-house="voltgrid"] .bk-dashboard, [data-house="voltgrid"].bk-dashboard {
-  background: radial-gradient(circle at 50% 0%, #0c2a30, #050608);
+  background: radial-gradient(circle at 50% 0%, #081d26, #05070a);
 }
 [data-house="voltgrid"] .hub-brand {
   color: var(--house-accent);
@@ -52,15 +53,35 @@
 
 /* Glitch Boot Signature Reveal Animation */
 @keyframes glitchBoot {
-  from {
+  0% {
     opacity: 0;
-    clip-path: inset(0 0 100% 0);
-    transform: translateY(6px);
+    clip-path: polygon(0 0, 100% 0, 100% 0, 0 0);
+    filter: brightness(2) drop-shadow(0 0 16px #00e5ff);
   }
-  to {
+  20% {
+    opacity: 0.8;
+    clip-path: polygon(0 0, 100% 0, 100% 25%, 0 20%);
+    filter: brightness(1.6);
+  }
+  40% {
+    opacity: 0.6;
+    clip-path: polygon(0 15%, 100% 18%, 100% 60%, 0 55%);
+    filter: brightness(1.4);
+  }
+  65% {
+    opacity: 0.9;
+    clip-path: polygon(0 30%, 100% 28%, 100% 85%, 0 90%);
+    filter: brightness(1.2);
+  }
+  85% {
     opacity: 1;
-    clip-path: inset(0 0 0 0);
-    transform: translateY(0);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+    filter: brightness(1.1);
+  }
+  100% {
+    opacity: 1;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+    filter: brightness(1);
   }
 }
 

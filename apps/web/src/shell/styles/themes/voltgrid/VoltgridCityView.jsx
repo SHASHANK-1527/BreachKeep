@@ -1,105 +1,78 @@
 import React, { useState, useEffect } from 'react';
 import './VoltgridCityView.css';
-import VoltgridAnimatedFlags from './VoltgridAnimatedFlags';
+import VoltgridCitadelScene from './VoltgridCitadelScene';
 
 export default function VoltgridCityView({ children }) {
-  const [windGust, setWindGust] = useState(1);
+  const [mouseOffset, setMouseOffset] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
-    // Subtle periodic ambient wind gusts to vary banner flutter naturally (exact 1:1 match)
-    const interval = setInterval(() => {
-      setWindGust(1.4);
-      setTimeout(() => setWindGust(1), 2200);
-    }, 12000);
-    return () => clearInterval(interval);
+    const handleMouseMove = (e) => {
+      const x = ((e.clientX / window.innerWidth) - 0.5) * 16;
+      const y = ((e.clientY / window.innerHeight) - 0.5) * 12;
+      setMouseOffset({ x, y });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
   return (
     <div className="voltgrid-viewport-stage">
-      {/* ========================================================
-          1. UNIFIED 2D SCENE CANVAS: ARTWORK & ANIMATED CYBER BANNERS
-          Unified within a single 1376x768 SVG coordinate system
-          with preserveAspectRatio="xMidYMax slice" so that all
-          elements are mathematically locked to their positions on every screen.
-          ======================================================== */}
-      <div className="cybercity-illustration-canvas">
-        <VoltgridAnimatedFlags windGust={windGust} />
-
-        {/* ========================================================
-            2. SCENE VAPOR FORMATIONS IN CONTINUOUS MOTION
-            Atmospheric nocturnal cybercity mist drifting and billowing
-            with living alpine/cyber wind motion.
-            ======================================================== */}
-        <div className="scene-illustrated-clouds-container" aria-hidden="true">
-          <div className="scene-cloud-wrapper cloud-left-wrapper">
-            <img
-              src="/voltgrid_cloud_left.webp"
-              alt=""
-              className="scene-cloud-sprite cloud-left-sprite"
-            />
-          </div>
-          <div className="scene-cloud-wrapper cloud-right-wrapper">
-            <img
-              src="/voltgrid_cloud_right.webp"
-              alt=""
-              className="scene-cloud-sprite cloud-right-sprite"
-            />
-          </div>
-        </div>
+      <div
+        className="cybercity-illustration-canvas"
+        style={{
+          transform: `translate3d(${mouseOffset.x}px, ${mouseOffset.y}px, 0) scale(1.025)`,
+          transition: 'transform 0.45s cubic-bezier(0.22, 1, 0.36, 1)'
+        }}
+      >
+        <VoltgridCitadelScene />
       </div>
 
-      {/* ========================================================
-          3. CINEMATIC TITLE HEADER
-          Clean, weightless typography reflecting House Voltgrid
-          ======================================================== */}
       <header className="voltgrid-cinematic-hud">
         <div className="hud-cinematic-title">
-          <div className="cinematic-crest-icon">
-            <svg width="28" height="32" viewBox="0 0 32 36" fill="none">
-              {/* Rounded-square hologram panel (Voltgrid screen shape language) */}
+          <div className="cinematic-crest-icon" aria-hidden="true">
+            <svg width="34" height="40" viewBox="0 0 34 40" fill="none">
               <rect
-                x="2"
-                y="2"
+                x="3"
+                y="3"
                 width="28"
-                height="32"
+                height="34"
                 rx="8"
-                fill="#0d1013"
-                stroke="rgba(41, 230, 201, 0.4)"
-                strokeWidth="1.8"
+                fill="#0b0f14"
+                stroke="rgba(0, 229, 255, 0.45)"
+                strokeWidth="2"
               />
               <rect
-                x="4.5"
-                y="4.5"
+                x="5.5"
+                y="5.5"
                 width="23"
-                height="27"
+                height="29"
                 rx="6"
                 fill="none"
-                stroke="rgba(41, 230, 201, 0.15)"
+                stroke="rgba(0, 229, 255, 0.18)"
                 strokeWidth="1"
               />
-              {/* High-tech circuit traces */}
               <path
-                d="M16 6 V13 M16 23 V30 M7 18 H13 M19 18 H25"
-                stroke="#29e6c9"
+                d="M17 7 V14 M17 26 V33 M8 20 H14 M20 20 H26"
+                stroke="#00e5ff"
                 strokeWidth="1.5"
                 strokeLinecap="round"
               />
-              {/* Central Active Data Node (Magenta #ff3cf0 active indicator) */}
-              <circle cx="16" cy="18" r="4.2" fill="#ff3cf0" />
-              <circle cx="16" cy="18" r="2.2" fill="#ffffff" />
-              {/* Micro circuit endpoints */}
-              <circle cx="16" cy="6" r="1.2" fill="#29e6c9" />
-              <circle cx="16" cy="30" r="1.2" fill="#29e6c9" />
-              <circle cx="7" cy="18" r="1.2" fill="#29e6c9" />
-              <circle cx="25" cy="18" r="1.2" fill="#29e6c9" />
+              <circle cx="17" cy="20" r="3.8" fill="#00e5ff" />
+              <circle cx="17" cy="20" r="2.0" fill="#ffffff" />
+              <circle cx="17" cy="7" r="1.2" fill="#7df9ff" />
+              <circle cx="17" cy="33" r="1.2" fill="#7df9ff" />
+              <circle cx="8" cy="20" r="1.2" fill="#7df9ff" />
+              <circle cx="26" cy="20" r="1.2" fill="#7df9ff" />
             </svg>
           </div>
           <div className="cinematic-title-text">
             <h1 className="cinematic-house-name">HOUSE VOLTGRID</h1>
-            <span className="cinematic-realm-sub">NEON CYBERCITY &bull; REALM OF DATA TRAFFIC</span>
+            <span className="cinematic-realm-sub">HIGH-VOLTAGE CITADEL &bull; REALM OF THE ELECTRIC GRID</span>
           </div>
         </div>
       </header>
+
       {children && <div className="theme-stage-overlay">{children}</div>}
     </div>
   );

@@ -1,9 +1,9 @@
-/* Rimeguard — Frozen Fortress (ice-blue). */
+/* Rimeguard — Frozen Citadel (ice-blue / permafrost). */
 [data-house="rimeguard"], body[data-house="rimeguard"] {
-  --house-bg: #03070c;
-  --house-surface: #07121b;
+  --house-bg: #040914;
+  --house-surface: #0a1626;
   --house-accent: #6fd6ff;
-  --house-accent-strong: #00dfa2;
+  --house-accent-strong: #f2fbff;
   --house-glow: rgba(111, 214, 255, 0.5);
 
   --bg-dark: #03070c;
@@ -26,7 +26,7 @@
   --text-muted: #8ba2b5;
   --text-dim: #4b6375;
 
-  --font-serif: 'Cinzel', 'Cormorant Garamond', Georgia, serif;
+  --font-serif: 'Cinzel Decorative', 'Cinzel', Georgia, serif;
   --font-body: 'Manrope', -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
@@ -36,7 +36,7 @@
 }
 
 [data-house="rimeguard"] .bk-dashboard, [data-house="rimeguard"].bk-dashboard {
-  background: radial-gradient(circle at 50% 0%, #12233a, #03070c);
+  background: radial-gradient(circle at 50% 0%, #12233a, #040914);
 }
 [data-house="rimeguard"] .hub-brand {
   color: var(--house-accent);

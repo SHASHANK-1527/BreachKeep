@@ -1,22 +1,14 @@
-/* ========================================================
-   HOUSE VOLTGRID — NEON CYBERCITY STYLING
-   Pristine Cybercity Illustration with Living Vapor Drift & Animated Banners
-   ======================================================== */
-
 .voltgrid-viewport-stage {
   position: relative;
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background-color: #050608;
-  color: #d8f5f0;
+  background-color: #05070a;
+  color: #e6f4f8;
   font-family: 'Space Grotesk', -apple-system, sans-serif;
   user-select: none;
 }
 
-/* ========================================================
-   1. ILLUSTRATED GAME SCENE CANVAS
-   ======================================================== */
 .cybercity-illustration-canvas {
   position: absolute;
   top: 0;
@@ -26,127 +18,9 @@
   overflow: hidden;
 }
 
-/* ========================================================
-   2. AUTHENTIC SCENE VAPOR & CLOUD FORMATIONS IN MOTION
-   Nocturnal cybercity mist and rain vapor animated with
-   graceful atmospheric drift, billowing lift, and breathing
-   ======================================================== */
-.scene-illustrated-clouds-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  overflow: hidden;
-  z-index: 5;
-}
-
-.scene-cloud-wrapper {
-  position: absolute;
-  top: 0;
-  pointer-events: none;
-  will-change: transform;
-}
-
-/* Left Cloud: starts at top-left, drifts and billows across nocturnal skyline */
-.cloud-left-wrapper {
-  left: 0;
-  width: 33.5%;
-  max-width: 520px;
-  transform-origin: 20% 10%;
-  animation: leftCloudCyberDrift 20s ease-in-out infinite alternate;
-}
-
-/* Right Cloud: starts at top-right, drifts and billows across nocturnal skyline */
-.cloud-right-wrapper {
-  right: 0;
-  width: 34%;
-  max-width: 530px;
-  transform-origin: 80% 10%;
-  animation: rightCloudCyberDrift 24s ease-in-out infinite alternate;
-}
-
-.scene-cloud-sprite {
-  width: 100%;
-  height: auto;
-  display: block;
-  filter: drop-shadow(0 4px 16px rgba(5, 6, 8, 0.6));
-}
-
-.cloud-left-sprite {
-  transform-origin: center bottom;
-  animation: cloudBillowPuffLeft 7.5s ease-in-out infinite alternate;
-}
-
-.cloud-right-sprite {
-  transform-origin: center bottom;
-  animation: cloudBillowPuffRight 8.8s ease-in-out infinite alternate;
-}
-
-/* Graceful horizontal wind drifting across the sky */
-@keyframes leftCloudCyberDrift {
-  0% {
-    transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
-  }
-  35% {
-    transform: translate3d(32px, -8px, 0) scale(1.025) rotate(0.6deg);
-  }
-  70% {
-    transform: translate3d(-14px, 5px, 0) scale(0.985) rotate(-0.4deg);
-  }
-  100% {
-    transform: translate3d(20px, -4px, 0) scale(1.01) rotate(0.3deg);
-  }
-}
-
-@keyframes rightCloudCyberDrift {
-  0% {
-    transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
-  }
-  30% {
-    transform: translate3d(-35px, 6px, 0) scale(0.98) rotate(-0.6deg);
-  }
-  75% {
-    transform: translate3d(18px, -10px, 0) scale(1.03) rotate(0.5deg);
-  }
-  100% {
-    transform: translate3d(-18px, 3px, 0) scale(1) rotate(-0.2deg);
-  }
-}
-
-/* Subtle organic expansion and billowing of the vapor masses */
-@keyframes cloudBillowPuffLeft {
-  0% {
-    transform: scale(1, 1);
-  }
-  50% {
-    transform: scale(1.02, 1.015) translateY(-3px);
-  }
-  100% {
-    transform: scale(0.99, 1.025) translateY(2px);
-  }
-}
-
-@keyframes cloudBillowPuffRight {
-  0% {
-    transform: scale(1, 1);
-  }
-  50% {
-    transform: scale(1.018, 1.02) translateY(-2px);
-  }
-  100% {
-    transform: scale(0.985, 1.015) translateY(3px);
-  }
-}
-
-/* ========================================================
-   3. CINEMATIC TITLE HUD
-   Weightless, atmospheric typography reflecting House Voltgrid
-   ======================================================== */
 .voltgrid-cinematic-hud {
   position: absolute;
-  top: 20px;
+  top: 24px;
   left: 28px;
   z-index: 40;
   pointer-events: none;
@@ -155,15 +29,15 @@
 .hud-cinematic-title {
   display: flex;
   align-items: center;
-  gap: 14px;
-  filter: drop-shadow(0 2px 14px rgba(5, 6, 8, 0.95));
+  gap: 16px;
+  filter: drop-shadow(0 2px 14px rgba(3, 5, 8, 0.95));
 }
 
 .cinematic-crest-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  filter: drop-shadow(0 0 12px rgba(41, 230, 201, 0.6));
+  filter: drop-shadow(0 0 10px rgba(0, 229, 255, 0.45));
 }
 
 .cinematic-title-text {
@@ -175,20 +49,20 @@
 .cinematic-house-name {
   margin: 0;
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 700;
   letter-spacing: 0.16em;
   color: #ffffff;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.95), 0 0 24px rgba(41, 230, 201, 0.55);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.95), 0 0 20px rgba(0, 229, 255, 0.4);
   line-height: 1.1;
 }
 
 .cinematic-realm-sub {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 9.5px;
+  font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.26em;
-  color: #29e6c9;
+  letter-spacing: 0.22em;
+  color: #7df9ff;
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.95);
   opacity: 0.95;
 }
@@ -199,9 +73,9 @@
     left: 16px;
   }
   .cinematic-house-name {
-    font-size: 17px;
+    font-size: 18px;
   }
   .cinematic-realm-sub {
-    font-size: 8px;
+    font-size: 8.5px;
   }
 }
