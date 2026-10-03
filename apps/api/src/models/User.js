@@ -16,6 +16,7 @@ const userSchema = new mongoose.Schema(
     sessionCode: { type: String },
     sessionCodeExpires: { type: Date },
     lastSessionDate: { type: String },
+    verifiedToday: { type: Boolean, default: false },
 
     // password reset
     resetToken: { type: String },

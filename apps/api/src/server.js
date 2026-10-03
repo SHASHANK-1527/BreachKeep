@@ -1,5 +1,6 @@
 import express from 'express'
 import mongoose from 'mongoose'
+mongoose.set('sanitizeFilter', true)
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
 import helmet from 'helmet'

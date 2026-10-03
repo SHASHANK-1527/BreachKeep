@@ -15,6 +15,7 @@ import AccessConfig from '../models/AccessConfig.js'
 import { isValidEmailDomain } from '../utils/emailValidate.js'
 import { validatePassword, getTodayIST, getMidnightISTExpiry, generateSessionCode } from '../utils/auth.js'
 import { generateCode, sendVerificationEmail, sendSessionCodeEmail, sendPasswordResetEmail } from '../utils/email.js'
+import { safeEqual } from '../utils/flags.js'
 import { cookieOpts } from '../config/env.js'
 
 const SESSION_MAXAGE = 7 * 24 * 60 * 60 * 1000
@@ -110,13 +111,19 @@ export async function login(req, res) {
       return generic()
     }
 
-    // Auto-generate session code if needed (like reference backend)
+    // Auto-generate session code if needed
     const today = getTodayIST()
-    if (user.lastSessionDate !== today || !user.sessionCode || new Date() > user.sessionCodeExpires) {
+    const expired = user.sessionCodeExpires && new Date() > user.sessionCodeExpires
+    if (user.lastSessionDate !== today || expired) {
+      user.verifiedToday = false
+    }
+
+    if (!user.verifiedToday) {
       const sessionCode = generateSessionCode()
       user.sessionCode = sessionCode
       user.sessionCodeExpires = getMidnightISTExpiry()
       user.lastSessionDate = today
+      user.verifiedToday = false
       await user.save()
       try { await sendSessionCodeEmail(user.email, sessionCode) } catch (err) { console.error('Session email error:', err.message) }
       return res.json({ ok: true, requiresSessionCode: true, message: 'Session code sent to your email. Check your inbox.' })
@@ -137,12 +144,24 @@ export async function login(req, res) {
 export async function verifySession(req, res) {
   try {
     const { email, sessionCode } = req.body
+    console.log('[debug] verifySession body:', { email, sessionCode })
+    if (typeof sessionCode !== 'string') return res.status(400).json({ error: 'Invalid request' })
     const user = await User.findOne({ email: (email || '').toLowerCase() })
-    if (!user || user.sessionCode !== sessionCode || new Date() > user.sessionCodeExpires) {
+    console.log('[debug] user found:', !!user)
+    if (user) {
+        console.log('[debug] user session data:', { 
+            sessionCode: user.sessionCode, 
+            verified: user.verified, 
+            expires: user.sessionCodeExpires,
+            now: new Date()
+        })
+    }
+    if (!user || !user.sessionCode || !user.verified || !safeEqual(user.sessionCode, sessionCode) || new Date() > user.sessionCodeExpires) {
       return res.status(400).json({ error: 'Invalid or expired session code' })
     }
     user.failedLogins = 0
     user.lockUntil = undefined
+    user.verifiedToday = true
     await user.save()
     issueSession(res, user)
     return res.json({ ok: true, user: user.safe() })

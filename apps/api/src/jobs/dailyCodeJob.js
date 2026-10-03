@@ -19,6 +19,7 @@ export async function runDailyCodes() {
       u.sessionCode = generateSessionCode()
       u.sessionCodeExpires = expiry
       u.lastSessionDate = today
+      u.verifiedToday = false
       await u.save()
       await sendSessionCodeEmail(u.email, u.sessionCode)
       sent++

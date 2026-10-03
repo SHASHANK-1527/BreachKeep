@@ -34,6 +34,16 @@ export async function googleAuth(req, res) {
 
     let email, sub, name
     if (accessToken) {
+      // Validate the access token's audience first using tokeninfo
+      const tokenInfoRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?access_token=${accessToken}`)
+      if (!tokenInfoRes.ok) {
+        return res.status(401).json({ error: 'Failed to verify Google access token audience' })
+      }
+      const tokenInfo = await tokenInfoRes.json()
+      if (tokenInfo.aud !== process.env.GOOGLE_CLIENT_ID) {
+        return res.status(401).json({ error: 'Google access token audience mismatch' })
+      }
+
       const gRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
         headers: { Authorization: `Bearer ${accessToken}` },
       })
@@ -47,11 +57,6 @@ export async function googleAuth(req, res) {
       if (!email || !data.email_verified)
         return res.status(400).json({ error: 'Google account email not verified' })
     } else if (idToken) {
-      // The mock identity is a LOCAL development shortcut only. `testMode` is
-      // forced false whenever NODE_ENV=production, so a stray TEST_MODE=true in
-      // a production .env can no longer hand every visitor the same account.
-      // (Reading process.env.TEST_MODE directly here is what made every student
-      // on the live site sign in as cadet@breachkeep.internal.)
       if (testMode && idToken === 'mock-google-token') {
         email = 'cadet@breachkeep.internal'
         sub = 'dev-google-cadet'
@@ -69,31 +74,7 @@ export async function googleAuth(req, res) {
 
     const user = await User.findOne({ email })
 
-    // "Continue with Google" is a single unified action, so it must not depend on
-    // the gate mode. The gate cookie still says 'register' when the student typed
-    // the common access code, which used to make the login tab behave like signup.
-    // Decide purely from whether the account already exists.
-
     if (!user) {
-      // Roster gate disabled in code (27 Sep 2026).
-      //
-      // `AccessConfig.rosterGateEnabled` defaults to TRUE and the Roster
-      // collection was never populated, so this rejected every first-time
-      // Google sign-in with "This email is not on the course roster".
-      // Email/password signup already has the same check commented out
-      // (authController.js, `signup`), so enforcing it here alone meant the
-      // two registration paths disagreed about who was allowed in.
-      //
-      // To re-enable: uncomment the two lines below AND either turn the
-      // Roster gate on in the admin panel (Access -> Gates) or leave
-      // rosterGateEnabled true, then add the class emails on the Roster tab.
-      // An empty roster with the gate on locks everyone out.
-      //
-      // NOTE: with this off, ANY Google account can register, not just school
-      // ones. Domain restriction is a separate check and is not implemented.
-      // if (process.env.NODE_ENV === 'production' && !(await rosterAllows(email)))
-      //   return res.status(403).json({ error: 'This email is not on the course roster' })
-
       const username = email === 'cadet@breachkeep.internal'
         ? 'Initiate'
         : (name ? name.replace(/\s+/g, '_').toLowerCase().slice(0, 20) : email.split('@')[0])
@@ -106,9 +87,9 @@ export async function googleAuth(req, res) {
         sessionCode: generateSessionCode(),
         sessionCodeExpires: getMidnightISTExpiry(),
         lastSessionDate: getTodayIST(),
+        verifiedToday: true,
       })
 
-      // First sign-up of the day: no session code to prove.
       issueSession(res, created)
       return res.json({ ok: true, user: created.safe(), message: 'Account created successfully. Welcome!' })
     }
@@ -116,14 +97,17 @@ export async function googleAuth(req, res) {
     if (!user.googleId) { user.googleId = sub; await user.save() }
 
     const today = getTodayIST()
-    const codeStillValid =
-      user.lastSessionDate === today && user.sessionCode && user.sessionCodeExpires > new Date()
+    const expired = user.sessionCodeExpires && new Date() > user.sessionCodeExpires
+    if (user.lastSessionDate !== today || expired) {
+      user.verifiedToday = false
+    }
 
-    if (!codeStillValid && process.env.NODE_ENV === 'production') {
+    if (!user.verifiedToday) {
       const sessionCode = generateSessionCode()
       user.sessionCode = sessionCode
       user.sessionCodeExpires = getMidnightISTExpiry()
       user.lastSessionDate = today
+      user.verifiedToday = false
       await user.save()
       try { await sendSessionCodeEmail(user.email, sessionCode) } catch (err) { console.error('Session email error:', err.message) }
       return res.json({
@@ -139,8 +123,6 @@ export async function googleAuth(req, res) {
   } catch (e) {
     const msg = e?.message || ''
     console.error('googleAuth:', e?.code || '', msg)
-    // Distinguish "Google was unreachable" from "this token is not valid",
-    // otherwise a network blip looks like a wrong password to the student.
     if (/ECONNRESET|ETIMEDOUT|ENOTFOUND|EAI_AGAIN|ECONNREFUSED|network|socket|fetch failed/i.test(msg)) {
       return res.status(503).json({ error: 'Could not reach Google right now. Check your connection and try again.' })
     }
