@@ -1,3 +1,4 @@
+import mongoose from 'mongoose'
 import jwt from 'jsonwebtoken'
 import User from '../models/User.js'
 import AccessConfig from '../models/AccessConfig.js'
@@ -29,7 +30,9 @@ export async function verifyAccessCode(req, res) {
   }
 
   // 3. a personal daily code -> session mode
-  const user = await User.findOne({ sessionCode: code, sessionCodeExpires: { $gt: new Date() } })
+  // mongoose.trusted(): server.js enables sanitizeFilter, which would otherwise
+  // turn this operator into a literal match and silently break the query.
+  const user = await User.findOne({ sessionCode: code, sessionCodeExpires: mongoose.trusted({ $gt: new Date() }) })
   if (user) {
     setGate(res, { mode: 'session', code })
     return res.json({ ok: true, next: '/enter' })

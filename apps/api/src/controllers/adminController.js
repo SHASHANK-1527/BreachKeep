@@ -1,3 +1,4 @@
+import mongoose from 'mongoose'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import AccessConfig from '../models/AccessConfig.js'
@@ -207,7 +208,7 @@ export async function getRoster(req, res) {
 export async function removeFromRoster(req, res) {
   const emails = (req.body.emails || []).map((e) => String(e).toLowerCase().trim()).filter(Boolean)
   if (!emails.length) return res.status(400).json({ error: 'No emails given' })
-  const { deletedCount } = await Roster.deleteMany({ email: { $in: emails } })
+  const { deletedCount } = await Roster.deleteMany({ email: mongoose.trusted({ $in: emails }) })
   return res.json({ ok: true, removed: deletedCount })
 }
 
@@ -252,7 +253,7 @@ export async function setDungeon(req, res) {
   if (!dungeonId) return res.status(400).json({ error: 'dungeonId required' })
 
   if (live) {
-    const liveCount = await DungeonState.countDocuments({ live: true, dungeonId: { $ne: dungeonId } })
+    const liveCount = await DungeonState.countDocuments({ live: true, dungeonId: mongoose.trusted({ $ne: dungeonId }) })
     if (liveCount >= MAX_LIVE)
       return res.status(400).json({ error: `At most ${MAX_LIVE} dungeons can be live at once` })
   }

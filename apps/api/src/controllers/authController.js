@@ -1,3 +1,4 @@
+import mongoose from 'mongoose'
 import bcrypt from 'bcryptjs'
 
 // bcryptjs is the pure-JS implementation, so each hash blocks the event loop.
@@ -144,18 +145,8 @@ export async function login(req, res) {
 export async function verifySession(req, res) {
   try {
     const { email, sessionCode } = req.body
-    console.log('[debug] verifySession body:', { email, sessionCode })
     if (typeof sessionCode !== 'string') return res.status(400).json({ error: 'Invalid request' })
     const user = await User.findOne({ email: (email || '').toLowerCase() })
-    console.log('[debug] user found:', !!user)
-    if (user) {
-        console.log('[debug] user session data:', { 
-            sessionCode: user.sessionCode, 
-            verified: user.verified, 
-            expires: user.sessionCodeExpires,
-            now: new Date()
-        })
-    }
     if (!user || !user.sessionCode || !user.verified || !safeEqual(user.sessionCode, sessionCode) || new Date() > user.sessionCodeExpires) {
       return res.status(400).json({ error: 'Invalid or expired session code' })
     }
@@ -233,7 +224,7 @@ export async function resetPassword(req, res) {
     if (!pw.valid) return res.status(400).json({ error: pw.error })
     const user = await User.findOne({
       resetToken: token,
-      resetTokenExpires: { $gt: new Date() },
+      resetTokenExpires: mongoose.trusted({ $gt: new Date() }),
     })
     if (!user) return res.status(400).json({ error: 'Invalid or expired reset token' })
     user.password = await bcrypt.hash(newPassword, BCRYPT_COST)
