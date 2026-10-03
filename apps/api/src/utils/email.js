@@ -1,6 +1,8 @@
 import nodemailer from 'nodemailer'
 
-// One transporter for the process. The previous code built a fresh SMTP
+import { randomAlphanumeric } from './flags.js'
+
+// One transporter for the process.
 // connection for every single message, which on a class-sized signup burst
 // meant a new Gmail handshake per student.
 let _transporter = null
@@ -46,7 +48,7 @@ export function publicBaseUrl() {
 }
 
 export function generateCode() {
-  return Math.floor(100000 + Math.random() * 900000).toString()
+  return randomAlphanumeric(6)
 }
 
 export async function sendVerificationEmail(email, code) {
@@ -54,7 +56,7 @@ export async function sendVerificationEmail(email, code) {
   await transporter().sendMail({
     from: `"BreachKeep" <${process.env.EMAIL_USER}>`,
     to: email,
-    subject: 'Your 6-Digit Verification Code',
+    subject: 'Your 6-Character Verification Code',
     html: `
       <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; background: #0a0403; color: #e9d9d1; padding: 2rem; border-radius: 8px; border: 1px solid rgba(255,122,0,0.22);">
         <h1 style="color: #ff5a1f; font-family: 'Cinzel Decorative', serif;">BreachKeep</h1>

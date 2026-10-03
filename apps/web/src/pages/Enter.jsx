@@ -25,6 +25,22 @@ export default function Enter() {
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const passwordRules = [
+    { label: 'At least 8 characters', test: (v) => v.length >= 8 },
+    { label: 'At least one number', test: (v) => /[0-9]/.test(v) },
+    { label: 'At least one symbol', test: (v) => /[!@#$%^&*(),.?":{}|<>]/.test(v) },
+    { label: 'At least one letter', test: (v) => /[a-zA-Z]/.test(v) },
+  ]
+  const [passwordStatus, setPasswordStatus] = useState(passwordRules.map(r => ({...r, ok: false})))
+
+  const handlePasswordChange = (val) => {
+    setForm({ ...form, password: val })
+    if (tab === 'signup') {
+      setPasswordStatus(passwordRules.map(r => ({...r, ok: r.test(val)})))
+    } else {
+      setPasswordStatus([])
+    }
+  }
 
   // Page-2 -> Page-3 transition: modal fades, portal vortex fills the
   // screen, white flash, then crossfade into the onboarding scene.
@@ -300,11 +316,10 @@ export default function Enter() {
                 <input
                   className="bk-code-input"
                   value={vcode}
-                  onChange={(e) => setVcode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  onChange={(e) => setVcode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6))}
                   onKeyDown={(e) => { if (e.key === 'Enter' && !busy) doVerify() }}
-                  placeholder="6-digit code"
+                  placeholder="6-character code"
                   autoFocus
-                  inputMode="numeric"
                   autoComplete="one-time-code"
                 />
                 <button className="bk-code-btn" style={{ width: '100%' }} onClick={doVerify} disabled={busy}>
@@ -397,12 +412,23 @@ export default function Enter() {
                     type={showPassword ? 'text' : 'password'}
                     placeholder="Password"
                     value={form.password}
-                    onChange={(e) => setForm({ ...form, password: e.target.value })}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !busy) (tab === 'login' ? doLogin : doSignup)()
-                    }}
-                  />
-                  <button
+                  onChange={(e) => handlePasswordChange(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !busy) (tab === 'login' ? doLogin : doSignup)()
+                  }}
+                />
+                {tab === 'signup' && form.password.length > 0 && (
+                  <div style={{ marginTop: '8px', textAlign: 'left' }}>
+                    {passwordStatus.map((r, i) => (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: r.ok ? '#22c55e' : '#ff5a1f', marginBottom: '2px' }}>
+                        <span>{r.ok ? '✅' : '❌'}</span>
+                        {r.label}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <button
+
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     style={{

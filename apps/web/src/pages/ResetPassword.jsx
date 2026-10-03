@@ -20,8 +20,20 @@ export default function ResetPassword() {
 
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const passwordRules = [
+    { label: 'At least 8 characters', test: (v) => v.length >= 8 },
+    { label: 'At least one number', test: (v) => /[0-9]/.test(v) },
+    { label: 'At least one symbol', test: (v) => /[!@#$%^&*(),.?":{}|<>]/.test(v) },
+    { label: 'At least one letter', test: (v) => /[a-zA-Z]/.test(v) },
+  ]
+  const [passwordStatus, setPasswordStatus] = useState(passwordRules.map(r => ({...r, ok: false})))
   const [msg, setMsg] = useState('')
   const [busy, setBusy] = useState(false)
+
+  const handlePasswordChange = (val) => {
+    setPassword(val)
+    setPasswordStatus(passwordRules.map(r => ({...r, ok: r.test(val)})))
+  }
 
   if (!token) {
     return (
@@ -62,10 +74,19 @@ export default function ResetPassword() {
             style={STYLE.input}
             type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => handlePasswordChange(e.target.value)}
             placeholder="New password (8+ chars, number, symbol, letter)"
             required
           />
+          {password.length > 0 && (
+            <div style={{ marginBottom: '1rem', textAlign: 'left' }}>
+              {passwordStatus.map((r, i) => (
+                <div key={i} style={{ fontSize: '0.75rem', color: r.ok ? '#22c55e' : '#ff5a1f', marginBottom: '2px' }}>
+                  {r.ok ? '✅' : '❌'} {r.label}
+                </div>
+              ))}
+            </div>
+          )}
           <input
             style={STYLE.input}
             type="password"
@@ -74,6 +95,11 @@ export default function ResetPassword() {
             placeholder="Confirm new password"
             required
           />
+          {password !== confirmPassword && (
+            <div style={{ color: '#ff5a1f', fontSize: '0.75rem', marginBottom: '1rem', textAlign: 'left' }}>
+              &bull; Passwords do not match
+            </div>
+          )}
           <button style={STYLE.btnPrimary} type="submit" disabled={busy}>
             {busy ? 'Resetting...' : 'Reset Password'}
           </button>
