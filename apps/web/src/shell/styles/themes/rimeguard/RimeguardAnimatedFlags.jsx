@@ -40,7 +40,7 @@ export default function RimeguardAnimatedFlags() {
       <g className="rimeguard-citadel-floating-group">
         {/* Base Master Artwork */}
         <image
-          href="/rimeguard_citadel.jpg"
+          href="/rimeguard_citadel.webp"
           x="0"
           y="0"
           width="1376"

@@ -1,0 +1,272 @@
+/* ========================================================
+   CASTLE ENTRANCE & GATES THEME STYLES
+   Bottom-left "ENTER THE CASTLE" button + Transition overlay + Gates view
+   ======================================================== */
+
+/* 1. Bottom-Left Anchor for Enter the Castle Button */
+.bk-enter-castle-anchor {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: 95;
+  display: flex;
+  align-items: center;
+  pointer-events: auto;
+}
+
+.bk-enter-castle-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 22px;
+  background: rgba(8, 14, 24, 0.88);
+  color: var(--house-accent, #ffdca8);
+  border: 1px solid var(--border-active, rgba(212, 175, 55, 0.45));
+  border-radius: 999px;
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.65), 0 0 16px var(--house-glow, rgba(212, 175, 55, 0.25));
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  transition: all 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+  user-select: none;
+}
+
+.bk-enter-castle-btn:hover {
+  transform: translateY(-2px) scale(1.03);
+  background: rgba(14, 24, 42, 0.95);
+  border-color: var(--house-accent-strong, #ffffff);
+  color: #ffffff;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.75), 0 0 24px var(--house-glow, rgba(212, 175, 55, 0.5));
+}
+
+.bk-enter-castle-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.bk-enter-castle-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Theme-specific button accents */
+.bk-enter-castle-anchor[data-house="rimeguard"] .bk-enter-castle-btn {
+  border-color: rgba(111, 214, 255, 0.45);
+  color: #6fd6ff;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.65), 0 0 18px rgba(111, 214, 255, 0.28);
+}
+.bk-enter-castle-anchor[data-house="rimeguard"] .bk-enter-castle-btn:hover {
+  border-color: #6fd6ff;
+  color: #ffffff;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.75), 0 0 26px rgba(111, 214, 255, 0.55);
+}
+
+.bk-enter-castle-anchor[data-house="emberkeep"] .bk-enter-castle-btn {
+  border-color: rgba(255, 90, 31, 0.45);
+  color: #ff5a1f;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.65), 0 0 18px rgba(255, 90, 31, 0.28);
+}
+.bk-enter-castle-anchor[data-house="emberkeep"] .bk-enter-castle-btn:hover {
+  border-color: #ff5a1f;
+  color: #ffdca8;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.75), 0 0 26px rgba(255, 90, 31, 0.55);
+}
+
+.bk-enter-castle-anchor[data-house="arcweave"] .bk-enter-castle-btn {
+  border-color: rgba(168, 85, 247, 0.45);
+  color: #c084fc;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.65), 0 0 18px rgba(168, 85, 247, 0.28);
+}
+.bk-enter-castle-anchor[data-house="arcweave"] .bk-enter-castle-btn:hover {
+  border-color: #c084fc;
+  color: #ffffff;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.75), 0 0 26px rgba(168, 85, 247, 0.55);
+}
+
+.bk-enter-castle-anchor[data-house="voltgrid"] .bk-enter-castle-btn {
+  border-color: rgba(0, 229, 255, 0.45);
+  color: #00e5ff;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.65), 0 0 18px rgba(0, 229, 255, 0.28);
+}
+.bk-enter-castle-anchor[data-house="voltgrid"] .bk-enter-castle-btn:hover {
+  border-color: #00e5ff;
+  color: #ffffff;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.75), 0 0 26px rgba(0, 229, 255, 0.55);
+}
+
+.btn-castle-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.bk-castle-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bk-btn-exit {
+  background: rgba(22, 10, 10, 0.88);
+  border-color: rgba(239, 68, 68, 0.45);
+  color: #fca5a5;
+}
+
+.bk-btn-exit:hover {
+  background: rgba(36, 14, 14, 0.95);
+  border-color: #ef4444;
+  color: #ffffff;
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.35);
+}
+
+.bk-btn-replay {
+  padding: 12px 16px;
+}
+
+/* 2. Full-Screen Transition Video Overlay */
+.castle-transition-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 999999;
+  background: #000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  animation: castleFadeIn 0.35s ease-out forwards;
+}
+
+.castle-transition-overlay.fade-out {
+  animation: castleFadeOut 0.35s ease-in forwards;
+}
+
+.castle-transition-video {
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  display: block;
+}
+
+.castle-transition-skip-btn {
+  position: absolute;
+  top: 24px;
+  right: 28px;
+  z-index: 1000000;
+  background: rgba(10, 10, 18, 0.78);
+  color: #f0f9ff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 999px;
+  padding: 8px 20px;
+  font-family: var(--font-cinzel), 'Cinzel', serif;
+  font-size: 0.82rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all 0.22s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+}
+
+.castle-transition-skip-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.8);
+}
+
+/* 3. Castle Gates View Layer */
+.castle-gates-stage {
+  position: relative;
+  width: 100%;
+  min-height: calc(100vh - 56px);
+  overflow: visible;
+  background-color: var(--house-bg, #040914);
+}
+
+.castle-gates-illustration-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.castle-gates-image {
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  animation: castleGatesReveal 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.castle-gates-atmosphere {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 40%, rgba(0, 0, 0, 0.08) 0%, rgba(0, 0, 0, 0.5) 100%),
+              linear-gradient(to bottom, rgba(4, 9, 20, 0.35) 0%, transparent 22%, rgba(4, 9, 20, 0.65) 100%);
+}
+
+.castle-gates-hud {
+  position: absolute;
+  top: 20px;
+  left: 28px;
+  z-index: 40;
+  pointer-events: none;
+}
+
+@keyframes castleFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes castleFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes castleGatesReveal {
+  from {
+    opacity: 0;
+    filter: blur(8px) brightness(1.2);
+    transform: scale(1.03);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0px) brightness(1);
+    transform: scale(1);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .bk-enter-castle-anchor {
+    bottom: 16px;
+    left: 16px;
+  }
+  .bk-enter-castle-btn {
+    padding: 10px 16px;
+    font-size: 0.78rem;
+    gap: 8px;
+  }
+  .castle-transition-skip-btn {
+    top: 16px;
+    right: 16px;
+    padding: 6px 14px;
+    font-size: 0.75rem;
+  }
+}

@@ -34,7 +34,7 @@ export default function VoltgridCitadelScene() {
       <g className="voltgrid-citadel-floating-group">
         {/* Master Electric Citadel Artwork */}
         <image
-          href="/voltgrid_grid_citadel.jpg"
+          href="/voltgrid_grid_citadel.webp"
           x="0"
           y="0"
           width="1376"
