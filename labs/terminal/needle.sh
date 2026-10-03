@@ -46,7 +46,7 @@ Under  store/  there are hundreds of files. Exactly ONE matches ALL of:
   * last modified MORE than a year ago
 
 Name and contents tell you nothing — match on metadata, and combine the tests:
-  find store -user archivist -perm 600 -mtime +365
+  find ~/store -user archivist -perm 600 -mtime +365   # use ~/store so the path is absolute
 You cannot read the file directly (it is not yours). Prove you found it by
 submitting its path:
   check <the/path/find/printed>

@@ -145,6 +145,18 @@ export const ROOM_CAPS = {
   'web-headers':       { caps: GUARD_CAPS, noNewPriv: true },
   'web-stored-xss':    { caps: GUARD_CAPS, noNewPriv: true },
   'web-chain':         { caps: GUARD_CAPS, noNewPriv: true },
+  // secure-coding rooms: the grader runs as root and drops the harness to the
+  // unprivileged 'runner' uid via setpriv — which needs SETUID/SETGID/SETPCAP,
+  // exactly like the web rooms above. Without these the grader cannot drop and
+  // no fix can ever be graded.
+  'secure-sqli':        { caps: GUARD_CAPS, noNewPriv: true },
+  'secure-xss':         { caps: GUARD_CAPS, noNewPriv: true },
+  'secure-idor':        { caps: GUARD_CAPS, noNewPriv: true },
+  'secure-client':      { caps: GUARD_CAPS, noNewPriv: true },
+  'secure-headers':     { caps: GUARD_CAPS, noNewPriv: true },
+  'secure-rate-limit':  { caps: GUARD_CAPS, noNewPriv: true },
+  'secure-hide-secret': { caps: GUARD_CAPS, noNewPriv: true },
+  'secure-full-review': { caps: GUARD_CAPS, noNewPriv: true },
 }
 
 export function roomCaps(roomId) {

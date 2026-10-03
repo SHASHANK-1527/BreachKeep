@@ -31,7 +31,7 @@ wait a few seconds, and collect it.
 TXT
 chown root:root "$S/README.txt"
 
-( while true; do bash /opt/chain/run.sh >/dev/null 2>&1; sleep 5; done ) &
+( while true; do bash /opt/chain/run.sh >/dev/null 2>&1 || true; sleep 5; done ) &
 
 unset BK_FLAG FLAG
 BASE_ARG=(); [ -n "${BK_BASE:-}" ] && BASE_ARG=(-b "$BK_BASE")

@@ -15,6 +15,11 @@ RUN useradd -m -s /bin/bash student && useradd -r -s /usr/sbin/nologin webapp
 COPY package.json ./
 RUN npm install --omit=dev
 COPY server.js seed.js bkflag.js ./
+# Ensure the app files are readable+traversable by the unprivileged 'webapp'
+# user that runs the app, regardless of the source files' mode in the build
+# context (a non-Linux checkout can carry mode 600/700, which would COPY in
+# as root-only and stop the app from starting).
+RUN chmod -R a+rX /app
 COPY --chown=root:root web-entry.sh /usr/local/bin/room.sh
 RUN chmod 755 /usr/local/bin/room.sh
 ENV BK_ROOM=chain
