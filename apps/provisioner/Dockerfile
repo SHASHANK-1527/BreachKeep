@@ -9,5 +9,5 @@ COPY src ./src
 # Internal-only service. It is never published by nginx to the outside world;
 # the api service reaches it over the compose network with a shared secret.
 ENV NODE_ENV=production
-EXPOSE 6000
+EXPOSE 5050
 CMD ["node", "src/server.js"]

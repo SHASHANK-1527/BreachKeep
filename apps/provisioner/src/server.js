@@ -163,7 +163,7 @@ app.post('/capstone', async (req, res) => {
   }
 })
 
-const PORT = parseInt(process.env.PROV_PORT || '6000', 10)
+const PORT = parseInt(process.env.PROV_PORT || '5050', 10)
 const server = http.createServer(app)
 
 // WebSocket upgrades (the ttyd terminal under /labs; any ws the web app might
@@ -183,7 +183,7 @@ server.on('upgrade', (req, socket, head) => {
   proxy.ws(req, socket, head, { target: `http://${name}:${route.port}` })
 })
 
-server.listen(PORT, async () => {
+server.listen(PORT, '0.0.0.0', async () => {
   console.log(`[provisioner] internal-only on :${PORT}`)
   try { await ensureLabNetwork() } catch (e) { console.error('lab network setup failed:', e.message) }
   startIdleReaper()

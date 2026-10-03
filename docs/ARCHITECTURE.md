@@ -180,7 +180,7 @@ npm run dev            # Starts dev server with HMR and API proxying
 
 **Dev Server Proxying:**
 - `/api/*` → proxies to `http://localhost:5000` (main API)
-- `/labs/*` → proxies to `http://localhost:6000` (lab environments)
+- `/labs/*` → proxies to `http://localhost:5050` (lab environments)
 
 **Production Bundles:**
 - `dist/app/` - Protected application (served only with valid gate cookie)

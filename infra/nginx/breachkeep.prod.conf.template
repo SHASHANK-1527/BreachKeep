@@ -61,7 +61,7 @@ server {
 
   # ---------- labs (not used yet; provisioner is internal-only) ----------
   location /labs/ {
-    proxy_pass http://provisioner:6000;
+    proxy_pass http://provisioner:5050;
     include /etc/nginx/proxy_common.conf;
     proxy_read_timeout 3600s;
     proxy_send_timeout 3600s;
@@ -73,7 +73,7 @@ server {
   # as the access code set the gate cookie, `/` was rewritten to /app/ and sent
   # to the provisioner (403/502) instead of the app. Regex beats prefix match.
   location ~ ^/app/bk_ {
-    proxy_pass http://provisioner:6000;
+    proxy_pass http://provisioner:5050;
     include /etc/nginx/proxy_common.conf;
     proxy_read_timeout 3600s;
     proxy_send_timeout 3600s;

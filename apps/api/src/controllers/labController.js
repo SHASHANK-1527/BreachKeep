@@ -63,7 +63,9 @@ export async function openLab(req, res) {
     // /app/<name>/files and /app/<name>/save with the per-session token.
     return res.json({ url, appUrl, name, token })
   } catch (e) {
-    return res.status(502).json({ error: 'lab_unavailable', detail: String(e.message) })
+    const detail = e?.cause?.message ? `${e.message} (${e.cause.message})` : String(e.message)
+    console.error(`[labController] openLab failed for room ${roomId}:`, e)
+    return res.status(502).json({ error: 'lab_unavailable', detail })
   }
 }
 

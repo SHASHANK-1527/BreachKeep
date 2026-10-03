@@ -1,6 +1,6 @@
 // Thin HTTP client to the provisioner. The provisioner is the ONLY process
 // allowed to talk to Docker; it is internal-only (never exposed by nginx).
-const BASE = process.env.PROVISIONER_URL || 'http://provisioner:6000'
+const BASE = process.env.PROVISIONER_URL || 'http://provisioner:5050'
 const SECRET = process.env.PROVISIONER_SHARED_SECRET || ''
 
 async function call(path, body) {

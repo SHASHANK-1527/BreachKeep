@@ -21,7 +21,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./labs:/labs:ro
     # NOT exposed to the host in prod; internal network only
-    expose: ["6000"]
+    expose: ["5050"]
 
   web-build:
     build: ./apps/web
