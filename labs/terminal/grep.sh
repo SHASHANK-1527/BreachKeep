@@ -24,13 +24,12 @@ done
 printf 'the gOlDeN tIcKeT is right here -> %s\n' "$FLAG" > "$ROOT/b/sub/log_42.txt"
 
 cat > /home/student/README.txt <<'TXT'
-=== grep ===
-Somewhere under  docs/  a line contains the phrase  GOLDEN TICKET
-— but the case is scrambled, and it is one line among hundreds of files.
+=== Pattern Search ===
+Somewhere under docs/ a document references the phrase "GOLDEN TICKET".
+The author did not maintain uniform letter casing, and the document is buried
+within nested directories among hundreds of files.
 
-Search recursively AND case-insensitively:
-  grep -ri "golden ticket" docs
-The key is on the same line.
+Locate the matching file and line to recover the key.
 TXT
 
 unset BK_FLAG

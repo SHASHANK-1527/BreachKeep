@@ -21,13 +21,14 @@ chmod 0777 /opt/chain/plugins                                    # the real hole
 : > /var/log/keepchain.log; chmod 666 /var/log/keepchain.log
 
 cat > "$S/README.txt" <<'TXT'
-=== Misconfiguration chain ===
-Two things here are individually "fine" but together are not:
-  1. A root job runs every script in  /opt/chain/plugins/  on a timer.
-  2. Look at the permissions on that directory:   ls -ld /opt/chain/plugins
-run.sh itself is locked down — but it will happily run a plugin YOU add. Place a
-plugin that copies the root-only key (/opt/bk/flag) somewhere you can read it,
-wait a few seconds, and collect it.
+=== Automation Misconfiguration Chain (hard) ===
+An automated orchestration service executes periodic jobs with root privileges.
+The core runner script appears locked down, yet the environment permits unauthorized
+execution through permission flaws.
+
+The sensitive target flag is stored at /opt/bk/flag (readable only by root).
+Analyze the service architecture under /opt/chain to chain together the misconfiguration
+and retrieve the protected flag.
 TXT
 chown root:root "$S/README.txt"
 

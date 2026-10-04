@@ -29,13 +29,12 @@ top_count=$(( (RANDOM % 40) + 60 ))   # 60..99, guaranteed above the noise
 } | shuf > "$LOG"
 
 cat > /home/student/README.txt <<'TXT'
-=== Pipes (medium) ===
-access.log is a web server log. One IP address hit the server far more than any
-other. Find THAT ip and exactly HOW MANY times it appears.
+=== Log Frequency Analysis (medium) ===
+access.log is a web server access log. One source IP address has issued an unusually
+high volume of requests compared to normal traffic.
 
-Build a pipeline — the first field of each line is the IP:
-  cut -d' ' -f1 access.log | sort | uniq -c | sort -nr | head
-Then submit the top result:
+Analyze the log to identify the most frequent IP address and its exact request count.
+Once determined, verify your findings with:
   check <ip> <count>
 TXT
 

@@ -17,12 +17,11 @@ printf 'BK{stale-rotated-out}\n'                  > "$ROOT/.config/.old_key"
 
 cat > "$ROOT/README.txt" <<'TXT'
 === Hidden Files ===
-A plain  ls  will not show everything here. The real key sits in a
-hidden file, inside a chain of hidden directories.
+A standard directory listing does not reveal everything in this workspace.
+The genuine key is stashed inside a hidden file structure.
 
-  ls -a            shows dotfiles in the current directory
-  ls -aR           walk everything, hidden included
-Decoys named like .bak / .old are traps — read carefully.
+Beware of stale or backup files (.bak, .old) placed as decoys—locate the
+authentic key.
 TXT
 
 unset BK_FLAG

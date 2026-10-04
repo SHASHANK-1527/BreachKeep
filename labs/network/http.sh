@@ -29,14 +29,11 @@ PY
 python3 /opt/net/server.py &
 
 cat > "$S/README.txt" <<'TXT'
-=== HTTP by hand ===
-A web service runs on 127.0.0.1 (port 80). Explore it and read what it tells you:
-  curl -i http://127.0.0.1/
-  curl -i http://127.0.0.1/vault
-The vault refuses you until you send the right request header. Add it:
-  curl -s -H 'X-Keep-Access: open' http://127.0.0.1/vault
-(You can do the same by typing the raw request into  nc 127.0.0.1 80 .)
-The vault returns the key (BK{...}).
+=== HTTP Protocol Interaction ===
+A local HTTP service is listening on port 80.
+
+Interact directly with the web server, inspect its endpoints and HTTP responses,
+and satisfy the application's access control requirements to access the vault and retrieve the key.
 TXT
 chown root:root "$S/README.txt"
 

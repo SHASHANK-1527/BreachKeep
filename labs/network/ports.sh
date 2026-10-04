@@ -23,14 +23,12 @@ PY
 python3 /opt/net/server.py &
 
 cat > "$S/README.txt" <<'TXT'
-=== Open Ports ===
-Several services are listening on this host. One of them hands back the key;
-the others are noise. First find what is listening, then talk to each one.
-  ss -ltn                      # which TCP ports are listening
-  nmap -sT 127.0.0.1           # or scan localhost
-Then connect and read what each returns:
-  nc 127.0.0.1 <port>
-The key comes back as BK{...}.
+=== Local Port Enumeration ===
+Several network services are bound and listening on localhost (127.0.0.1).
+Most of these provide routine operational metrics, but one hosts the vault service.
+
+Enumerate the active listening TCP ports, interact with the services,
+and identify the port delivering the key.
 TXT
 chown root:root "$S/README.txt"
 

@@ -11,13 +11,14 @@ chown root:root /usr/local/bin/keepbackup
 chmod 4755 /usr/local/bin/keepbackup     # setuid root — this is the finding
 
 cat > "$S/README.txt" <<'TXT'
-=== SUID audit ===
-A SUID-root program runs as root no matter who starts it — fine for a few system
-tools, dangerous for anything else. List them all and spot the one that does NOT
-belong (not a standard system utility):
-  find / -perm -4000 -type f 2>/dev/null
-Submit the full path of the odd one out:
-  check /full/path/to/it
+=== SUID Binary Audit ===
+Binaries configured with the SUID bit execute with the file owner's privileges.
+While standard Linux systems contain expected SUID utilities, custom or misplaced
+SUID binaries pose significant privilege escalation risks.
+
+Audit all SUID files across the filesystem, identify the non-standard binary
+that should not carry elevated privileges, and submit its full path:
+  check /full/path/to/binary
 TXT
 chown root:root "$S/README.txt"
 

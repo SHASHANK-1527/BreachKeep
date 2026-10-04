@@ -29,14 +29,13 @@ RULES
 chmod 644 /etc/keep/rules.v4
 
 cat > "$S/README.txt" <<'TXT'
-=== Reading a firewall ===
-/etc/keep/rules.v4 is a saved iptables ruleset. The INPUT chain policy is DROP,
-so nothing gets in EXCEPT what a rule explicitly ACCEPTs. Loopback and
-established replies don't count — find the one real service port opened to the
-world (a tcp --dport ... -j ACCEPT that isn't lo/established).
-  less /etc/keep/rules.v4
-  grep -n ACCEPT /etc/keep/rules.v4
-Submit that port number:
+=== Firewall Policy Analysis ===
+The firewall configuration in /etc/keep/rules.v4 defines packet filtering rules
+for an edge firewall. The default policy drops incoming traffic unless explicitly permitted.
+
+Analyze the ruleset to determine which external TCP service port is permitted through
+the firewall.
+Submit the port number:
   check <port>
 TXT
 chown root:root "$S/README.txt"

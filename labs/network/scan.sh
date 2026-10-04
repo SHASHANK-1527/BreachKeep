@@ -23,12 +23,13 @@ PY
 python3 /opt/net/server.py &
 
 cat > "$S/README.txt" <<'TXT'
-=== Port Scan ===
-There is a target host on the lab network at 127.0.0.2. You do not know which
-ports are open — find them, then identify the service that holds the key.
-  nmap -sT -p 1-10000 127.0.0.2     # scan a wide range (SYN scan needs root; -sT does not)
-  nc 127.0.0.2 <open-port>          # talk to each open port
-The vault service prefixes its reply with "keep-vault:" and the key is BK{...}.
+=== Remote Host Reconnaissance ===
+A remote target host is active on the lab network at 127.0.0.2.
+Multiple non-standard ports are bound to various services, one of which
+houses the vault service.
+
+Scan the target host across port range 1-10000, inspect responding services,
+and recover the flag from the vault service.
 TXT
 chown root:root "$S/README.txt"
 

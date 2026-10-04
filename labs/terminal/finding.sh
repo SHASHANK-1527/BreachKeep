@@ -32,14 +32,12 @@ printf '\n%s\n' "$FLAG" >> "$target"
 
 cat > /home/student/README.txt <<'TXT'
 === Finding Files ===
-Under  pile/  there are hundreds of files. Exactly ONE matches all three:
-  * its name ends in  .dat
-  * it is larger than 10 KB
-  * it is a regular file (not a dir, not a link)
+Under pile/ there are hundreds of files. Exactly ONE matches all three criteria:
+  * Its filename ends with .dat
+  * Its size is strictly greater than 10 KB
+  * It is a regular file (not a directory or symbolic link)
 
-Combine the tests — don't guess:
-  find pile -name '*.dat' -size +10k -type f
-Then read the last line of the file it prints.  (tail -n 1 <file>)
+Filter the directory to find that unique file and inspect its contents to retrieve the key.
 TXT
 
 unset BK_FLAG

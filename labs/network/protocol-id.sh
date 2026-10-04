@@ -24,12 +24,12 @@ PY
 chown student:student /home/student/traffic.pcap
 
 cat > "$S/README.txt" <<'TXT'
-=== Identify the protocol ===
-traffic.pcap mixes a few protocols. Exactly ONE of them sent a login PASSWORD in
-the clear. Work out which protocol that was.
-  tshark -r traffic.pcap                 # tshark labels each packet's protocol
-  tshark -r traffic.pcap -Y ftp          # (try different protocol filters)
-Submit the protocol name, lowercase:
+=== Protocol Identification ===
+The file traffic.pcap contains captured sessions across multiple standard application protocols.
+One of the communications transmitted sensitive authentication credentials (a password) in plaintext.
+
+Inspect the traffic capture, determine which protocol transmitted the cleartext password,
+and submit the lowercase protocol name:
   check <protocol>
 TXT
 chown root:root "$S/README.txt"

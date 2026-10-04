@@ -21,14 +21,12 @@ xz -c "$work/layer2.tar" > "$ROOT/evidence.log"
 rm -rf "$work"
 
 cat > "$ROOT/README.txt" <<'TXT'
-=== Archives ===
-evidence.log is NOT a log file. Someone wrapped the key in several layers of
-compression and lied about the extensions. Peel them one at a time.
+=== Nested Archives (medium) ===
+evidence.log is not what its file extension suggests. Critical evidence was
+wrapped inside multiple nested layers of compression with disguised filenames.
 
-At each step, ask what you actually have:
-  file evidence.log           -> what is it REALLY?
-Then undo that layer (xz -d, tar -xf, gzip -d ...), run `file` again on what
-falls out, and repeat until you reach plain text.
+Inspect each layer's actual data format, decompress it step by step, and peel
+back the layers until you recover the key text.
 TXT
 
 unset BK_FLAG

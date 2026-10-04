@@ -20,13 +20,12 @@ chmod 666 /opt/cron/job.sh            # the misconfiguration: world-writable
 : > /var/log/keepcron.log; chmod 666 /var/log/keepcron.log
 
 cat > "$S/README.txt" <<'TXT'
-=== Cron: what runs as root ===
-A maintenance job runs as ROOT every few seconds:  /opt/cron/job.sh
-Check who can write it:
-  ls -l /opt/cron/job.sh
-Whatever is in that script, root will run. If you can write to it, you can make
-root do something on your behalf — like place the root-only key where you can
-read it. Add your line, wait a few seconds, then read your result.
+=== Scheduled Task Exploitation ===
+A recurring administrative maintenance job runs on this host with root privileges.
+The privileged flag is stored securely at /opt/bk/flag (accessible only by root).
+
+Investigate automated maintenance scripts on the system for permission flaws,
+and leverage them to read or expose the protected key.
 TXT
 chown root:root "$S/README.txt"
 

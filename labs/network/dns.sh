@@ -19,13 +19,12 @@ CONF
 dnsmasq -C /etc/dnsmasq-keep.conf 2>/dev/null || dnsmasq -C /etc/dnsmasq-keep.conf &
 
 cat > "$S/README.txt" <<'TXT'
-=== DNS records ===
-A DNS server is running on 127.0.0.1. DNS holds more than addresses — TXT
-records carry free-form text, and someone published the key in one.
-  dig @127.0.0.1 keep.info TXT +short      # a hint
-  dig @127.0.0.1 flag.keep TXT +short      # the key
-  dig @127.0.0.1 vault.keep A +short       # addresses too, if you are curious
-The TXT value of flag.keep is the key (BK{...}).
+=== DNS Enumeration ===
+A local DNS nameserver is operational on 127.0.0.1.
+Information disclosure frequently occurs through misconfigured or descriptive
+resource records published on internal zones.
+
+Query the local DNS server for records within the .keep zone to uncover the key.
 TXT
 chown root:root "$S/README.txt"
 

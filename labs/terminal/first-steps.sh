@@ -22,11 +22,10 @@ done
 
 cat > "$ROOT/README.txt" <<'TXT'
 === First Steps ===
-Somewhere below your home directory is the only file named  flag.txt
+Somewhere below your home directory is the only file named flag.txt.
 It holds the key for this room.
 
-Move around with:   ls    cd    pwd    cat
-There is no shortcut tool in this room on purpose — walk the tree.
+Explore the directory tree by hand to locate the file and read its contents.
 TXT
 
 unset BK_FLAG

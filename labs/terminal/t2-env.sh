@@ -15,13 +15,12 @@ EOF
 chmod 644 /etc/keepservice.conf
 
 cat > "$S/README.txt" <<'TXT'
-=== Environment variables ===
-A service stores its settings as environment variables in a config file. One is
-its PIN. Find the config, read the PIN, and submit it:
-  grep -ril pin /etc 2>/dev/null
-  cat /etc/keepservice.conf
-  check <the PIN>
-Tip: `source /etc/keepservice.conf` then `echo "$SERVICE_PIN"` prints it too.
+=== Configuration & Secrets ===
+A system daemon stores its operational parameters and authentication credentials
+within configuration files under /etc.
+
+Locate the service configuration, discover the service PIN, and submit it:
+  check <PIN>
 TXT
 chown root:root "$S/README.txt"
 

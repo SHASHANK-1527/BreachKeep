@@ -14,12 +14,11 @@ printf 'MARKER-%s-END' "$FLAG" >> "$blob"
 head -c 4096 /dev/urandom >> "$blob"
 
 cat > "$ROOT/README.txt" <<'TXT'
-=== strings ===
-core.dump is a binary file. Opening it with cat just spews garbage and may
-mess up your terminal. Pull the human-readable text out instead:
+=== Binary Extraction (medium) ===
+core.dump contains memory artifacts captured during an incident. The file consists
+mostly of non-printable binary data, but contains an embedded flag string.
 
-  strings core.dump | grep BK
-  strings core.dump | grep MARKER
+Extract readable text from the binary dump to recover the key.
 TXT
 
 unset BK_FLAG

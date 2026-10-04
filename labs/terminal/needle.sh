@@ -39,17 +39,15 @@ chmod 600 "$needle"
 touch -d '2 years ago' "$needle"
 
 cat > /home/student/README.txt <<'TXT'
-=== Needle (hard) ===
-Under  store/  there are hundreds of files. Exactly ONE matches ALL of:
-  * owned by the user  archivist
-  * permissions exactly  600  (-rw-------)
-  * last modified MORE than a year ago
+=== Metadata Audit (hard) ===
+Under store/ there are hundreds of files. Exactly ONE file matches ALL of these criteria:
+  * Owned by the user archivist
+  * Permissions set strictly to 600 (-rw-------)
+  * Last modified more than 1 year (365 days) ago
 
-Name and contents tell you nothing — match on metadata, and combine the tests:
-  find ~/store -user archivist -perm 600 -mtime +365   # use ~/store so the path is absolute
-You cannot read the file directly (it is not yours). Prove you found it by
-submitting its path:
-  check <the/path/find/printed>
+Due to permission restrictions, your user cannot read the target file directly.
+Once you discover the exact file path matching all three criteria, verify it:
+  check <full-path-to-file>
 TXT
 
 # --- guard setup ---

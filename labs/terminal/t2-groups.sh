@@ -19,14 +19,11 @@ echo "BK{wrong-vault}" > /vault/warden-only.txt
 chown root:wardens /vault/warden-only.txt; chmod 640 /vault/warden-only.txt
 
 cat > "$S/README.txt" <<'TXT'
-=== Groups & ownership ===
-/vault holds two restricted files. One you can read, one you cannot — the
-difference is the GROUP on the file and which groups YOU belong to.
-  ls -l /vault
-  id
-Read the file whose group you are a member of:
-  cat /vault/<the right file>
-warden-only.txt is a decoy — you are not a warden.
+=== Groups & Ownership ===
+The /vault directory holds sensitive system files protected by POSIX group permissions.
+
+Determine your account's group memberships and access rights to read the authorized
+restricted file and retrieve the key.
 TXT
 chown root:root "$S/README.txt"
 

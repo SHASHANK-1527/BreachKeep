@@ -14,13 +14,16 @@ SH
 chown student:student "$S/solve.sh"; chmod 755 "$S/solve.sh"
 
 cat > "$S/README.txt" <<'TXT'
-=== Your first script ===
-Finish  solve.sh  so that it takes ONE argument — a directory — and prints just
-the NUMBER of files whose name ends in .log directly inside it. Nothing else.
-  ./solve.sh somedir      ->      7
-Build a test dir yourself (mkdir t; touch t/a.log t/b.txt) and check your count.
-When it works on any input, run:   check
-We test it on a freshly generated directory, so printing a fixed number fails.
+=== Shell Automation Scripting ===
+Complete the script solve.sh so that it accepts ONE argument (a target directory path)
+and outputs strictly the total count of files ending with .log directly inside that directory.
+Nothing else should be printed to standard output.
+
+Example expected behavior:
+  ./solve.sh /path/to/dir   ->   outputs only the integer count
+
+Test your script against sample inputs. Once ready, verify your solution with:
+  check
 TXT
 chown root:root "$S/README.txt"
 

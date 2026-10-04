@@ -12,12 +12,12 @@ setpriv --reuid webapp --regid webapp --init-groups \
 
 # A short in-container note; full brief/hints live on the room page.
 cat > /home/student/README.txt <<'TXT'
-=== Web room ===
-A deliberately vulnerable web app (the "Trading Post") is running for you.
-  - From this shell:   curl -i http://localhost:8080/        (start at /robots.txt)
-  - In your browser:   use the "Open web app" button on the room page
-The room page has the story, your objective, and graded hints. When you recover
-the key (BK{...}) through the intended flaw, submit it on the room page.
+=== Web Room ===
+A vulnerable web application (the "Trading Post") is running for you.
+  - From this shell:   http://localhost:8080/
+  - In your browser:   Use the "Open web app" button on the room page
+The room page provides the scenario briefing, objective, and graded hint ladder.
+When you uncover the vulnerability and recover the key (BK{...}), submit it on the room page.
 TXT
 chown student:student /home/student/README.txt 2>/dev/null || true
 

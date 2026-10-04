@@ -13,13 +13,15 @@ SH
 chown student:student "$S/run.sh"; chmod 600 "$S/run.sh"
 
 cat > "$S/README.txt" <<'TXT'
-=== Permissions ===
-run.sh belongs to you but will not execute — look at its mode with  ls -l.
-Give yourself (and only what's needed) the execute bit, then prove it:
-  chmod u+x run.sh
-  ./run.sh
-Reaching for  chmod 777  is the wrong instinct — the keep rejects it.
-When run.sh is executable and NOT world-writable, run:   check
+=== File Permissions ===
+run.sh belongs to your account, but the operating system prevents execution.
+Inspect the file's current permissions and grant the necessary permissions so you
+can execute the script.
+
+Apply the principle of least privilege—excessive permissions (such as world-writable
+or 777) will be rejected by the validation guard.
+When run.sh is properly executable, verify with:
+  check
 TXT
 
 mkdir -p /opt/bk && chmod 700 /opt/bk
@@ -27,9 +29,9 @@ printf '%s' "$FLAG" > /opt/bk/flag; chmod 600 /opt/bk/flag
 cat > /opt/bk/verify.sh <<'V'
 #!/bin/bash
 f=/home/student/run.sh
-[ -x "$f" ] || { echo "run.sh is still not executable — chmod u+x run.sh"; exit 1; }
+[ -x "$f" ] || { echo "run.sh is still not executable"; exit 1; }
 mode=$(stat -c '%a' "$f")
-[ "$mode" = "777" ] && { echo "777 is too open; grant only what is needed (744 or 755)"; exit 1; }
+[ "$mode" = "777" ] && { echo "777 is overly permissive; grant only appropriate permissions"; exit 1; }
 [ "$(stat -c '%A' "$f" | cut -c9)" = "w" ] && { echo "it is world-writable; remove other-write"; exit 1; }
 exit 0
 V

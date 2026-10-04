@@ -22,15 +22,12 @@ PY
 chown student:student /home/student/capture.pcap
 
 cat > "$S/README.txt" <<'TXT'
-=== Packet Capture ===
-capture.pcap recorded a user logging in to a site over plain HTTP — so their
-password crossed the wire in the clear. Open the capture and find it.
-  tshark -r capture.pcap                       # overview: 3 packets, one is a POST
-  tshark -r capture.pcap -Y http               # just the HTTP requests
-Now read the POST login in plain text by following its TCP stream (it is the
-2nd conversation, index 1):
-  tshark -q -r capture.pcap -z follow,tcp,ascii,1
-You will see  username=...&password=...  — that password is the key (BK{...}).
+=== Packet Analysis ===
+The file capture.pcap contains recorded network traffic of an authentication
+session conducted over unencrypted HTTP.
+
+Analyze the packet capture, inspect the transmitted protocol payloads, and
+extract the plaintext password credential to obtain the key.
 TXT
 chown root:root "$S/README.txt"
 

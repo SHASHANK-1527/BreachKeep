@@ -15,13 +15,11 @@ echo 'student ALL=(root) NOPASSWD: /usr/bin/cat' > /etc/sudoers.d/keep
 chmod 440 /etc/sudoers.d/keep
 
 cat > "$S/README.txt" <<'TXT'
-=== Privilege: sudo ===
-The key is in /root/flag.txt. root can read it; you cannot (try it).
-But see what you are allowed to run as root:
-  sudo -l
-If a listed command can read a file, that is your way in. Think about what
-`cat` does when it runs as root.
-Lesson: handing out even a "harmless" command as root is a privilege leak.
+=== Privilege Delegation ===
+The target flag is located at /root/flag.txt, inaccessible to standard unprivileged users.
+
+Audit your account's administrative privilege delegation and execution rights
+on this host to find an avenue to access the restricted file.
 TXT
 chown root:root "$S/README.txt"
 

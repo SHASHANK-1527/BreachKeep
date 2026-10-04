@@ -19,12 +19,10 @@ LINE=$(( (RANDOM % (TOTAL - 200)) + 100 ))
 
 cat > "$ROOT/README.txt" <<TXT
 === Reading Files ===
-ledger.log has $TOTAL lines. The clerk wrote the vault key on line $LINE.
+ledger.log contains $TOTAL lines of transaction records.
+Somewhere within this file, the clerk recorded the vault key specifically on line $LINE.
 
-Do NOT scroll the whole file by eye. Jump straight to the line:
-  sed -n '${LINE}p' ledger.log
-  head -n $LINE ledger.log | tail -n 1
-  less +${LINE}g ledger.log      (press q to quit)
+Inspect that specific line in ledger.log without manually scrolling through thousands of lines.
 TXT
 
 unset BK_FLAG

@@ -25,16 +25,12 @@ PY
 chown student:student /home/student/transfer.pcap
 
 cat > "$S/README.txt" <<'TXT'
-=== PCAP forensics ===
-transfer.pcap captured a file being downloaded. Its contents were base64-encoded
-on the wire, so searching for BK{ directly will NOT find the key — you must
-recover the transferred text and DECODE it.
-Follow the TCP stream to read what was sent:
-  tshark -q -r transfer.pcap -z follow,tcp,ascii,0
-You will see a line of base64 (a long run of letters/digits, maybe ending in =).
-Copy that line and decode it:
-  echo '<that base64 line>' | base64 -d
-The decoded text contains the key (BK{...}).
+=== Network Artifact Forensics (hard) ===
+transfer.pcap captured an exfiltration or file transfer event over an HTTP session.
+The transmitted payload has been encoded to evade simple string pattern detection.
+
+Reconstruct the conversation from the packet capture, extract the transferred payload,
+and decode the data to retrieve the flag.
 TXT
 chown root:root "$S/README.txt"
 

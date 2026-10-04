@@ -35,14 +35,13 @@ PY
 python3 /opt/net/server.py &
 
 cat > "$S/README.txt" <<'TXT'
-=== Pivot the network ===
-You have a foothold on one host; the key is on another you cannot see yet. Each
-host tells you how to reach the next.
-  START HERE:  nc 127.0.0.2 5000
-It names the next host, a port, and a passphrase. Connect to that next host and
-SEND it the passphrase (type it and press enter, or: printf 'pass\n' | nc host port).
-That host reveals the FINAL host and port — connect there for the key (BK{...}).
-Keep notes: host -> next host -> final host.
+=== Network Pivoting (hard) ===
+During penetration testing, initial footholds often lead to internal network segments
+and multi-hop infrastructure.
+
+Begin your reconnaissance at 127.0.0.2:5000.
+Follow the chain of services across internal network segments, discovering and supplying
+the required authentication tokens to reach the final secure enclave and obtain the key.
 TXT
 chown root:root "$S/README.txt"
 

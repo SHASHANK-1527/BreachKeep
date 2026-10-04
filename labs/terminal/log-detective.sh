@@ -56,19 +56,20 @@ ANSWER="$(date -u -d "@${T0}" +'%Y-%m-%d %H:%M:%S')"
 } > "$HOME_S/web.log"
 
 cat > "$HOME_S/README.txt" <<'TXT'
-=== Log Detective (hard) ===
-Three logs, three different time formats:
-  app.log   epoch seconds         (e.g. 1740000000 LOGIN ...)
-  auth.log  syslog  "Mon DD HH:MM:SS"
-  web.log   ISO 8601  "YYYY-MM-DDThh:mm:ssZ"
+=== Incident Log Correlation (hard) ===
+An unauthorized actor conducted brute-force activity against this system.
+Evidence is scattered across three log files recorded in different timestamp formats:
+  app.log
+  auth.log
+  web.log
 
-Someone brute-forced a login. Steps:
-  1. Find the attacker IP — the one with many "Failed password" lines in auth.log.
-  2. Pull every line for that IP across ALL THREE logs.
-  3. Find that IP's EARLIEST timestamp. (It is in app.log, as an epoch —
-     convert it:  date -u -d @<epoch> )
-Report it in UTC, format  YYYY-MM-DD HH:MM:SS :
-  check 2026-01-02 03:04:05
+Investigate the incident:
+  1. Identify the attacker IP address responsible for repeated failed authentication attempts.
+  2. Correlate that IP's activity across all three logs.
+  3. Determine the earliest timestamp associated with that attacker across any log.
+
+Submit the earliest timestamp normalized to UTC in the format YYYY-MM-DD HH:MM:SS:
+  check YYYY-MM-DD HH:MM:SS
 TXT
 
 # --- guard setup ---

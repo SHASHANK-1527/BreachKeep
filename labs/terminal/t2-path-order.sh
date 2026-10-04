@@ -23,15 +23,14 @@ R
 chmod 644 /opt/service/run.conf /opt/service/run.sh
 
 cat > "$S/README.txt" <<'TXT'
-=== PATH order ===
-A root job runs a command (CMD) by its BARE name, resolving it through PATH:
-  cat /opt/service/run.conf
-The shell searches PATH left to right and runs the FIRST match. If a directory
-you can WRITE to appears before the real system directories, you could place a
-fake `collect` there and the root job would run yours instead.
-Which directory in that PATH is the dangerous one (writable + ahead of /usr/bin)?
-Submit its path:
-  check /some/dir
+=== PATH Evaluation & Hijacking ===
+A service runner configured under /opt/service executes an administrative command
+using a relative binary invocation reliant on its configured PATH variable.
+
+Audit the service runner configuration to find the insecure directory entry
+in the search PATH that is vulnerable to binary hijacking by an unprivileged user.
+Submit the vulnerable directory path:
+  check /path/to/directory
 TXT
 chown root:root "$S/README.txt"
 
@@ -43,7 +42,7 @@ cat > /opt/bk/verify.sh <<'V'
 want="$(cat /opt/bk/expected)"
 a="${1%/}"
 [ "$a" = "$want" ] && exit 0
-echo "not the hijackable directory — look for one you can write to that comes before /usr/bin"; exit 1
+echo "not the hijackable directory; examine directory permissions and PATH search order"; exit 1
 V
 chmod 700 /opt/bk/verify.sh
 nohup /usr/local/bin/bkverify >/dev/null 2>&1 &
