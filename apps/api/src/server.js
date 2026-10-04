@@ -48,6 +48,18 @@ app.use(
   })
 )
 
+// Request logger for container log streams (Dozzle / docker logs)
+app.use((req, res, next) => {
+  // Filter out high-frequency internal health checks to keep logs readable
+  if (req.path === '/api/health') return next()
+  const start = Date.now()
+  res.on('finish', () => {
+    const duration = Date.now() - start
+    console.log(`[api] ${req.method} ${req.originalUrl} ${res.statusCode} (${duration}ms)`)
+  })
+  next()
+})
+
 app.get('/api/health', (req, res) => res.json({ ok: true, service: 'breachkeep-api' }))
 
 // Public, ungated: both web bundles poll this so they can show the maintenance
