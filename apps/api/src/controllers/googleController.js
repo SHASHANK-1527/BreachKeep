@@ -4,6 +4,7 @@ import { testMode } from '../config/testMode.js'
 import { issueSession, rosterAllows } from './authController.js'
 import { sendSessionCodeEmail } from '../utils/email.js'
 import { getTodayIST, getMidnightISTExpiry, generateSessionCode } from '../utils/auth.js'
+import { readMaintenance } from '../middleware/maintenance.js'
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID)
 
@@ -79,6 +80,11 @@ export async function googleAuth(req, res) {
         ? 'Initiate'
         : (name ? name.replace(/\s+/g, '_').toLowerCase().slice(0, 20) : email.split('@')[0])
 
+      const { maintenance, message, eta } = await readMaintenance()
+      if (maintenance) {
+        return res.status(503).json({ error: 'maintenance', message, eta })
+      }
+
       const created = await User.create({
         username,
         email,
@@ -92,6 +98,11 @@ export async function googleAuth(req, res) {
 
       issueSession(res, created)
       return res.json({ ok: true, user: created.safe(), message: 'Account created successfully. Welcome!' })
+    }
+
+    const { maintenance, message, eta } = await readMaintenance()
+    if (maintenance && !user.testingRights && user.role !== 'admin') {
+      return res.status(503).json({ error: 'maintenance', message, eta })
     }
 
     if (!user.googleId) { user.googleId = sub; await user.save() }

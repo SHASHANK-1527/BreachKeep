@@ -47,11 +47,24 @@ export async function adminState(req, res) {
     { $match: { house: { $ne: null } } },
     { $group: { _id: '$house', n: { $sum: 1 } } },
   ])
+
+  let capstoneRunning = false
+  if (cfg.capstoneArmed) {
+    try {
+      const capStatus = await labClient.capstone('status')
+      capstoneRunning = !!capStatus?.running
+    } catch {}
+  }
+
   return res.json({
     commonCodeEnabled: cfg.commonCodeEnabled,
     rosterGateEnabled: cfg.rosterGateEnabled,
     maintenance: !!cfg.maintenance,
     capstoneArmed: !!cfg.capstoneArmed,
+    capstoneTargetHost: cfg.capstoneTargetHost || '',
+    capstoneWebPort: process.env.CAPSTONE_WEB_PORT || '8088',
+    capstoneSshPort: process.env.CAPSTONE_SSH_PORT || '2222',
+    capstoneRunning,
     testingEnabled: !!cfg.testingEnabled,
     maintenanceMessage: cfg.maintenanceMessage || '',
     maintenanceEta: cfg.maintenanceEta || '',
@@ -129,11 +142,18 @@ export async function adminStudentDetail(req, res) {
 // POST /api/admin/students/:id/house  { house }
 export async function adminAssignHouse(req, res) {
   const { house } = req.body
-  if (!house || !['rimeguard', 'emberkeep', 'arcweave', 'voltgrid'].includes(house))
-    return res.status(400).json({ error: 'house must be rimeguard, emberkeep, arcweave or voltgrid' })
-
   const user = await User.findById(req.params.id)
   if (!user) return res.status(404).json({ error: 'Student not found' })
+
+  if (!house || house === 'unsorted') {
+    user.house = null
+    user.sorted = false
+    await user.save()
+    return res.json({ ok: true, house: null, sorted: false, introComplete: user.introComplete })
+  }
+
+  if (!['rimeguard', 'emberkeep', 'arcweave', 'voltgrid'].includes(house))
+    return res.status(400).json({ error: 'house must be rimeguard, emberkeep, arcweave, voltgrid or unsorted' })
 
   user.house = house
   user.sorted = true
@@ -266,31 +286,39 @@ export async function setDungeon(req, res) {
     { upsert: true }
   )
 
-  // tell the provisioner to build or tear down (best-effort; report failure)
+  // notify provisioner (best-effort; non-blocking failure)
   try {
     await labClient.setDungeon(dungeonId, !!live)
   } catch (e) {
-    return res.status(502).json({ error: 'Saved, but provisioner did not respond', detail: String(e.message) })
+    console.warn(`[admin] provisioner notification for dungeon ${dungeonId} warning:`, e.message)
   }
   return res.json({ ok: true, dungeonId, live: !!live })
 }
 
-// POST /api/admin/capstone  { armed }
+// POST /api/admin/capstone  { armed?, host? }
 // Arms/disarms the capstone target box: flips the state the dungeon page reads,
 // and tells the provisioner to start/stop the single shared target container.
 export async function setCapstone(req, res) {
   const cfg = await AccessConfig.get()
-  cfg.capstoneArmed = !!req.body.armed
-  if (typeof req.body.host === 'string') cfg.capstoneTargetHost = req.body.host.slice(0, 200)
+  if (typeof req.body.armed === 'boolean') cfg.capstoneArmed = req.body.armed
+  if (typeof req.body.host === 'string') cfg.capstoneTargetHost = req.body.host.trim().slice(0, 200)
   cfg.updatedAt = new Date()
   await cfg.save()
+
+  let capRunning = false
   try {
-    await labClient.capstone(cfg.capstoneArmed ? 'start' : 'stop')
+    const r = await labClient.capstone(cfg.capstoneArmed ? 'start' : 'stop')
+    capRunning = cfg.capstoneArmed ? !!r?.started : false
   } catch (e) {
-    return res.status(502).json({ error: 'Saved, but provisioner did not respond', detail: String(e.message) })
+    console.warn('[admin] capstone container control warning:', e.message)
   }
   console.log(`[admin] capstone ${cfg.capstoneArmed ? 'ARMED — target box up' : 'disarmed — target box down'}`)
-  return res.json({ ok: true, capstoneArmed: cfg.capstoneArmed })
+  return res.json({
+    ok: true,
+    capstoneArmed: cfg.capstoneArmed,
+    capstoneTargetHost: cfg.capstoneTargetHost,
+    capstoneRunning: capRunning,
+  })
 }
 
 // ---- testing tools (Warden) ----

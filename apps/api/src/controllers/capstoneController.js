@@ -9,5 +9,6 @@ export async function getCapstone(req, res) {
   const host = process.env.CAPSTONE_TARGET_HOST || cfg.capstoneTargetHost || req.hostname
   const web = process.env.CAPSTONE_WEB_PORT || '8088'
   const ssh = process.env.CAPSTONE_SSH_PORT || '2222'
-  return res.json({ armed, target: armed ? { host, web, ssh } : null })
+  const target = armed ? { host, web, ssh } : null
+  return res.json({ armed, target, host, web, ssh })
 }

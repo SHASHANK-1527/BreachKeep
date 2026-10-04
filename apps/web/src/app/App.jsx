@@ -330,8 +330,9 @@ function AppRoutes() {
     )
   }
 
-  // Site closed by the Warden — nothing student-facing renders.
-  if (maint.maintenance) {
+  // Site closed by the Warden — non-testers see the maintenance page.
+  const isTester = user?.testingRights || user?.role === 'admin' || maint.isTester
+  if (maint.maintenance && !isTester) {
     return <Maintenance message={maint.message} eta={maint.eta} />
   }
 
@@ -371,6 +372,18 @@ function AppRoutes() {
   // User is logged in OR has gate access - show full app with header
   return (
     <>
+      {(maint.siteMaintenance || maint.maintenance) && isTester && (
+        <div style={{
+          position: 'sticky', top: 0, zIndex: 9999,
+          background: 'linear-gradient(90deg, #7f1d1d, #991b1b)',
+          color: '#fef2f2', padding: '0.4rem 1rem', fontSize: '0.78rem',
+          textAlign: 'center', fontWeight: 600, letterSpacing: '0.03em',
+          borderBottom: '1px solid rgba(239, 68, 68, 0.4)',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)'
+        }}>
+          ⚠️ Maintenance Mode Active — Site sealed for regular students. Tester bypass enabled.
+        </div>
+      )}
       {!isAtmosphericPage && <Header user={user} onLogout={logout} />}
       <main style={{ paddingTop: isAtmosphericPage ? '0' : '56px', minHeight: '100vh' }}>
         <PageTransition>

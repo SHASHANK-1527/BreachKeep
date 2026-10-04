@@ -139,18 +139,39 @@ app.post('/stop', async (req, res) => {
   return res.json({ ok: true })
 })
 
-// POST /dungeon { dungeonId, live } -> build images (live) or tear down (off)
+// POST /dungeon { dungeonId, live } -> activate/deactivate dungeon
 app.post('/dungeon', async (req, res) => {
   const { dungeonId, live } = req.body
   const def = DUNGEONS[dungeonId]
   if (!def) return res.status(400).json({ error: 'unknown dungeon' })
   try {
     if (live) {
-      for (const room of def.rooms) await buildImage(def.context, room, `breachkeep/${room}:latest`)
-      return res.json({ ok: true, built: def.rooms })
+      // Respond immediately so nginx doesn't 504 Gateway Timeout.
+      // Build any missing images in the background if necessary.
+      (async () => {
+        for (const room of def.rooms) {
+          const tag = `breachkeep/${room}:latest`
+          try {
+            await docker.getImage(tag).inspect()
+          } catch {
+            console.log(`[provisioner] image ${tag} missing, building in background...`)
+            await buildImage(def.context, room, tag).catch((err) =>
+              console.error(`[provisioner] failed building ${tag}:`, err.message)
+            )
+          }
+        }
+      })()
+      return res.json({ ok: true, built: def.rooms, live: true })
     } else {
-      for (const room of def.rooms) await removeImage(`breachkeep/${room}:latest`)
-      return res.json({ ok: true, removed: def.rooms })
+      // When deactivating, stop active containers for this dungeon but preserve images
+      for (const [key, val] of registry.all()) {
+        const [, r] = key.split(':')
+        if (def.rooms.includes(r)) {
+          await stopContainer(val.name).catch(() => {})
+          registry.del(key.split(':')[0], r)
+        }
+      }
+      return res.json({ ok: true, removed: def.rooms, live: false })
     }
   } catch (e) {
     console.error('dungeon', e)
@@ -158,12 +179,20 @@ app.post('/dungeon', async (req, res) => {
   }
 })
 
-// POST /capstone { action: 'start' | 'stop' } -> run/stop the shared target box
+// POST /capstone { action: 'start' | 'stop' | 'status' } -> run/stop/inspect the shared target box
 app.post('/capstone', async (req, res) => {
   const { action } = req.body
   try {
     if (action === 'start') { const id = await startCapstone(); return res.json({ ok: true, started: id }) }
     if (action === 'stop') { await stopCapstone(); return res.json({ ok: true, stopped: true }) }
+    if (action === 'status') {
+      let running = false
+      try {
+        const inspect = await docker.getContainer('bk_capstone').inspect()
+        running = !!inspect?.State?.Running
+      } catch {}
+      return res.json({ ok: true, running })
+    }
     return res.status(400).json({ error: 'bad action' })
   } catch (e) {
     console.error('capstone', e)

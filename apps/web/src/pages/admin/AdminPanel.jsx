@@ -79,6 +79,7 @@ export default function AdminPanel() {
   const [query, setQuery] = useState('')
   const [mMsg, setMMsg] = useState('')
   const [mEta, setMEta] = useState('')
+  const [capHost, setCapHost] = useState('')
   const [testDungeon, setTestDungeon] = useState('terminal-1')
 
   const flash = useCallback((text, kind = 'ok') => setToast({ text, kind }), [])
@@ -101,16 +102,15 @@ export default function AdminPanel() {
   }, [])
   useEffect(() => { load() }, [load])
 
-  // Keep the kill-switch message/ETA boxes in step with whatever is stored.
+  // Keep the kill-switch message/ETA and capstone host boxes in step with state.
   // MUST live here with the other hooks: React requires the same hooks to run
   // on every render, and there is an early `return` for the login screen below.
-  // Placing it after that return changed the hook count the moment you logged
-  // in, which crashed the whole panel to a blank page (React error #310).
   useEffect(() => {
     if (!state) return
     setMMsg(state.maintenanceMessage || '')
     setMEta(state.maintenanceEta || '')
-  }, [state?.maintenanceMessage, state?.maintenanceEta])
+    setCapHost(state.capstoneTargetHost || '')
+  }, [state?.maintenanceMessage, state?.maintenanceEta, state?.capstoneTargetHost])
 
   // Load the active tab's data on demand.
   useEffect(() => {
@@ -307,17 +307,71 @@ export default function AdminPanel() {
           <>
             <h1 style={s.h1}>Capstone</h1>
             <p style={s.sub}>Spawn the one shared target box on the day. Students attack it from their own Kali VMs.</p>
+
             <div style={s.card}>
-              <div style={s.cardTitle}>Target box</div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <div style={s.cardTitle}>Target box status</div>
+                <span style={{
+                  ...s.pill,
+                  color: state?.capstoneRunning ? T.green : (state?.capstoneArmed ? T.gold : T.dim),
+                  borderColor: state?.capstoneRunning ? T.green : (state?.capstoneArmed ? T.gold : T.border),
+                  fontWeight: 600,
+                }}>
+                  {state?.capstoneRunning ? '● Container running' : (state?.capstoneArmed ? '○ Starting…' : '○ Powered down')}
+                </span>
+              </div>
+
               <Toggle
                 checked={state?.capstoneArmed}
-                onChange={(v) => act(async () => { await api.post('/admin/capstone', { armed: v }); await loadState() }, v ? 'Target box armed — students see the briefing and connect info' : 'Target box powered down')}
+                onChange={(v) => act(async () => {
+                  await api.post('/admin/capstone', { armed: v, host: capHost })
+                  await loadState()
+                }, v ? 'Target box armed — students see briefing & connect info' : 'Target box powered down')}
                 label="Arm the capstone target box"
-                hint="On: the box starts and the capstone page shows the briefing, connect instructions and the flag box. Off: students see 'wait for the day'."
+                hint="On: the target container starts and the capstone page reveals connection instructions and flag submission. Off: students see 'wait for the day'."
               />
-              <p style={{ fontSize: '0.78rem', color: T.dim, marginTop: '0.5rem' }}>
-                First make the capstone dungeon live on the Dungeons tab (that builds the target image). Then arm it here on the day.
-              </p>
+
+              <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: `1px solid ${T.border}` }}>
+                <label style={{ display: 'block', fontSize: '0.8rem', color: T.cream, fontWeight: 600, marginBottom: '0.4rem' }}>
+                  Target host / IP address
+                </label>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <input
+                    value={capHost}
+                    onChange={(e) => setCapHost(e.target.value)}
+                    placeholder="e.g. 20.235.162.102 or breachkeep-elabs.duckdns.org"
+                    style={{ ...s.input, flex: 1 }}
+                  />
+                  <button
+                    disabled={busy}
+                    style={{ ...s.btn, ...s.btnGhost }}
+                    onClick={() => act(async () => {
+                      await api.post('/admin/capstone', { host: capHost })
+                      await loadState()
+                    }, 'Target host updated')}
+                  >
+                    Save Host
+                  </button>
+                </div>
+                <p style={{ fontSize: '0.78rem', color: T.dim, marginTop: '0.4rem' }}>
+                  This IP or domain name is presented to students on the Capstone challenge page for nmap, web recon, and SSH access.
+                </p>
+              </div>
+
+              <div style={{ marginTop: '1.2rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.8rem' }}>
+                <div style={{ background: T.bg, padding: '0.75rem', borderRadius: 8, border: `1px solid ${T.border}` }}>
+                  <div style={{ fontSize: '0.72rem', color: T.dim, textTransform: 'uppercase' }}>Web Service Port</div>
+                  <div style={{ fontSize: '1.05rem', fontWeight: 700, color: T.cream, marginTop: 4 }}>
+                    :{state?.capstoneWebPort || '8088'}
+                  </div>
+                </div>
+                <div style={{ background: T.bg, padding: '0.75rem', borderRadius: 8, border: `1px solid ${T.border}` }}>
+                  <div style={{ fontSize: '0.72rem', color: T.dim, textTransform: 'uppercase' }}>SSH Service Port</div>
+                  <div style={{ fontSize: '1.05rem', fontWeight: 700, color: T.cream, marginTop: 4 }}>
+                    :{state?.capstoneSshPort || '2222'}
+                  </div>
+                </div>
+              </div>
             </div>
           </>
         )}
@@ -432,8 +486,10 @@ export default function AdminPanel() {
                           value={u.house || ''}
                           onChange={(e) => {
                             const house = e.target.value
-                            if (!house) return
-                            act(async () => { await api.post(`/admin/students/${u.id}/house`, { house }); await loadStudents(query) }, `${u.username} → ${house}`)
+                            act(async () => {
+                              await api.post(`/admin/students/${u.id}/house`, { house })
+                              await loadStudents(query)
+                            }, `${u.username} → ${house || 'unsorted'}`)
                           }}
                           style={{ background: T.bg, color: T.cream, border: `1px solid ${T.border}`, borderRadius: 6, padding: '0.3rem 0.4rem', fontFamily: 'inherit', fontSize: '0.8rem' }}
                         >
@@ -488,8 +544,8 @@ export default function AdminPanel() {
                 </div>
                 <div style={{ fontSize: '0.8rem', color: T.dim, marginTop: 3 }}>
                   {down
-                    ? 'Registration, sign-in, the intro module and flag submission are all refused. This panel stays reachable.'
-                    : 'Everything is live. Anyone with the access code can register and work through the intro.'}
+                    ? 'Regular students see the maintenance page. Accounts with Testing Rights and admins retain full access to test dungeons and features.'
+                    : 'Everything is live. Anyone with the access code can register and work through the challenges.'}
                 </div>
               </div>
             </div>
@@ -535,8 +591,9 @@ export default function AdminPanel() {
               {down ? (
                 <>
                   <p style={{ fontSize: '0.88rem', color: T.dim, lineHeight: 1.6, margin: '0 0 1rem' }}>
-                    The site is closed. Reopening takes effect within five seconds for
-                    everyone — no rebuild, no restart.
+                    The site is sealed for regular students. Accounts with testing rights (granted in the Testing tab)
+                    and administrators can still log in, test dungeons, and access all features. Reopening takes effect
+                    immediately.
                   </p>
                   <button
                     disabled={busy}
@@ -549,15 +606,15 @@ export default function AdminPanel() {
               ) : (
                 <>
                   <p style={{ fontSize: '0.88rem', color: T.dim, lineHeight: 1.6, margin: '0 0 1rem' }}>
-                    Closes the site for every student immediately. Anyone mid-session is
-                    moved to the maintenance page on their next action. No data is touched
-                    and no progress is lost — this is reversible from right here.
+                    Closes the site for regular students immediately. Students mid-session are redirected to
+                    the maintenance notice. Accounts with testing rights and administrators retain full access
+                    to test and verify the site. No data or progress is lost.
                   </p>
                   <button
                     disabled={busy}
                     style={{ ...s.btn, ...s.btnRed, padding: '0.7rem 1.4rem', fontSize: '0.92rem' }}
                     onClick={() => {
-                      if (!window.confirm('Close BreachKeep for all students now?\n\nThey will see the maintenance page until you reopen it here.')) return
+                      if (!window.confirm('Close BreachKeep for regular students now?\n\nThey will see the maintenance page until you reopen it. Accounts with testing rights will still have access.')) return
                       setMaintenance(true)
                     }}
                   >

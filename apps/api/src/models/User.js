@@ -57,6 +57,7 @@ userSchema.methods.safe = function () {
     sorted: this.sorted,
     introComplete: this.introComplete,
     role: this.role,
+    testingRights: !!this.testingRights,
   }
 }
 

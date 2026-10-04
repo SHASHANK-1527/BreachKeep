@@ -14,11 +14,18 @@ import { useEffect, useState } from 'react'
 const BASE = import.meta.env.VITE_API_BASE || '/api'
 
 export default function useMaintenance(skip = false) {
-  const [state, setState] = useState({ checked: false, maintenance: false, message: '', eta: '' })
+  const [state, setState] = useState({
+    checked: false,
+    maintenance: false,
+    siteMaintenance: false,
+    message: '',
+    eta: '',
+    isTester: false,
+  })
 
   useEffect(() => {
     if (skip) {
-      setState({ checked: true, maintenance: false, message: '', eta: '' })
+      setState({ checked: true, maintenance: false, siteMaintenance: false, message: '', eta: '', isTester: false })
       return
     }
     let alive = true
@@ -35,8 +42,10 @@ export default function useMaintenance(skip = false) {
         setState({
           checked: true,
           maintenance: !!data.maintenance,
+          siteMaintenance: !!data.siteMaintenance,
           message: data.message || '',
           eta: data.eta || '',
+          isTester: !!data.isTester,
         })
       } catch {
         // Status endpoint unreachable — let the app render and fail normally
@@ -47,11 +56,17 @@ export default function useMaintenance(skip = false) {
 
     const onSignal = (e) => {
       if (!alive) return
-      setState({
-        checked: true,
-        maintenance: true,
-        message: e.detail?.message || '',
-        eta: e.detail?.eta || '',
+      setState((prev) => {
+        // If current session was marked as tester bypass, ignore 503 maintenance event
+        if (prev.isTester) return prev
+        return {
+          ...prev,
+          checked: true,
+          maintenance: true,
+          siteMaintenance: true,
+          message: e.detail?.message || '',
+          eta: e.detail?.eta || '',
+        }
       })
     }
 

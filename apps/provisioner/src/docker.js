@@ -90,8 +90,15 @@ const CAP_SSH = process.env.CAPSTONE_SSH_PORT || '2222'
 export async function startCapstone() {
   const name = 'bk_capstone'
   await stopContainer(name)
+  const image = 'breachkeep/capstone-gauntlet:latest'
+  try {
+    await docker.getImage(image).inspect()
+  } catch {
+    console.log('[provisioner] building capstone image...')
+    await buildImage('capstone', 'capstone-gauntlet', image)
+  }
   const container = await docker.createContainer({
-    Image: 'breachkeep/capstone-gauntlet:latest',
+    Image: image,
     name,
     Env: [`CAPSTONE_FLAG=${process.env.CAPSTONE_FLAG || 'BK{dev-capstone-root-flag}'}`],
     Tty: false,

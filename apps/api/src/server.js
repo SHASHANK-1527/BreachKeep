@@ -10,6 +10,8 @@ import maintenanceGate, { readMaintenance } from './middleware/maintenance.js'
 import { testMode, announceTestMode } from './config/testMode.js'
 import devRoutes from './routes/dev.js'
 
+import jwt from 'jsonwebtoken'
+import User from './models/User.js'
 import authRoutes from './routes/auth.js'
 import accessRoutes from './routes/access.js'
 import introRoutes from './routes/intro.js'
@@ -48,13 +50,42 @@ app.use(
 app.get('/api/health', (req, res) => res.json({ ok: true, service: 'breachkeep-api' }))
 
 // Public, ungated: both web bundles poll this so they can show the maintenance
-// page instead of a broken app. Deliberately reveals nothing but the flag.
+// page instead of a broken app. Accounts with testing rights or admin cookie
+// bypass maintenance so testers can verify the live app.
 app.get('/api/status', async (req, res) => {
   const { maintenance, message, eta } = await readMaintenance()
   res.set('Cache-Control', 'no-store')
-  // testMode is surfaced so the frontend can decide whether to draw the test
-  // panel. It is always false in production, whatever the environment says.
-  return res.json({ maintenance, message, eta, testMode })
+
+  let isTester = false
+  try {
+    const adminToken = req.cookies?.bk_admin
+    if (adminToken) {
+      const payload = jwt.verify(adminToken, process.env.JWT_SECRET)
+      if (payload.scope === 'admin') isTester = true
+    }
+  } catch {}
+
+  if (!isTester) {
+    try {
+      const sessToken = req.cookies?.bk_session
+      if (sessToken) {
+        const payload = jwt.verify(sessToken, process.env.JWT_SECRET)
+        if (payload.uid) {
+          const u = await User.findById(payload.uid).select('testingRights role')
+          if (u && (u.testingRights || u.role === 'admin')) isTester = true
+        }
+      }
+    } catch {}
+  }
+
+  return res.json({
+    maintenance: isTester ? false : maintenance,
+    siteMaintenance: maintenance,
+    message,
+    eta,
+    testMode,
+    isTester,
+  })
 })
 
 // Kill switch — must sit in front of every student-facing route.
