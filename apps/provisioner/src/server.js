@@ -6,7 +6,7 @@ import httpProxy from 'http-proxy'
 import { DUNGEONS, roomCaps } from './dungeons.js'
 import {
   buildImage, runContainer, stopContainer, removeImage, ensureLabNetwork,
-  startCapstone, stopCapstone,
+  startCapstone, stopCapstone, docker,
 } from './docker.js'
 import { registry } from './registry.js'
 import { startIdleReaper } from './idle-reaper.js'
@@ -101,8 +101,16 @@ app.post('/provision', async (req, res) => {
     const name = `bk_${studentId}_${roomId}`.replace(/[^a-zA-Z0-9_]/g, '')
     const existing = registry.get(studentId, roomId)
     if (existing) {
-      registry.touch(studentId, roomId)
-      return res.json({ url: `/labs/${name}`, token: existing.token })
+      let alive = false
+      try {
+        const inspect = await docker.getContainer(existing.name).inspect()
+        alive = !!inspect?.State?.Running
+      } catch {}
+      if (alive) {
+        registry.touch(studentId, roomId)
+        return res.json({ url: `/labs/${name}`, token: existing.token })
+      }
+      registry.del(studentId, roomId)
     }
     const token = crypto.randomBytes(18).toString('hex')
     const { caps, noNewPriv } = roomCaps(roomId)
