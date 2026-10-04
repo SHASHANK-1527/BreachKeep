@@ -1,5 +1,6 @@
 import { OAuth2Client } from 'google-auth-library'
 import User from '../models/User.js'
+import AccessConfig from '../models/AccessConfig.js'
 import { testMode } from '../config/testMode.js'
 import { issueSession, rosterAllows } from './authController.js'
 import { sendSessionCodeEmail } from '../utils/email.js'
@@ -107,26 +108,31 @@ export async function googleAuth(req, res) {
 
     if (!user.googleId) { user.googleId = sub; await user.save() }
 
-    const today = getTodayIST()
-    const expired = user.sessionCodeExpires && new Date() > user.sessionCodeExpires
-    if (user.lastSessionDate !== today || expired) {
-      user.verifiedToday = false
-    }
+    const cfg = await AccessConfig.get()
+    const dailyCodeRequired = process.env.REQUIRE_DAILY_SESSION_CODE !== 'false' && cfg.dailyCodeEnabled !== false
 
-    if (!user.verifiedToday) {
-      const sessionCode = generateSessionCode()
-      user.sessionCode = sessionCode
-      user.sessionCodeExpires = getMidnightISTExpiry()
-      user.lastSessionDate = today
-      user.verifiedToday = false
-      await user.save()
-      try { await sendSessionCodeEmail(user.email, sessionCode) } catch (err) { console.error('Session email error:', err.message) }
-      return res.json({
-        ok: true,
-        requiresSessionCode: true,
-        email,
-        message: 'Session code sent to your email. Check your inbox.',
-      })
+    if (dailyCodeRequired) {
+      const today = getTodayIST()
+      const expired = user.sessionCodeExpires && new Date() > user.sessionCodeExpires
+      if (user.lastSessionDate !== today || expired) {
+        user.verifiedToday = false
+      }
+
+      if (!user.verifiedToday) {
+        const sessionCode = generateSessionCode()
+        user.sessionCode = sessionCode
+        user.sessionCodeExpires = getMidnightISTExpiry()
+        user.lastSessionDate = today
+        user.verifiedToday = false
+        await user.save()
+        try { await sendSessionCodeEmail(user.email, sessionCode) } catch (err) { console.error('Session email error:', err.message) }
+        return res.json({
+          ok: true,
+          requiresSessionCode: true,
+          email,
+          message: 'Session code sent to your email. Check your inbox.',
+        })
+      }
     }
 
     issueSession(res, user)

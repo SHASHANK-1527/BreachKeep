@@ -229,6 +229,12 @@ export default function AdminPanel() {
             <div style={s.card}>
               <div style={s.cardTitle}>Gates</div>
               <Toggle
+                checked={state?.dailyCodeEnabled !== false}
+                onChange={(v) => act(async () => { await api.post('/admin/daily-code', { enabled: v }); await loadState() }, 'Daily code setting updated')}
+                label="Daily session code required"
+                hint="When off, users sign in directly without needing an emailed daily session code."
+              />
+              <Toggle
                 checked={state?.commonCodeEnabled}
                 onChange={(v) => act(async () => { await api.post('/admin/common-code', { enabled: v }); await loadState() }, 'Access updated')}
                 label="First-time access code enabled"

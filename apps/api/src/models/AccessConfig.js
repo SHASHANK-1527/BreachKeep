@@ -4,6 +4,7 @@ import mongoose from 'mongoose'
 const accessConfigSchema = new mongoose.Schema({
   _id: { type: String, default: 'singleton' },
   commonCodeEnabled: { type: Boolean, default: true },
+  dailyCodeEnabled: { type: Boolean, default: true },
   rosterGateEnabled: { type: Boolean, default: true },
   // Kill switch. When true every student-facing API route answers 503 and both
   // web bundles render the maintenance page. Admin routes stay reachable.

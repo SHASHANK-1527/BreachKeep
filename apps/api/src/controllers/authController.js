@@ -113,21 +113,26 @@ export async function login(req, res) {
     }
 
     // Auto-generate session code if needed
-    const today = getTodayIST()
-    const expired = user.sessionCodeExpires && new Date() > user.sessionCodeExpires
-    if (user.lastSessionDate !== today || expired) {
-      user.verifiedToday = false
-    }
+    const cfg = await AccessConfig.get()
+    const dailyCodeRequired = process.env.REQUIRE_DAILY_SESSION_CODE !== 'false' && cfg.dailyCodeEnabled !== false
 
-    if (!user.verifiedToday) {
-      const sessionCode = generateSessionCode()
-      user.sessionCode = sessionCode
-      user.sessionCodeExpires = getMidnightISTExpiry()
-      user.lastSessionDate = today
-      user.verifiedToday = false
-      await user.save()
-      try { await sendSessionCodeEmail(user.email, sessionCode) } catch (err) { console.error('Session email error:', err.message) }
-      return res.json({ ok: true, requiresSessionCode: true, message: 'Session code sent to your email. Check your inbox.' })
+    if (dailyCodeRequired) {
+      const today = getTodayIST()
+      const expired = user.sessionCodeExpires && new Date() > user.sessionCodeExpires
+      if (user.lastSessionDate !== today || expired) {
+        user.verifiedToday = false
+      }
+
+      if (!user.verifiedToday) {
+        const sessionCode = generateSessionCode()
+        user.sessionCode = sessionCode
+        user.sessionCodeExpires = getMidnightISTExpiry()
+        user.lastSessionDate = today
+        user.verifiedToday = false
+        await user.save()
+        try { await sendSessionCodeEmail(user.email, sessionCode) } catch (err) { console.error('Session email error:', err.message) }
+        return res.json({ ok: true, requiresSessionCode: true, message: 'Session code sent to your email. Check your inbox.' })
+      }
     }
 
     user.failedLogins = 0

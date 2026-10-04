@@ -58,6 +58,7 @@ export async function adminState(req, res) {
 
   return res.json({
     commonCodeEnabled: cfg.commonCodeEnabled,
+    dailyCodeEnabled: cfg.dailyCodeEnabled !== false,
     rosterGateEnabled: cfg.rosterGateEnabled,
     maintenance: !!cfg.maintenance,
     capstoneArmed: !!cfg.capstoneArmed,
@@ -189,6 +190,15 @@ export async function setCommonCode(req, res) {
   cfg.updatedAt = new Date()
   await cfg.save()
   return res.json({ ok: true, commonCodeEnabled: cfg.commonCodeEnabled })
+}
+
+// POST /api/admin/daily-code  { enabled }
+export async function setDailyCode(req, res) {
+  const cfg = await AccessConfig.get()
+  cfg.dailyCodeEnabled = !!req.body.enabled
+  cfg.updatedAt = new Date()
+  await cfg.save()
+  return res.json({ ok: true, dailyCodeEnabled: cfg.dailyCodeEnabled })
 }
 
 // POST /api/admin/maintenance  { enabled, message?, eta? }
