@@ -85,9 +85,9 @@ describe('codes', () => {
     assert.ok(seen.size > 490, 'daily codes must not collide')
   })
 
-  test('the email verification code is still 6 digits', async () => {
+  test('the email verification code is 6 characters', async () => {
     const { generateCode } = await import('../src/utils/email.js')
-    for (let i = 0; i < 200; i++) assert.match(generateCode(), /^\d{6}$/)
+    for (let i = 0; i < 200; i++) assert.match(generateCode(), /^[A-HJ-NP-Z2-9]{6}$/)
   })
 
   test('the daily code expires at the next midnight IST and never in the past', async () => {
@@ -133,7 +133,7 @@ describe('dynamic per-student intro flags', () => {
   test("the flag is shaped BK{...} and a classmate's does not validate", async () => {
     process.env.FLAG_HMAC_SECRET = process.env.FLAG_HMAC_SECRET || 'f'.repeat(64)
     const { flagFor, checkFlag } = await import('../src/utils/flags.js')
-    assert.match(flagFor('aaaaaaaaaaaaaaaaaaaaaaaa', 'guestbook'), /^BK\{[0-9a-f]{24}\}$/)
+    assert.match(flagFor('aaaaaaaaaaaaaaaaaaaaaaaa', 'guestbook'), /^BK\{[a-z0-9_]+_[0-9a-f]{16}\}$/)
     const mine = 'aaaaaaaaaaaaaaaaaaaaaaaa'
     const theirs = 'bbbbbbbbbbbbbbbbbbbbbbbb'
     assert.equal(checkFlag(mine, 'guestbook', flagFor(mine, 'guestbook')), true)

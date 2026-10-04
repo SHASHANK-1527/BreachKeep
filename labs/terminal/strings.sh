@@ -8,10 +8,14 @@ FLAG="${BK_FLAG:-}"
 ROOT=/home/student
 blob="$ROOT/core.dump"
 
-# Build a binary file: random bytes, with the flag sandwiched in the middle.
-head -c 4096 /dev/urandom > "$blob"
+# Build a binary file: random bytes, with decoy and real flags sandwiched in the middle.
+head -c 2048 /dev/urandom > "$blob"
+printf '\nBK{raw_str1ngs_w1th0ut_m4rk3r_decoy1}\n' >> "$blob"
+head -c 2048 /dev/urandom >> "$blob"
 printf 'MARKER-%s-END' "$FLAG" >> "$blob"
-head -c 4096 /dev/urandom >> "$blob"
+head -c 2048 /dev/urandom >> "$blob"
+printf '\nBK{st4l3_m3m0ry_4rt1f4ct_decoy2}\n' >> "$blob"
+head -c 2048 /dev/urandom >> "$blob"
 
 cat > "$ROOT/README.txt" <<'TXT'
 === Binary Extraction (medium) ===

@@ -24,6 +24,29 @@ done
 for i in 1 2 3; do
   head -c 2000 /dev/urandom | base64 | head -c 2000 > "$ROOT/sample_${i}.dat"
 done
+printf '\nBK{s1z3_m4tt3rs_th1s_f1l3_1s_t00_sm4ll_decoy1}\n' >> "$ROOT/sample_1.dat"
+printf '\nBK{d1d_y0u_ch3ck_th3_s1z3_c0nd1t10n_decoy2}\n' >> "$ROOT/sample_2.dat"
+printf '\nBK{un1qu3_f1l3_s1z3_n0t_m3t_decoy3}\n' >> "$ROOT/sample_3.dat"
+
+# Plant decoy flags across random and non-.dat files to foil blind grep
+decoys=(
+  "BK{wr0ng_3xt3ns10n_n0t_4_d4t_f1l3_decoy}"
+  "BK{th1s_1s_4_l0g_f1l3_n0t_d4t_decoy}"
+  "BK{r3curs1v3_gr3p_w0nt_s4v3_y0u_h3r3_decoy}"
+  "BK{y0u_must_us3_f1nd_c0mm4nd_decoy}"
+  "BK{4ll_th4t_gl1tt3rs_1s_n0t_g0ld_decoy}"
+  "BK{f1lt3r_by_s1z3_4nd_typ3_decoy}"
+  "BK{n1c3_try_but_ch3ck_th3_cr1t3r14_decoy}"
+  "BK{p1l3_1nsp3ct10n_r3qu1r3s_f1nd_decoy}"
+  "BK{b4ckup_d4t4_n0t_th3_t4rg3t_decoy}"
+  "BK{cr1t3r14_m1sm4tch_k33p_s34rch1ng_decoy}"
+)
+for idx in "${!decoys[@]}"; do
+  target_idx=$(( (idx * 23) + 7 ))
+  for f in "$ROOT/file_${target_idx}."*; do
+    [ -f "$f" ] && printf '\n%s\n' "${decoys[$idx]}" >> "$f"
+  done
+done
 
 # The one true match: *.dat, >10 KB, regular file. Flag is the last line.
 target="$ROOT/record_$(tr -dc 'a-z0-9' </dev/urandom | head -c5).dat"

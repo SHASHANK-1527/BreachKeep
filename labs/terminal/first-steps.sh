@@ -13,11 +13,20 @@ mkdir -p "$ROOT/$d1/$d2/$d3"
 printf '%s\n' "$FLAG" > "$ROOT/$d1/$d2/$d3/flag.txt"
 
 # Decoy directories: plausible but irrelevant, and none contain a flag.txt.
+decoy_notes=(
+  "draft note: BK{n0t_th3_f1l3_n4m3d_fl4g_txt_decoy1}"
+  "old memo: BK{ch3ck_th3_f1l3n4m3_fl4g_txt_decoy2}"
+  "meeting log: BK{r3curs1v3_gr3p_f0und_4_dr4ft_decoy3}"
+  "scratchpad: BK{k33p_3xpl0r1ng_f0r_fl4g_txt_decoy4}"
+  "todo list: BK{0nly_fl4g_txt_h4s_th3_r34l_k3y_decoy5}"
+)
+idx=0
 for _ in 1 2 3 4 5; do
   dd="$ROOT/$(rand)/$(rand)"
   mkdir -p "$dd"
-  printf 'nothing to see here\n' > "$dd/notes.txt"
-  printf 'old inventory\n'       > "$dd/data.csv"
+  printf '%s\n' "${decoy_notes[$idx]}" > "$dd/notes.txt"
+  printf 'old inventory: %s\n' "$(rand)" > "$dd/data.csv"
+  idx=$(( idx + 1 ))
 done
 
 cat > "$ROOT/README.txt" <<'TXT'

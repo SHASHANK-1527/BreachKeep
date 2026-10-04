@@ -24,11 +24,13 @@ for i in $(seq 1 400); do
 done
 # Near-miss archivist files: right owner, wrong perms, recent mtime.
 for i in 1 2 3 4 5; do
-  f="$ROOT/arch_${i}.txt"; echo "archivist working copy" > "$f"
+  f="$ROOT/arch_${i}.txt"
+  echo "archivist working copy: BK{ch3ck_th3_p3rms_644_1s_n0t_600_decoy${i}}" > "$f"
   chown archivist:archivist "$f"; chmod 644 "$f"
 done
 # Near-miss: mode 600 + old, but owned by student (wrong owner).
-old_decoy="$ROOT/doc_backup.txt"; echo "student backup" > "$old_decoy"
+old_decoy="$ROOT/doc_backup.txt"
+echo "student backup: BK{ch3ck_th3_0wn3r_th1s_1s_stud3nt_decoy}" > "$old_decoy"
 chown student:student "$old_decoy"; chmod 600 "$old_decoy"; touch -d '3 years ago' "$old_decoy"
 
 # The one true needle.

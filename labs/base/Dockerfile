@@ -2,8 +2,10 @@
 # Per-room images do:  FROM breachkeep/base
 FROM debian:bookworm-slim
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-      coreutils grep sed gawk findutils procps nano less ca-certificates wget && \
+RUN rm -f /etc/dpkg/dpkg.cfg.d/docker-clean && \
+    apt-get update && apt-get install -y --no-install-recommends \
+      coreutils grep sed gawk findutils procps nano less ca-certificates wget \
+      man-db manpages && \
     rm -rf /var/lib/apt/lists/*
 
 ARG TTYD_VERSION=1.7.4

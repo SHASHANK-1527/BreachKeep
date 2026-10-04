@@ -503,13 +503,16 @@ function SecureEditorRoom({ room, solved, onBack, onSolved }) {
 function RoomFlag({ roomId, onSolved, alreadySolved }) {
   const [flag, setFlag] = useState('')
   const [result, setResult] = useState(alreadySolved ? 'correct' : null)
+  const [hint, setHint] = useState('')
   const submit = async () => {
     try {
-      const { correct } = await api.post('/flags/submit', { roomId, flag })
-      setResult(correct ? 'correct' : 'wrong')
-      if (correct) onSolved?.()
+      const res = await api.post('/flags/submit', { roomId, flag })
+      setResult(res.correct ? 'correct' : 'wrong')
+      setHint(res.hint || '')
+      if (res.correct) onSolved?.()
     } catch {
       setResult('error')
+      setHint('')
     }
   }
   return (
@@ -522,7 +525,7 @@ function RoomFlag({ roomId, onSolved, alreadySolved }) {
       />
       <button className="bkd-btn" onClick={submit}>Submit</button>
       {result === 'correct' && <span className="bkd-ok">Room cleared!</span>}
-      {result === 'wrong' && <span className="bkd-no">Not quite — keep at it.</span>}
+      {result === 'wrong' && <span className="bkd-no">{hint || 'Not quite — keep at it.'}</span>}
       {result === 'error' && <span className="bkd-no">Something went wrong.</span>}
     </div>
   )

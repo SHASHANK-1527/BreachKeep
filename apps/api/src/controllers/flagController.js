@@ -1,6 +1,6 @@
 import Progress from '../models/Progress.js'
 import DungeonState from '../models/DungeonState.js'
-import { checkFlag, flagFor } from '../utils/flags.js'
+import { checkFlag, flagFor, isDecoyFlag } from '../utils/flags.js'
 import { INTRO_ROOMS } from './introController.js'
 import { judgeCapstone, CAPSTONE_ROOM } from '../config/capstone.js'
 
@@ -46,7 +46,15 @@ export async function submitFlag(req, res) {
     return res.json({ correct: false, hint: r.hint })
   }
   const correct = checkFlag(req.user._id.toString(), roomId, flag)
-  if (!correct) return res.json({ correct: false })
+  if (!correct) {
+    if (isDecoyFlag(flag)) {
+      return res.json({
+        correct: false,
+        hint: "That's a decoy flag! Blind grepping won't work — follow the challenge instructions to find the genuine key."
+      })
+    }
+    return res.json({ correct: false })
+  }
   await Progress.updateOne(
     { userId: req.user._id, roomId },
     { $setOnInsert: { solvedAt: new Date() } },

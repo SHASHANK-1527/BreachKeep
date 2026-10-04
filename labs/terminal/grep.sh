@@ -23,6 +23,14 @@ done
 # The flag is on the SAME line.
 printf 'the gOlDeN tIcKeT is right here -> %s\n' "$FLAG" > "$ROOT/b/sub/log_42.txt"
 
+# Decoy flags across other files to throw off blind `grep -r "BK{"`
+printf 'the silver ticket was archived here -> BK{s1lv3r_t1ck3t_1s_n0t_g0ld3n_decoy}\n' >> "$ROOT/a/note_3.txt"
+printf 'the bronze ticket was expired -> BK{br0nz3_t1ck3t_1s_n0t_g0ld3n_decoy}\n' >> "$ROOT/b/note_7.txt"
+printf 'GOLDEN TICKET REVOKED AND ROTATED -> BK{3xp1r3d_t1ck3t_tr4p_decoy}\n' >> "$ROOT/c/note_12.txt"
+printf 'copper ticket stub from previous shift -> BK{c0pp3r_t1ck3t_w0nt_w0rk_decoy}\n' >> "$ROOT/b/note_15.txt"
+printf 'incident report: plain grep failed -> BK{gr3p_w1th0ut_c4s3_1s_d4ng3r0us_decoy}\n' >> "$ROOT/a/note_18.txt"
+printf 'platinum ticket reservation memo -> BK{pl4t1num_t1ck3t_v1p_tr4p_decoy}\n' >> "$ROOT/b/sub/note_5.txt"
+
 cat > /home/student/README.txt <<'TXT'
 === Pattern Search ===
 Somewhere under docs/ a document references the phrase "GOLDEN TICKET".
