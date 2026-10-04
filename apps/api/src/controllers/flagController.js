@@ -47,7 +47,7 @@ export async function submitFlag(req, res) {
   }
   const correct = checkFlag(req.user._id.toString(), roomId, flag)
   if (!correct) {
-    if (isDecoyFlag(flag)) {
+    if (isDecoyFlag(flag, roomId)) {
       return res.json({
         correct: false,
         hint: "That's a decoy flag! Blind grepping won't work — follow the challenge instructions to find the genuine key."

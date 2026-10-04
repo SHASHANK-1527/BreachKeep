@@ -1,26 +1,28 @@
 #!/bin/bash
 # Room: Reading files — jump straight to a known line in a long file.
+# 30+ decoy flags are planted on other lines so grepping "BK{" returns dozens
+# of candidates. The student MUST inspect the exact line requested in README.txt.
 set -e
 FLAG="${BK_FLAG:-}"
 [ -n "$FLAG" ] || FLAG="BK{dev-placeholder}"
 ROOT=/home/student
 TOTAL=1500
 LINE=$(( (RANDOM % (TOTAL - 200)) + 100 ))
+rand_hex() { tr -dc 'a-f0-9' </dev/urandom | head -c16; }
+
+# Pick 35 random lines to host decoy flags (excluding the target line)
+decoy_lines=()
+for _ in $(seq 1 35); do
+  dl=$(( (RANDOM % TOTAL) + 1 ))
+  [ "$dl" -ne "$LINE" ] && decoy_lines+=("$dl")
+done
 
 {
   for i in $(seq 1 "$TOTAL"); do
     if [ "$i" -eq "$LINE" ]; then
       printf 'entry %s: VAULT KEY -> %s\n' "$i" "$FLAG"
-    elif [ "$i" -eq 17 ]; then
-      printf 'entry %s: VAULT KEY -> BK{wr0ng_l1n3_d1d_y0u_r34d_th3_r34dm3_decoy}\n' "$i"
-    elif [ "$i" -eq 84 ]; then
-      printf 'entry %s: VAULT KEY -> BK{cl0s3_but_n0t_th3_r1ght_l1n3_decoy}\n' "$i"
-    elif [ "$i" -eq 250 ]; then
-      printf 'entry %s: VAULT KEY -> BK{sk1pp1ng_4h34d_1sn_t_ch3ck1ng_l1n3_decoy}\n' "$i"
-    elif [ "$i" -eq 780 ]; then
-      printf 'entry %s: VAULT KEY -> BK{jump_t0_th3_sp3c1f1c_l1n3_numb3r_decoy}\n' "$i"
-    elif [ "$i" -eq 1250 ]; then
-      printf 'entry %s: VAULT KEY -> BK{k33p_sc4nn1ng_l1n3_sp3c1f13d_decoy}\n' "$i"
+    elif [[ " ${decoy_lines[*]} " =~ " ${i} " ]]; then
+      printf 'entry %s: VAULT KEY -> BK{sp3c1f1c_l1n3_r34d3r_%s}\n' "$i" "$(rand_hex)"
     else
       printf 'entry %s: routine transaction %s\n' "$i" "$(tr -dc 'a-f0-9' </dev/urandom | head -c10)"
     fi
@@ -30,9 +32,10 @@ LINE=$(( (RANDOM % (TOTAL - 200)) + 100 ))
 cat > "$ROOT/README.txt" <<TXT
 === Reading Files ===
 ledger.log contains $TOTAL lines of transaction records.
-Somewhere within this file, the clerk recorded the vault key specifically on line $LINE.
+The genuine vault key was recorded specifically on line $LINE.
 
-Inspect that specific line in ledger.log without manually scrolling through thousands of lines.
+Beware: the log contains dozens of stale decoy keys recorded on other lines.
+Inspect line $LINE directly in ledger.log without guessing or blind grepping.
 TXT
 
 unset BK_FLAG

@@ -105,8 +105,8 @@ export function checkFlag(userId, roomId, submitted) {
   return false
 }
 
-// Identifies obvious decoy flags submitted by students blind-grepping
-export function isDecoyFlag(submitted) {
+// Identifies decoy flags submitted by students blind-grepping
+export function isDecoyFlag(submitted, roomId) {
   const s = String(submitted || '').trim()
   if (!s.startsWith('BK{') || !s.endsWith('}')) return false
   const inner = s.slice(3, -1).toLowerCase()
@@ -116,7 +116,13 @@ export function isDecoyFlag(submitted) {
     'nice_try', 'wont_save_you', 'must_use', 'did_you_check', 'glitters',
     'only_a_backup', 'rotated_out', 'check_the_owner', 'check_the_perms'
   ]
-  return decoyKeywords.some((kw) => inner.includes(kw))
+  if (decoyKeywords.some((kw) => inner.includes(kw))) return true
+  // If the submitted flag matches the room's prefix (e.g. BK{g0ld3n_t1ck3t_c4s3_1gn0r3d_...}),
+  // but was already rejected by checkFlag, it was one of the decoy flags planted in that room!
+  if (roomId && ROOM_SLUGS[roomId] && inner.startsWith(ROOM_SLUGS[roomId])) {
+    return true
+  }
+  return false
 }
 
 export function randomAlphanumeric(n = 8) {
