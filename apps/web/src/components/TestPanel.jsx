@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api } from '../app/api.js'
+import { useAuth } from '../app/AuthContext.jsx'
 
 // A floating control panel for jumping the app into states that are slow to
 // reach by hand. It draws itself ONLY when the server confirms test mode, so a
@@ -46,12 +47,7 @@ const s = {
 }
 
 export default function TestPanel() {
-  // `on` comes from the PUBLIC /api/status, so the panel appears whenever the
-  // API has test mode on — even on the access-code page or the Warden panel,
-  // where there is no student session. `state` comes from /api/dev/state, which
-  // needs one. Keeping them apart is deliberate: gating the whole panel on
-  // /dev/state made it vanish silently whenever you weren't logged in as a
-  // student, which looks identical to "test mode isn't working".
+  const { user } = useAuth() || {}
   const [on, setOn] = useState(false)
   const [state, setState] = useState(null)
   const [open, setOpen] = useState(false)
@@ -59,24 +55,33 @@ export default function TestPanel() {
   const [err, setErr] = useState('')
 
   const load = useCallback(async () => {
-    // The panel is allowed whenever the server lets this account hit
-    // /api/dev/state — either local env test mode, or an account the Warden has
-    // granted testing rights. A granted student sees the full panel on the live
-    // site; everyone else gets a 404 here and the panel stays hidden.
+    // If the account has testing rights or admin role, or testMode
     try {
       const st = await api.get('/dev/state')
-      setOn(true); setState(st); return
-    } catch { /* not allowed for this account */ }
-    // Fallback: local env test mode with no student session in this tab (so the
-    // panel can still say “no session” on the access-code / Warden pages).
+      setOn(true)
+      setState(st)
+      return
+    } catch { /* not allowed or session not ready */ }
+
+    // Fallback: check status endpoint
     try {
       const status = await api.get('/status')
-      if (status?.testMode) { setOn(true); setState(null); return }
+      if (status?.testMode || status?.isTester) {
+        setOn(true)
+        setState(null)
+        return
+      }
     } catch {}
-    setOn(false); setState(null)
-  }, [])
 
-  useEffect(() => { load() }, [load])
+    if (user?.testingRights || user?.role === 'admin') {
+      setOn(true)
+    } else {
+      setOn(false)
+      setState(null)
+    }
+  }, [user])
+
+  useEffect(() => { load() }, [load, user])
 
   // Ctrl+Shift+T toggles it, so it can stay out of the way while you look at a scene.
   useEffect(() => {

@@ -331,8 +331,11 @@ function AppRoutes() {
   }
 
   // Site closed by the Warden — non-testers see the maintenance page.
+  // We allow reaching /enter so authorized accounts with testing rights can sign in!
+  const cleanPath = loc.pathname.replace(/\/+$/, '') || '/'
+  const isAuthRoute = cleanPath === '/enter' || cleanPath === '/reset-password'
   const isTester = user?.testingRights || user?.role === 'admin' || maint.isTester
-  if (maint.maintenance && !isTester) {
+  if (maint.maintenance && !isTester && !isAuthRoute) {
     return <Maintenance message={maint.message} eta={maint.eta} />
   }
 
@@ -361,7 +364,6 @@ function AppRoutes() {
   // keep the header — it is their only route to logout and account settings.
   // Dungeon pages are scenes too: they draw the house hall behind the rooms and
   // carry their own "back to the hall" control and profile medallion.
-  const cleanPath = loc.pathname.replace(/\/+$/, '') || '/'
   const isAtmosphericPage = [
     '/enter',
     '/onboarding',

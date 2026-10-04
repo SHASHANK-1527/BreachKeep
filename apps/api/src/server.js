@@ -12,6 +12,7 @@ import devRoutes from './routes/dev.js'
 
 import jwt from 'jsonwebtoken'
 import User from './models/User.js'
+import AccessConfig from './models/AccessConfig.js'
 import authRoutes from './routes/auth.js'
 import accessRoutes from './routes/access.js'
 import introRoutes from './routes/intro.js'
@@ -78,12 +79,19 @@ app.get('/api/status', async (req, res) => {
     } catch {}
   }
 
+  let testingEnabled = false
+  try {
+    const cfg = await AccessConfig.get()
+    testingEnabled = !!cfg.testingEnabled
+  } catch {}
+
   return res.json({
     maintenance: isTester ? false : maintenance,
     siteMaintenance: maintenance,
     message,
     eta,
-    testMode,
+    testMode: testMode || isTester,
+    testingEnabled,
     isTester,
   })
 })

@@ -240,11 +240,23 @@ export default function Maintenance({ message = '', eta = '' }) {
       <div style={{
         position: 'absolute',
         bottom: '1.1rem',
-        fontSize: '0.72rem',
-        color: 'rgba(233,217,209,0.28)',
-        letterSpacing: '0.06em',
+        fontSize: '0.74rem',
+        color: 'rgba(233,217,209,0.4)',
+        letterSpacing: '0.04em',
+        display: 'flex',
+        gap: '1.2rem',
+        alignItems: 'center',
       }}>
-        Cyber eLabs · BreachKeep
+        <span>Cyber eLabs · BreachKeep</span>
+        <span style={{ opacity: 0.5 }}>·</span>
+        <a
+          href="/enter"
+          style={{ color: T.dim, textDecoration: 'none', transition: 'color 150ms ease' }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = T.cream }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = T.dim }}
+        >
+          Staff / Tester Sign In →
+        </a>
       </div>
     </div>
   )
