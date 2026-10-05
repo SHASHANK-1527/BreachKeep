@@ -185,20 +185,31 @@ export default function TestPanel() {
             ))}
           </div>
 
-          <div style={s.h}>Live dungeons (no provisioner needed)</div>
+          <div style={s.h}>Live dungeons (this account only)</div>
           <div style={s.row}>
             {state.dungeons.map((d) => {
               const on = state.liveDungeons.includes(d)
+              const globalOn = state.globalLiveDungeons?.includes(d)
               return (
-                <button key={d} style={{ ...s.btn, ...(on ? { borderColor: T.green, color: T.green } : {}) }}
-                  disabled={busy} onClick={() => act('/dev/dungeons', { dungeonId: d, live: !on })}>
-                  {on ? '● ' : '○ '}{d}
+                <button
+                  key={d}
+                  style={{
+                    ...s.btn,
+                    ...(on || globalOn ? { borderColor: T.green, color: T.green } : {}),
+                    ...(globalOn ? { opacity: 0.75 } : {}),
+                  }}
+                  disabled={busy || globalOn}
+                  title={globalOn ? 'Live globally via Admin Panel' : on ? 'Enabled for your account only (click to disable)' : 'Click to enable for your account only'}
+                  onClick={() => act('/dev/dungeons', { dungeonId: d, live: !on })}
+                >
+                  {globalOn ? '● ' : on ? '● ' : '○ '}{d}{globalOn ? ' (admin)' : ''}
                 </button>
               )
             })}
           </div>
           <p style={{ color: T.dim, margin: '7px 0 0', lineHeight: 1.5, fontSize: 10 }}>
-            Gates only appear on the themed hub for dungeons that are live.
+            {state.globalLiveDungeons?.length ? 'Dungeons marked (admin) are live globally for all students. ' : ''}
+            Toggling a dungeon here enables it ONLY for this test account and does not affect other students.
             Reload the dashboard after toggling.
           </p>
 

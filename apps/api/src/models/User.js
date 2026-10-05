@@ -39,6 +39,10 @@ const userSchema = new mongoose.Schema(
     // in production, exactly like VITE_TEST_MODE did during local development.
     testingRights: { type: Boolean, default: false },
 
+    // Per-account test-mode unlocked dungeons.
+    // If a user enables a dungeon from their test mode tab, it is only active for this account.
+    testDungeons: { type: [String], default: [] },
+
     // login throttling
     failedLogins: { type: Number, default: 0 },
     lockUntil: { type: Date },
@@ -58,6 +62,7 @@ userSchema.methods.safe = function () {
     introComplete: this.introComplete,
     role: this.role,
     testingRights: !!this.testingRights,
+    testDungeons: this.testDungeons || [],
   }
 }
 

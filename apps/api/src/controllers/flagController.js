@@ -82,8 +82,11 @@ export async function submitFlag(req, res) {
 export async function getProgress(req, res) {
   const solved = await Progress.find({ userId: req.user._id }).select('roomId -_id')
   const live = await DungeonState.find({ live: true }).select('dungeonId -_id')
+  const globalUnlocked = live.map((d) => d.dungeonId)
+  const userTestUnlocked = req.user?.testDungeons || []
+  const unlocked = Array.from(new Set([...globalUnlocked, ...userTestUnlocked]))
   return res.json({
     solved: solved.map((s) => s.roomId),
-    unlocked: live.map((d) => d.dungeonId),
+    unlocked,
   })
 }

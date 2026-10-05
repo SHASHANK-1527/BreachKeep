@@ -48,7 +48,8 @@ export async function openLab(req, res) {
   if (!dungeonId) return res.status(400).json({ error: 'unknown_room' })
 
   const live = await DungeonState.findOne({ dungeonId, live: true })
-  if (!live) return res.status(409).json({ error: 'dungeon_not_live' })
+  const userTestLive = req.user?.testDungeons?.includes(dungeonId)
+  if (!live && !userTestLive) return res.status(409).json({ error: 'dungeon_not_live' })
 
   const sid = req.user._id.toString()
   const flag = flagFor(sid, roomId)

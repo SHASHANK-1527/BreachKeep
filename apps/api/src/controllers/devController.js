@@ -9,7 +9,9 @@ const DUNGEONS = ['terminal-1', 'terminal-2', 'network', 'web', 'secure-coding',
 // Everything the test panel needs to draw itself, in one call.
 async function snapshot(user) {
   const solved = await Progress.find({ userId: user._id }).select('roomId -_id')
-  const live = await DungeonState.find({ live: true }).select('dungeonId -_id')
+  const globalLive = await DungeonState.find({ live: true }).select('dungeonId -_id')
+  const globalLiveIds = globalLive.map((d) => d.dungeonId)
+  const userTestIds = user.testDungeons || []
   const agg = await User.aggregate([
     { $match: { house: { $ne: null } } },
     { $group: { _id: '$house', n: { $sum: 1 } } },
@@ -26,6 +28,7 @@ async function snapshot(user) {
       sorted: user.sorted,
       introComplete: user.introComplete,
       introRooms: user.introRooms,
+      testDungeons: userTestIds,
     },
     introTotal: INTRO_ROOMS.length,
     introRooms: INTRO_ROOMS,
@@ -34,7 +37,8 @@ async function snapshot(user) {
       : !user.sorted ? 'B — sorting ceremony'
       : 'C — themed hub',
     solved: solved.map((s) => s.roomId),
-    liveDungeons: live.map((d) => d.dungeonId),
+    liveDungeons: userTestIds,
+    globalLiveDungeons: globalLiveIds,
     houseCounts,
     houses: HOUSES,
     dungeons: DUNGEONS,
@@ -85,18 +89,20 @@ export async function devHouse(req, res) {
 }
 
 // POST /api/dev/dungeons  { dungeonId, live }
-// Writes DungeonState directly. The admin panel's version calls the provisioner
-// and fails with a 502 when it isn't running, which it never is locally — this
-// is how you get gates onto the themed hub.
+// Toggles a dungeon live ONLY for this account (test mode).
+// Does NOT touch global DungeonState — global releases can only be made in the admin panel.
 export async function devDungeon(req, res) {
   const { dungeonId, live } = req.body
   if (!DUNGEONS.includes(dungeonId)) return res.status(400).json({ error: 'unknown dungeon' })
-  await DungeonState.updateOne(
-    { dungeonId },
-    { $set: { live: !!live, updatedAt: new Date() } },
-    { upsert: true }
-  )
-  return res.json(await snapshot(req.user))
+  const u = req.user
+  if (!Array.isArray(u.testDungeons)) u.testDungeons = []
+  if (live) {
+    if (!u.testDungeons.includes(dungeonId)) u.testDungeons.push(dungeonId)
+  } else {
+    u.testDungeons = u.testDungeons.filter((d) => d !== dungeonId)
+  }
+  await u.save()
+  return res.json(await snapshot(u))
 }
 
 // POST /api/dev/reset
@@ -108,6 +114,7 @@ export async function devReset(req, res) {
   u.introComplete = false
   u.house = null
   u.sorted = false
+  u.testDungeons = []
   await u.save()
   return res.json(await snapshot(u))
 }

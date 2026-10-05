@@ -183,3 +183,29 @@ describe('dynamic per-student intro flags', () => {
       'allow-same-origin would let the demo payload reach the real app')
   })
 })
+
+describe('test-mode dungeon isolation', () => {
+  test('devDungeon does not write to global DungeonState', async () => {
+    const src = await readFile(new URL('../src/controllers/devController.js', import.meta.url), 'utf8')
+    assert.ok(!src.includes('DungeonState.updateOne'), 'devDungeon must not write to DungeonState')
+    assert.ok(src.includes('u.testDungeons'), 'devDungeon must update user testDungeons')
+  })
+
+  test('getProgress combines global live dungeons with user testDungeons', async () => {
+    const src = await readFile(new URL('../src/controllers/flagController.js', import.meta.url), 'utf8')
+    assert.ok(src.includes('req.user?.testDungeons'), 'getProgress must check req.user.testDungeons')
+  })
+
+  test('openLab checks user testDungeons before rejecting sealed dungeons', async () => {
+    const src = await readFile(new URL('../src/controllers/labController.js', import.meta.url), 'utf8')
+    assert.ok(src.includes('req.user?.testDungeons?.includes(dungeonId)'),
+      'openLab must allow test-enabled dungeons for that student')
+  })
+
+  test('capstone checks user testDungeons for per-account arming', async () => {
+    const src = await readFile(new URL('../src/controllers/capstoneController.js', import.meta.url), 'utf8')
+    assert.ok(src.includes("req.user?.testDungeons?.includes('capstone')"),
+      'capstone must allow test-enabled arming for that student')
+  })
+})
+
