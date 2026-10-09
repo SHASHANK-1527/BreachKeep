@@ -9,8 +9,10 @@
 import http from 'http'
 import { readFile, writeFile, mkdir, access } from 'fs/promises'
 import { spawn } from 'child_process'
+import crypto from 'crypto'
+import path from 'path'
 
-const DIR = '/app'
+const DIR = process.env.APP_DIR || (process.platform === 'win32' || !process.env.DOCKER ? path.resolve('labs/secure-coding/app') : '/app')
 const ROOM = process.env.BK_ROOM || ''
 const FLAG = process.env.BK_FLAG || 'BK{dev-secure}'
 
@@ -19,26 +21,62 @@ function send(res, code, obj) {
   res.end(JSON.stringify(obj))
 }
 
-function runHarness() {
+export function runHarness(targetRoom = ROOM, appDir = DIR) {
   return new Promise((resolve) => {
-    // The grader runs as root and holds the flag in its env. The student's
-    // edited code must NOT run as the same uid, or it could read the flag from
-    // /proc/<grader>/environ and print it (harness stdout is returned to them).
-    // So drop the harness to an unprivileged 'runner' uid via setpriv, with no
-    // BK_FLAG anywhere in its environment.
-    const child = spawn('setpriv', [
-      '--reuid', 'runner', '--regid', 'runner', '--clear-groups',
-      'node', `${DIR}/secure-harness.mjs`, ROOM,
-    ], {
-      cwd: DIR,
-      env: { PATH: process.env.PATH, HOME: '/tmp', HARNESS: '1', BK_ROOM: ROOM },
+    const nonce = crypto.randomBytes(16).toString('hex')
+    // Container uses setpriv to drop root privileges to 'runner' uid.
+    // Outside container (or Windows), setpriv is stubbed/skipped.
+    const useSetpriv = !process.env.NO_SETPRIV && process.platform !== 'win32' && !process.env.SKIP_SETPRIV
+    const cmd = useSetpriv ? 'setpriv' : process.execPath
+    const args = useSetpriv
+      ? ['--reuid', 'runner', '--regid', 'runner', '--clear-groups', 'node', `${appDir}/secure-harness.mjs`, targetRoom]
+      : [`${appDir}/secure-harness.mjs`, targetRoom]
+
+    const child = spawn(cmd, args, {
+      cwd: appDir,
+      env: {
+        PATH: process.env.PATH,
+        HOME: process.env.HOME || '/tmp',
+        HARNESS: '1',
+        BK_ROOM: targetRoom,
+        HARNESS_NONCE: nonce,
+        TARGET_SERVER: process.env.TARGET_SERVER || `${appDir}/server.js`,
+      },
     })
     let out = ''
     child.stdout.on('data', (d) => (out += d))
     child.stderr.on('data', (d) => (out += d))
-    child.on('close', (code) => resolve({ code, out }))
-    child.on('error', (e) => resolve({ code: 1, out: String(e.message) }))
+    child.on('close', (code) => resolve({ code, out, nonce }))
+    child.on('error', (e) => resolve({ code: 1, out: String(e.message), nonce }))
   })
+}
+
+export async function evaluateSubmission(content, targetRoom = ROOM, appDir = DIR) {
+  if (content) {
+    await writeFile(`${appDir}/server.js`, content)
+  }
+  const { code, out, nonce } = await runHarness(targetRoom, appDir)
+  let detail = null
+  const lines = out.trim().split('\n').filter(Boolean)
+  for (let i = lines.length - 1; i >= 0; i--) {
+    const line = lines[i]
+    if (line.startsWith('__HARNESS_RESULT__:')) {
+      try {
+        const parsed = JSON.parse(line.slice('__HARNESS_RESULT__:'.length))
+        if (parsed && typeof parsed.pass === 'boolean' && parsed.nonce === nonce) {
+          detail = parsed
+          break
+        }
+      } catch {}
+    }
+  }
+  let pass = false
+  if (!detail || typeof detail.pass !== 'boolean') {
+    detail = { pass: false, reason: 'process exited unexpectedly or forged result' }
+  } else {
+    pass = code === 0 && detail.pass === true
+  }
+  return { pass, detail, output: out.slice(-4000), flag: pass ? FLAG : undefined }
 }
 
 const server = http.createServer(async (req, res) => {
@@ -59,12 +97,8 @@ const server = http.createServer(async (req, res) => {
       let content
       try { content = JSON.parse(body).content } catch { return send(res, 400, { error: 'bad json' }) }
       if (typeof content !== 'string' || !content.trim()) return send(res, 400, { error: 'empty content' })
-      await writeFile(`${DIR}/server.js`, content)
-      const { code, out } = await runHarness()
-      let detail = {}
-      try { detail = JSON.parse(out.trim().split('\n').filter(Boolean).pop()) } catch {}
-      const pass = code === 0
-      return send(res, 200, { pass, detail, output: out.slice(-4000), flag: pass ? FLAG : undefined })
+      const result = await evaluateSubmission(content, ROOM, DIR)
+      return send(res, 200, result)
     }
     send(res, 404, { error: 'not found' })
   } catch (e) {
