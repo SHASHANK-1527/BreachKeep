@@ -126,6 +126,7 @@ seconds — no rebuild, no restart.
 | `docs/ARCHITECTURE.md` | how the frontend is put together |
 | `docs/API.md` | every endpoint, the cookies, the maintenance behaviour |
 | `docs/ROOMS.md` | adding a dungeon room, and the provisioner's open gaps |
+| `docs/challenges/README.md` | deep-dive challenge manuals, environments, solutions, capstone |
 | `infra/deploy/DEPLOY.md` | deploying to a VM |
 
 ## Warning

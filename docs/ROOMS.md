@@ -50,3 +50,8 @@ room can actually be served to a student:
 ⚠️ `labs/web` is deliberately vulnerable. It exists to be exploited. Never run it
 outside the isolated lab network, and never on the host that holds sessions or
 database credentials.
+
+## Challenge Documentation
+Detailed technical specifications, environment constructions, and walkthroughs for all 49 challenge rooms across all dungeons are available in:
+- [docs/challenges/README.md](file:///c:/Users/KIIT/cyber-classes/BreachKeep/docs/challenges/README.md)
+
