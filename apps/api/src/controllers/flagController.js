@@ -14,10 +14,29 @@ import { judgeCapstone, CAPSTONE_ROOM } from '../config/capstone.js'
 // container the student exploits, and is never issued by this API.
 const REVEALABLE_ROOMS = new Set(INTRO_ROOMS)
 
+// Server-side rate limiting: max 6 attempts per 60 seconds per student per room
+const RATE_LIMIT_WINDOW_MS = 60 * 1000
+const MAX_ATTEMPTS_PER_WINDOW = 6
+const submissionHistory = new Map() // key: `${userId}:${roomId}` -> [timestamp, ...]
+
+function isSubmissionRateLimited(userId, roomId) {
+  const key = `${userId}:${roomId}`
+  const now = Date.now()
+  const history = submissionHistory.get(key) || []
+  const windowStart = now - RATE_LIMIT_WINDOW_MS
+  const recent = history.filter((ts) => ts > windowStart)
+  if (recent.length >= MAX_ATTEMPTS_PER_WINDOW) {
+    return true
+  }
+  recent.push(now)
+  submissionHistory.set(key, recent)
+  return false
+}
+
 // GET /api/flags/for-room/:roomId  (session)
 // The caller's own flag for a revealable room. Never another student's: the
 // userId in the HMAC is taken from the session, never from the request.
-export async function getRoomFlag(req, res) {
+export function getRoomFlag(req, res) {
   const { roomId } = req.params
   if (!REVEALABLE_ROOMS.has(roomId)) {
     return res.status(404).json({ error: 'no_flag_for_room' })
@@ -30,11 +49,15 @@ export async function submitFlag(req, res) {
   const { roomId, flag } = req.body
   if (!roomId || !flag) return res.status(400).json({ error: 'roomId and flag required' })
 
-  // Capstone is a shared, admin-spawned target box: the flag is a fixed
-  // value (not a per-student HMAC), and known decoy flags return a
-  // path-aware hint instead of just "wrong".
+  const userId = req.user._id.toString()
+  if (isSubmissionRateLimited(userId, roomId)) {
+    return res.status(429).json({ error: 'Too many flag submission attempts. Please slow down and try again shortly.' })
+  }
+
+  // Capstone target box: supports both fixed CAPSTONE_FLAG and per-student/team
+  // HMAC flags, and known decoy flags return path-aware hints.
   if (roomId === CAPSTONE_ROOM) {
-    const r = judgeCapstone(flag)
+    const r = judgeCapstone(flag, userId)
     if (r.correct) {
       await Progress.updateOne(
         { userId: req.user._id, roomId },
@@ -47,12 +70,7 @@ export async function submitFlag(req, res) {
   }
   const correct = checkFlag(req.user._id.toString(), roomId, flag)
   if (!correct) {
-    if (isDecoyFlag(flag, roomId)) {
-      return res.json({
-        correct: false,
-        hint: "That's a decoy flag! Blind grepping won't work — follow the challenge instructions to find the genuine key."
-      })
-    }
+    // Decoy flags in standard challenge rooms return generic false (no oracle hint)
     return res.json({ correct: false })
   }
   await Progress.updateOne(

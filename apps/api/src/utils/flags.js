@@ -1,4 +1,7 @@
 import crypto from 'crypto'
+import { formatFor, wrapFlag, parseFlag, getDecoyFormats } from '../../../shared/flagFormats.js'
+
+export { formatFor, wrapFlag, parseFlag, getDecoyFormats }
 
 export const ROOM_SLUGS = {
   // Terminal 1
@@ -45,7 +48,7 @@ export const ROOM_SLUGS = {
   'web-idor': '1d0r_p4r4m_t4mp3r',
   'web-sqli': 'un10n_s3l3ct_byp4ss',
   'web-reflected-xss': 'xss_scr1pt_4l3rt',
-  'web-headers': 'c0rs_h34d3r_sp00f',
+  'web-headers': 'trust_no_header',
   'web-stored-xss': 'p3rs1st3nt_p4yl04d',
   'web-chain': 'full_ch41n_3xpl01t',
 
@@ -59,6 +62,9 @@ export const ROOM_SLUGS = {
   'secure-hide-secret': 'k33p_3nv_s3cr3t',
   'secure-full-review': 'c0d3_4ud1t_ch4mp10n',
 
+  // Capstone
+  'capstone-gauntlet': 'capstone_gauntlet',
+
   // Introduction scenes
   'build-tool': 'bld_t00l_f0und',
   'hidden-page': 'h1dd3n_p4g3_sp0tt3d',
@@ -71,8 +77,8 @@ export const ROOM_SLUGS = {
   'phone-call': 's0c14l_3ng1n33r1ng',
 }
 
-// Per-student unforgeable flag (picoCTF style).
-// Format: BK{<room_leetspeak_prefix>_<16_hex_hmac>}
+// Per-student unforgeable flag with format diversification.
+// Format: <prefix><open><slug>_<16_hex_mac><close>
 export function flagFor(userId, roomId) {
   const slug = ROOM_SLUGS[roomId] || String(roomId || 'room').replace(/[^a-zA-Z0-9]/g, '_').toLowerCase()
   const mac = crypto
@@ -80,7 +86,8 @@ export function flagFor(userId, roomId) {
     .update(`${userId}:${roomId}`)
     .digest('hex')
     .slice(0, 16)
-  return `BK{${slug}_${mac}}`
+  const inner = `${slug}_${mac}`
+  return wrapFlag(inner, formatFor(roomId))
 }
 
 export function checkFlag(userId, roomId, submitted) {
@@ -92,15 +99,39 @@ export function checkFlag(userId, roomId, submitted) {
   const b = Buffer.from(sub)
   if (a.length === b.length && crypto.timingSafeEqual(a, b)) return true
 
-  // Legacy fallback: BK{24-hex-mac}
-  const legacyMac = crypto
-    .createHmac('sha256', process.env.FLAG_HMAC_SECRET)
-    .update(`${userId}:${roomId}`)
-    .digest('hex')
-    .slice(0, 24)
-  const legacyExpected = `BK{${legacyMac}}`
-  const la = Buffer.from(legacyExpected)
-  if (la.length === b.length && crypto.timingSafeEqual(la, b)) return true
+  // Migration window compatibility fallback (controlled via FLAG_MIGRATION_COMPAT env var).
+  // Strictly excluded for capstone-gauntlet (BK must stay rejected there).
+  const isMigrationCompat = process.env.FLAG_MIGRATION_COMPAT === '1' || process.env.FLAG_MIGRATION_COMPAT === 'true'
+  if (isMigrationCompat && roomId !== 'capstone-gauntlet') {
+    const slug = ROOM_SLUGS[roomId] || String(roomId || 'room').replace(/[^a-zA-Z0-9]/g, '_').toLowerCase()
+    const mac = crypto
+      .createHmac('sha256', process.env.FLAG_HMAC_SECRET)
+      .update(`${userId}:${roomId}`)
+      .digest('hex')
+      .slice(0, 16)
+
+    // Legacy fallback 1: BK{slug_16mac}
+    const legacySlugExpected = `BK{${slug}_${mac}}`
+    const lsa = Buffer.from(legacySlugExpected)
+    if (lsa.length === b.length && crypto.timingSafeEqual(lsa, b)) return true
+
+    // Legacy fallback 2: BK{24-hex-mac} (pre-slug era)
+    const legacyMac = crypto
+      .createHmac('sha256', process.env.FLAG_HMAC_SECRET)
+      .update(`${userId}:${roomId}`)
+      .digest('hex')
+      .slice(0, 24)
+    const legacyExpected = `BK{${legacyMac}}`
+    const la = Buffer.from(legacyExpected)
+    if (la.length === b.length && crypto.timingSafeEqual(la, b)) return true
+
+    // Hand-reassignment compatibility for terminal-1-pipes: WARD[[slug_16mac]]
+    if (roomId === 'terminal-1-pipes') {
+      const wardPipesExpected = `WARD[[${slug}_${mac}]]`
+      const wpa = Buffer.from(wardPipesExpected)
+      if (wpa.length === b.length && crypto.timingSafeEqual(wpa, b)) return true
+    }
+  }
 
   return false
 }
@@ -108,8 +139,10 @@ export function checkFlag(userId, roomId, submitted) {
 // Identifies decoy flags submitted by students blind-grepping
 export function isDecoyFlag(submitted, roomId) {
   const s = String(submitted || '').trim()
-  if (!s.startsWith('BK{') || !s.endsWith('}')) return false
-  const inner = s.slice(3, -1).toLowerCase()
+  if (!s) return false
+  const parsed = parseFlag(s)
+  const inner = (parsed ? parsed.inner : s.replace(/^[^{[(</|~:]+/, '').replace(/[^a-zA-Z0-9_]/g, '')).toLowerCase()
+
   const decoyKeywords = [
     'decoy', 'fake', 'trap', 'wrong', 'expired', 'stale', 'backup',
     'silver', 'bronze', 'copper', 'platinum', 'too_small', 'not_the',
@@ -117,8 +150,6 @@ export function isDecoyFlag(submitted, roomId) {
     'only_a_backup', 'rotated_out', 'check_the_owner', 'check_the_perms'
   ]
   if (decoyKeywords.some((kw) => inner.includes(kw))) return true
-  // If the submitted flag matches the room's prefix (e.g. BK{g0ld3n_t1ck3t_c4s3_1gn0r3d_...}),
-  // but was already rejected by checkFlag, it was one of the decoy flags planted in that room!
   if (roomId && ROOM_SLUGS[roomId] && inner.startsWith(ROOM_SLUGS[roomId])) {
     return true
   }

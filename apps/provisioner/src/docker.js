@@ -87,7 +87,7 @@ export async function runContainer({ image, name, env = [], caps = [], noNewPriv
 // run it only on an isolated host, never beside secrets or the database.
 const CAP_WEB = process.env.CAPSTONE_WEB_PORT || '8088'
 const CAP_SSH = process.env.CAPSTONE_SSH_PORT || '2222'
-export async function startCapstone() {
+export async function startCapstone(customFlag = null) {
   const name = 'bk_capstone'
   await stopContainer(name)
   const image = 'breachkeep/capstone-gauntlet:latest'
@@ -97,10 +97,14 @@ export async function startCapstone() {
     console.log('[provisioner] building capstone image...')
     await buildImage('capstone', 'capstone-gauntlet', image)
   }
+  const rawFlag = customFlag || process.env.CAPSTONE_FLAG || 'WARD[[dev-capstone-root-flag]]'
+  if (process.env.NODE_ENV === 'production' && rawFlag === 'WARD[[dev-capstone-root-flag]]') {
+    throw new Error('[provisioner] Insecure deployment: CAPSTONE_FLAG must not use dev default in production')
+  }
   const container = await docker.createContainer({
     Image: image,
     name,
-    Env: [`CAPSTONE_FLAG=${process.env.CAPSTONE_FLAG || 'BK{dev-capstone-root-flag}'}`],
+    Env: [`CAPSTONE_FLAG=${rawFlag}`],
     Tty: false,
     ExposedPorts: { '80/tcp': {}, '22/tcp': {} },
     HostConfig: {

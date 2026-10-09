@@ -5,7 +5,7 @@ import { labClient } from '../utils/labClient.js'
 // Which dungeon a room belongs to. Mirrors apps/provisioner/src/dungeons.js.
 // Used to (a) reject unknown rooms and (b) refuse to boot a container for a
 // dungeon the Warden has not made live.
-const DUNGEON_ROOMS = {
+export const DUNGEON_ROOMS = {
   'terminal-1': [
     'terminal-1-first-steps', 'terminal-1-reading', 'terminal-1-hidden',
     'terminal-1-finding', 'terminal-1-grep', 'terminal-1-pipes',
