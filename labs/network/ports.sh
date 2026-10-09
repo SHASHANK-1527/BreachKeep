@@ -3,21 +3,24 @@
 # connect to the right one. Several services listen on localhost; one hands
 # back the flag, the rest are decoys. Find-type.
 set -e
-FLAG="${BK_FLAG:-}"; [ -n "$FLAG" ] || FLAG="BK{dev-ports}"
+FLAG="${BK_FLAG:-}"; [ -n "$FLAG" ] || FLAG="KEY~p0rt_sc4nn3r_n00b_devplaceholder01~"
 S=/home/student
 mkdir -p /opt/net; cp /usr/local/lib/bk/netlib.py /opt/net/netlib.py 2>/dev/null || true
 
 FLAGPORT=$(( (RANDOM % 4000) + 4000 ))
 D1=$(( (RANDOM % 1000) + 2000 )); D2=$(( (RANDOM % 1000) + 3000 )); D3=$(( (RANDOM % 1000) + 8000 ))
+HEX1="$(tr -dc 'a-f0-9' </dev/urandom | head -c16)"
+HEX2="$(tr -dc 'a-f0-9' </dev/urandom | head -c16)"
+HEX3="$(tr -dc 'a-f0-9' </dev/urandom | head -c16)"
 
 cat > /opt/net/server.py <<PY
 import sys; sys.path.insert(0, '/opt/net')
 from netlib import start, hold
 FLAG = """$FLAG"""
 start('127.0.0.1', $FLAGPORT, lambda d: FLAG + "\n")
-start('127.0.0.1', $D1, lambda d: "keep-metrics: ok\n")
-start('127.0.0.1', $D2, lambda d: "keep-health: alive\n")
-start('127.0.0.1', $D3, lambda d: "nothing to see here\n")
+start('127.0.0.1', $D1, lambda d: "KEEP[p0rt_sc4nn3r_n00b_$HEX1]\n")
+start('127.0.0.1', $D2, lambda d: "VAULT<p0rt_sc4nn3r_n00b_$HEX2>\n")
+start('127.0.0.1', $D3, lambda d: "SEAL|p0rt_sc4nn3r_n00b_$HEX3|\n")
 hold()
 PY
 python3 /opt/net/server.py &

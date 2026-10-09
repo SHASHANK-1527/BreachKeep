@@ -2,12 +2,15 @@
 // target. Each web room runs its OWN container with BK_ROOM set to that room, so
 // only the intended vulnerability yields the real flag; the other vulns return a
 // decoy. When BK_ROOM is unset (local dev, or the Secure-Coding harness that
-// imports this app), reward() returns the real flag exactly as before — so
-// nothing about the vulnerabilities or the harness changes.
+// imports this app), reward() returns the real flag exactly as before.
+import { formatFor, wrapFlag, getDecoyFormats } from '../../apps/shared/flagFormats.js'
+
 export const ROOM = process.env.BK_ROOM || ''
-export const FLAG = process.env.BK_FLAG || 'BK{dev-web}'
+const roomFmt = formatFor(ROOM || 'web-recon')
+export const FLAG = process.env.BK_FLAG || wrapFlag('dev_web_flag_placeholder', roomFmt)
 
 export function reward(room) {
   if (!ROOM || ROOM === room) return FLAG
-  return 'BK{wrong-room-keep-looking}'
+  const decoyFmt = getDecoyFormats(ROOM || 'web-recon', 1)[0] || { prefix: 'KEEP', open: '[', close: ']' }
+  return wrapFlag('wrong_room_keep_looking', decoyFmt)
 }

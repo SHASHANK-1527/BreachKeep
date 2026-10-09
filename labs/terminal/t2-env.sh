@@ -2,24 +2,28 @@
 # terminal-2 / env (mandatory): environment variables live in config; read one.
 # Answer guard: student submits the PIN found in the service config.
 set -e
-FLAG="${BK_FLAG:-}"; [ -n "$FLAG" ] || FLAG="BK{dev-env}"
+FLAG="${BK_FLAG:-}"; [ -n "$FLAG" ] || FLAG="KEY~3nv_v4r_s3cr3ts_devplaceholder01~"
 S=/home/student
 PIN=$(tr -dc 'A-Z0-9' </dev/urandom | head -c8)
 
+# Selected fix: Preferred option — daemon process exports SERVICE_PIN in its environment; inspectable via /proc/<pid>/environ or ps eww
 cat > /etc/keepservice.conf <<EOF
 # keepd service configuration
 export SERVICE_NAME=keepd
-export SERVICE_PIN=$PIN
 export SERVICE_MODE=prod
 EOF
 chmod 644 /etc/keepservice.conf
 
-cat > "$S/README.txt" <<'TXT'
-=== Configuration & Secrets ===
-A system daemon stores its operational parameters and authentication credentials
-within configuration files under /etc.
+# Start background daemon as student with SERVICE_PIN in environment
+su -s /bin/bash student -c "env -i SERVICE_NAME=keepd SERVICE_PIN='$PIN' SERVICE_MODE=prod python3 -c 'import time; time.sleep(86400)'" &
 
-Locate the service configuration, discover the service PIN, and submit it:
+cat > "$S/README.txt" <<'TXT'
+=== Environment Variable Secrets ===
+A system daemon (keepd) is running in the background. Its operational parameters
+and secret authentication PIN are stored directly inside its process environment.
+
+Inspect the running processes and their environment variables (e.g. via ps eww or /proc/<pid>/environ)
+to discover the secret SERVICE_PIN, then submit it:
   check <PIN>
 TXT
 chown root:root "$S/README.txt"

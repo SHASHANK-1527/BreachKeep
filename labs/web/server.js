@@ -48,14 +48,14 @@ app.get('/account', (_req, res) => {
 app.get('/admin-panel', (req, res) => {
   if ((req.headers['x-keep-role'] || '') === 'admin')
     return res.type('text/plain').send(`admin panel unlocked. ${reward('headers')}`)
-  res.status(403).type('text/plain').send('forbidden: this panel requires the header  X-Keep-Role: admin')
+  res.status(403).type('text/plain').send("forbidden: this panel trusts a client-supplied signal this application shouldn't trust. Inspect how your request is evaluated.")
 })
 
 // Room 3 — cookie tampering: server trusts the role cookie (VULN)
 app.get('/vault', (req, res) => {
   // VULN: cookie-tamper — trusts client-set role
   if (req.cookies.role === 'admin') return res.send(`Welcome, warden. ${reward('cookie-trust')}`)
-  res.status(403).send('Members only. (role cookie = user)')
+  res.status(403).send('Members only.')
 })
 
 // Room 4 — price tampering: trusts client price (VULN)
@@ -90,16 +90,16 @@ app.post('/portal-8f2c/login', (req, res) => {
 app.get('/search', (req, res) => {
   // VULN: xss — reflects input unescaped
   const q = req.query.q || ''
+  res.cookie('keep_nonce', NONCE, { path: '/', sameSite: 'lax', httpOnly: false })
   res.send(`<h1>Results for ${q}</h1>
-<script>window.KEEP_NONCE=${JSON.stringify(NONCE)}</script>
 <p>No products matched. (reflected search)</p>`)
 })
 
 // Stored XSS — guestbook renders comments unescaped (VULN)
 app.get('/guestbook', (_req, res) => {
   const items = guestbook.map((c) => `<li>${c}</li>`).join('\n')
+  res.cookie('keep_nonce', NONCE, { path: '/', sameSite: 'lax', httpOnly: false })
   res.send(`<h1>Guestbook</h1>
-<script>window.KEEP_NONCE=${JSON.stringify(NONCE)}</script>
 <ul>${items}</ul>
 <form method="POST" action="guestbook"><input name="comment"><button>Post</button></form>`)
 })
@@ -109,11 +109,17 @@ app.post('/guestbook', (req, res) => {
   res.redirect('guestbook')
 })
 
-// XSS callback: a payload that actually executed in the page reads window.KEEP_NONCE
+// XSS callback: a payload that actually executed in the page reads document.cookie / keep_nonce
 // and reports here. /xss-status then reveals that room's flag.
+// TODO(breachkeep-fix): replace Sec-Fetch-Mode check with headless bot verification
 app.get('/xss-report', (req, res) => {
   const room = String(req.query.r || '')
-  if (req.query.nonce !== NONCE) return res.status(400).type('text/plain').send('missing/incorrect page nonce — this must run from the injected page')
+  const secFetchMode = req.headers['sec-fetch-mode']
+  if (!secFetchMode || (secFetchMode !== 'cors' && secFetchMode !== 'no-cors')) {
+    return res.status(403).type('text/plain').send('forbidden: script execution required (Sec-Fetch-Mode header missing or invalid)')
+  }
+  const nonce = req.query.nonce || req.cookies.keep_nonce
+  if (nonce !== NONCE) return res.status(400).type('text/plain').send('missing/incorrect page nonce — this must run from the injected page')
   if (room === 'reflected-xss' || room === 'stored-xss') solved[room] = true
   res.type('text/plain').send('reported')
 })

@@ -6,7 +6,7 @@
 # Only grep -r -i "golden ticket" hits the authentic line.
 set -e
 FLAG="${BK_FLAG:-}"
-[ -n "$FLAG" ] || FLAG="BK{dev-placeholder}"
+[ -n "$FLAG" ] || FLAG="FLAG((g0ld3n_t1ck3t_c4s3_1gn0r3d_devplaceholder01))"
 ROOT=/home/student/docs
 mkdir -p "$ROOT"/a "$ROOT"/b "$ROOT"/c "$ROOT"/b/sub
 rand_hex() { tr -dc 'a-f0-9' </dev/urandom | head -c16; }
@@ -22,7 +22,7 @@ for d in a b c b/sub; do
   done
 done
 
-# Plant 30 decoy flags with fake ticket references across various notes
+# Plant 30 decoy flags with fake ticket references across various notes using distinct formats (never FLAG((...)) or BK{...})
 decoy_labels=(
   "the silver ticket was archived here"
   "the bronze ticket was expired"
@@ -35,11 +35,18 @@ decoy_labels=(
   "gold leaf voucher record"
   "backup ticket confirmation"
 )
+decoy_fmts=(
+  "KEY~g0ld3n_t1ck3t_c4s3_1gn0r3d_%s~"
+  "ARCHIVE::g0ld3n_t1ck3t_c4s3_1gn0r3d_%s::"
+  "SEAL|g0ld3n_t1ck3t_c4s3_1gn0r3d_%s|"
+)
 idx=0
 for d in a b c b/sub; do
   for i in 2 4 6 8 10 12 14 16 18; do
     label="${decoy_labels[$((idx % ${#decoy_labels[@]}))]}"
-    printf '%s -> BK{g0ld3n_t1ck3t_c4s3_1gn0r3d_%s}\n' "$label" "$(rand_hex)" >> "$ROOT/$d/note_${i}.txt"
+    dfmt="${decoy_fmts[$((idx % ${#decoy_fmts[@]}))]}"
+    decoy_val="$(printf "$dfmt" "$(rand_hex)")"
+    printf '%s -> %s\n' "$label" "$decoy_val" >> "$ROOT/$d/note_${i}.txt"
     idx=$((idx + 1))
   done
 done

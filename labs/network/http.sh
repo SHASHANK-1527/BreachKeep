@@ -2,7 +2,7 @@
 # network / http (medium): speak HTTP by hand. The /vault endpoint returns the
 # flag only when the request carries the right header. Find-type.
 set -e
-FLAG="${BK_FLAG:-}"; [ -n "$FLAG" ] || FLAG="BK{dev-http}"
+FLAG="${BK_FLAG:-}"; [ -n "$FLAG" ] || FLAG="KEY~h34d3rs_4nd_m3th0ds_devplaceholder01~"
 S=/home/student
 mkdir -p /opt/net; cp /usr/local/lib/bk/netlib.py /opt/net/netlib.py 2>/dev/null || true
 
@@ -10,9 +10,9 @@ cat > /opt/net/server.py <<PY
 import sys; sys.path.insert(0, '/opt/net')
 from netlib import start, hold
 FLAG = """$FLAG"""
-def http(body, code="200 OK"):
+def http(body, code="200 OK", extra_headers=""):
     return ("HTTP/1.1 %s\r\nContent-Type: text/plain\r\nContent-Length: %d\r\n"
-            "Connection: close\r\n\r\n%s" % (code, len(body), body))
+            "%sConnection: close\r\n\r\n%s" % (code, len(body), extra_headers, body))
 def resp(d):
     req = d.decode('latin1')
     first = req.split('\r\n', 1)[0]
@@ -21,8 +21,9 @@ def resp(d):
     if path.startswith('/vault'):
         if has_hdr:
             return http("vault open. key: " + FLAG + "\n")
-        return http("forbidden: this endpoint needs the header  X-Keep-Access: open\n", "403 Forbidden")
-    return http("Keep HTTP service.\nTry the /vault endpoint — but it will ask for a specific request header.\n")
+        return http("forbidden: this endpoint requires an additional request header. Inspect how the app communicates access requirements (hint: check response headers on other routes, not just /vault).\n", "403 Forbidden")
+    return http("Keep HTTP service.\nTry the /vault endpoint — inspect service response headers for access requirements.\n",
+                "200 OK", "X-Keep-Access-Policy: Header X-Keep-Access with value 'open' required for vault\r\n")
 start('127.0.0.1', 80, resp)
 hold()
 PY

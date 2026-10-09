@@ -2,13 +2,26 @@
 # terminal-2 / suid-audit (medium): list SUID binaries and pick the one that
 # should not be SUID. Answer guard: submit the path of the odd binary.
 set -e
-FLAG="${BK_FLAG:-}"; [ -n "$FLAG" ] || FLAG="BK{dev-suid}"
+FLAG="${BK_FLAG:-}"; [ -n "$FLAG" ] || FLAG="KEEP[su1d_b1n4ry_hunt_devplaceholder01]"
 S=/home/student
 
-# A plausible-but-wrong SUID-root binary planted among the normal ones.
+# A plausible-but-wrong SUID-root binary planted among normal and decoy binaries.
 cp /bin/cp /usr/local/bin/keepbackup 2>/dev/null || cp "$(command -v cp)" /usr/local/bin/keepbackup
 chown root:root /usr/local/bin/keepbackup
-chmod 4755 /usr/local/bin/keepbackup     # setuid root — this is the finding
+chmod 4755 /usr/local/bin/keepbackup     # setuid root (cp copy) — this is the dangerous finding
+
+# Populate /usr/local/bin with 10 non-SUID decoy utilities so ls /usr/local/bin doesn't isolate keepbackup
+for b in keepsync keepmonitor keep-cli keepreport keepcompress keeplog keepstatus keepdiag keepcheck keepupdate; do
+  cp /bin/true /usr/local/bin/"$b" 2>/dev/null || cp "$(command -v true)" /usr/local/bin/"$b"
+  chown root:root /usr/local/bin/"$b"
+  chmod 755 /usr/local/bin/"$b"         # NOT setuid
+done
+
+# Plant an additional harmless SUID binary elsewhere (/opt/tools) to force reasoning about capability
+mkdir -p /opt/tools
+cp /bin/true /opt/tools/keep-healthcheck 2>/dev/null || cp "$(command -v true)" /opt/tools/keep-healthcheck
+chown root:root /opt/tools/keep-healthcheck
+chmod 4755 /opt/tools/keep-healthcheck  # Harmless SUID (copies /bin/true, not exploitable)
 
 cat > "$S/README.txt" <<'TXT'
 === SUID Binary Audit ===

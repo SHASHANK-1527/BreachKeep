@@ -5,17 +5,17 @@
 # files (wrong extension, wrong size, dummy configs).
 set -e
 FLAG="${BK_FLAG:-}"
-[ -n "$FLAG" ] || FLAG="BK{dev-placeholder}"
+[ -n "$FLAG" ] || FLAG="ARCHIVE::f1nd_10k_d4t_sp3c14l1st_devplaceholder01::"
 ROOT=/home/student/pile
 mkdir -p "$ROOT"
 rand_hex() { tr -dc 'a-f0-9' </dev/urandom | head -c16; }
 
 for i in $(seq 1 500); do
   ext=$(shuf -e dat log tmp cfg bin -n1)
-  # Keep almost everything small (<10 KB). A few big NON-.dat files exist as traps.
-  if [ $((RANDOM % 40)) -eq 0 ]; then
-    bytes=$(( (RANDOM % 8000) + 11000 ))   # big (>10k), but wrong extension
-    ext=$(shuf -e log tmp bin -n1)
+  # Generate files with varied sizes, including 15-20 big (>10k) non-.dat files (11-30KB)
+  if [ $((RANDOM % 25)) -eq 0 ]; then
+    bytes=$(( (RANDOM % 19000) + 11000 ))   # big (>10k, 11-30KB), but wrong extension
+    ext=$(shuf -e log tmp bin dat.bak dat.tmp -n1)
   else
     bytes=$(( (RANDOM % 4000) + 100 ))     # small
   fi
@@ -25,14 +25,29 @@ done
 # A few SMALL .dat files (< 10 KB), so ".dat" alone is not enough
 for i in 1 2 3 4 5; do
   head -c 2000 /dev/urandom | base64 | head -c 2000 > "$ROOT/sample_${i}.dat"
-  printf '\nBK{f1nd_10k_d4t_sp3c14l1st_%s}\n' "$(rand_hex)" >> "$ROOT/sample_${i}.dat"
+  printf '\nKEEP[f1nd_10k_d4t_sp3c14l1st_%s]\n' "$(rand_hex)" >> "$ROOT/sample_${i}.dat"
 done
 
-# Plant 35 decoy flags across random files in the pile
+# Big (>10KB) directory and symlink decoys ending in .dat (fails -type f)
+for i in 1 2 3; do
+  mkdir -p "$ROOT/archive_${i}.dat"
+  head -c 15000 /dev/urandom | base64 | head -c 15000 > "$ROOT/archive_${i}.dat/internal.bin"
+  printf '\nFLAG((f1nd_10k_d4t_sp3c14l1st_%s))\n' "$(rand_hex)" >> "$ROOT/archive_${i}.dat/internal.bin"
+done
+ln -s "$ROOT/file_1.log" "$ROOT/symlink_1.dat" 2>/dev/null || true
+ln -s "$ROOT/file_2.log" "$ROOT/symlink_2.dat" 2>/dev/null || true
+
+# Plant 35 decoy flags across random files in the pile using KEEP and FLAG formats (never ARCHIVE or BK)
 for i in $(seq 1 35); do
   target_file="$ROOT/file_$(( (i * 14) + 3 ))."*
   for f in $target_file; do
-    [ -f "$f" ] && printf '\nBK{f1nd_10k_d4t_sp3c14l1st_%s}\n' "$(rand_hex)" >> "$f"
+    if [ -f "$f" ]; then
+      if [ $((i % 2)) -eq 0 ]; then
+        printf '\nKEEP[f1nd_10k_d4t_sp3c14l1st_%s]\n' "$(rand_hex)" >> "$f"
+      else
+        printf '\nFLAG((f1nd_10k_d4t_sp3c14l1st_%s))\n' "$(rand_hex)" >> "$f"
+      fi
+    fi
   done
 done
 

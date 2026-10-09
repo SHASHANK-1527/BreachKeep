@@ -2,7 +2,7 @@
 # network / protocol-id (medium): a capture holds several protocols; identify
 # which one carried a cleartext password. Answer guard: submit the protocol.
 set -e
-FLAG="${BK_FLAG:-}"; [ -n "$FLAG" ] || FLAG="BK{dev-proto}"
+FLAG="${BK_FLAG:-}"; [ -n "$FLAG" ] || FLAG="RUNE/pr0t0c0l_4n4lys1s_devplaceholder01/"
 S=/home/student
 mkdir -p /opt/net; cp /usr/local/lib/bk/mkpcap.py /opt/net/mkpcap.py 2>/dev/null || true
 
@@ -28,15 +28,15 @@ cat > "$S/README.txt" <<'TXT'
 The file traffic.pcap contains captured sessions across multiple standard application protocols.
 One of the communications transmitted sensitive authentication credentials (a password) in plaintext.
 
-Inspect the traffic capture, determine which protocol transmitted the cleartext password,
-and submit the lowercase protocol name:
-  check <protocol>
+Inspect the traffic capture, determine which protocol transmitted the cleartext password
+and the port number on which the connection occurred, and submit both:
+  check <protocol> <port>   (e.g.: check http 80)
 TXT
 chown root:root "$S/README.txt"
 
 mkdir -p /opt/bk && chmod 700 /opt/bk
-printf '%s' "$FLAG" > /opt/bk/flag;  chmod 600 /opt/bk/flag
-printf 'ftp'        > /opt/bk/expected; chmod 600 /opt/bk/expected
+printf '%s' "$FLAG"   > /opt/bk/flag;     chmod 600 /opt/bk/flag
+printf 'ftp 21'        > /opt/bk/expected; chmod 600 /opt/bk/expected
 nohup /usr/local/bin/bkguard >/dev/null 2>&1 &
 
 unset BK_FLAG FLAG

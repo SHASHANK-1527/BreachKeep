@@ -2,11 +2,14 @@
 # network / firewall (medium): read an iptables ruleset and work out which one
 # inbound port is actually allowed through. Answer guard: submit the port.
 set -e
-FLAG="${BK_FLAG:-}"; [ -n "$FLAG" ] || FLAG="BK{dev-fw}"
+FLAG="${BK_FLAG:-}"; [ -n "$FLAG" ] || FLAG="RUNE/f1r3w4ll_byp4ss_r0cks_devplaceholder01/"
 S=/home/student
 
 ALLOW=$(( (RANDOM % 50000) + 2000 ))
+DECOY1=$(( (RANDOM % 50000) + 2000 ))
+DECOY2=$(( (RANDOM % 50000) + 2000 ))
 NOISE1=$(( (RANDOM % 50000) + 2000 )); NOISE2=$(( (RANDOM % 50000) + 2000 ))
+
 mkdir -p /etc/keep
 cat > /etc/keep/rules.v4 <<RULES
 # iptables-save — keepd edge firewall
@@ -18,11 +21,17 @@ cat > /etc/keep/rules.v4 <<RULES
 -A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
 # allow loopback
 -A INPUT -i lo -j ACCEPT
+# decoy rule 1: dropped earlier in chain before ACCEPT (first match drops)
+-A INPUT -p tcp --dport $DECOY1 -j DROP
+-A INPUT -p tcp --dport $DECOY1 -j ACCEPT
 # log-and-drop some probes (these are NOT allowed through)
 -A INPUT -p tcp --dport $NOISE1 -j LOG --log-prefix "probe1 "
 -A INPUT -p tcp --dport $NOISE1 -j DROP
+# decoy rule 2: rejected earlier in chain before ACCEPT
+-A INPUT -p tcp --dport $DECOY2 -j REJECT
+-A INPUT -p tcp --dport $DECOY2 -j ACCEPT
 -A INPUT -p tcp --dport $NOISE2 -j REJECT
-# the ONE service exposed to the world
+# the ONE genuine service allowed through without preceding drops
 -A INPUT -p tcp --dport $ALLOW -j ACCEPT
 COMMIT
 RULES

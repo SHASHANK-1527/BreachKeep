@@ -4,7 +4,7 @@
 # that group, so the lesson is reading `ls -l` + `id` and realising why `cat`
 # works. Find-type (no answer guard) — root sets up, drops to student.
 set -e
-FLAG="${BK_FLAG:-}"; [ -n "$FLAG" ] || FLAG="BK{dev-groups}"
+FLAG="${BK_FLAG:-}"; [ -n "$FLAG" ] || FLAG="ARCHIVE::gr0up_m3mb3rsh1p_devplaceholder01::"
 S=/home/student
 
 groupadd keepers 2>/dev/null || true
@@ -13,9 +13,17 @@ mkdir -p /vault
 printf '%s\n' "$FLAG" > /vault/keyring.txt
 chown root:keepers /vault/keyring.txt; chmod 640 /vault/keyring.txt
 echo "public notice: nothing secret here" > /vault/public.txt; chmod 644 /vault/public.txt
+
+# Decoy readable by the same keepers group to force reasoning about identity and file contents
+cat > /vault/keepers-only.txt <<'EOF'
+# Check your identity with `id` or `groups` to understand why you can read this and keyring.txt.
+KEEP[gr0up_m3mb3rsh1p_decoy_not_the_authentic_key]
+EOF
+chown root:keepers /vault/keepers-only.txt; chmod 640 /vault/keepers-only.txt
+
 # a decoy the student CANNOT read (different group) to make the point
 groupadd wardens 2>/dev/null || true
-echo "BK{wrong-vault}" > /vault/warden-only.txt
+echo "VAULT<wrong_vault_group_forbidden>" > /vault/warden-only.txt
 chown root:wardens /vault/warden-only.txt; chmod 640 /vault/warden-only.txt
 
 cat > "$S/README.txt" <<'TXT'
