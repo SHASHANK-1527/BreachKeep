@@ -1,5 +1,5 @@
 import crypto from 'crypto'
-import { formatFor, wrapFlag, parseFlag, getDecoyFormats } from '../../../shared/flagFormats.js'
+import { formatFor, wrapFlag, parseFlag, getDecoyFormats } from './flagFormats.js'
 
 export { formatFor, wrapFlag, parseFlag, getDecoyFormats }
 

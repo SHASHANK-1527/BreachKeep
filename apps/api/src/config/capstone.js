@@ -1,4 +1,4 @@
-import { formatFor, wrapFlag } from '../../../shared/flagFormats.js'
+import { formatFor, wrapFlag } from '../utils/flagFormats.js'
 import { checkFlag } from '../utils/flags.js'
 
 export const CAPSTONE_ROOM = 'capstone-gauntlet'

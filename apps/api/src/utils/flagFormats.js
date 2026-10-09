@@ -1,8 +1,6 @@
-// Per-room flag gating for the Trading Post when it is used as a Web Dungeon
-// target. Each web room runs its OWN container with BK_ROOM set to that room, so
-// only the intended vulnerability yields the real flag; the other vulns return a
-// decoy. When BK_ROOM is unset (local dev, or the Secure-Coding harness that
-// imports this app), reward() returns the real flag exactly as before.
+// Flag format diversification registry for BreachKeep
+// Provides distinct (prefix, open, close) formats across challenge rooms
+// and ensures decoy flags never reuse a room's assigned format.
 
 export const FLAG_FORMATS = [
   { prefix: 'BK', open: '{', close: '}' },
@@ -17,20 +15,32 @@ export const FLAG_FORMATS = [
   { prefix: 'CIPHER', open: '<<', close: '>>' },
 ]
 
+const INTRO_ROOMS = [
+  'build-tool', 'hidden-page', 'guestbook', 'coffee-shop-wifi',
+  'encoded-memo', 'support-form', 'somebodys-invoice',
+  'dotdotdot-folder', 'phone-call',
+]
+
 export function getFormatIndex(roomId) {
+  // Explicit override: capstone-gauntlet root flag must never resolve to BK{} (index 0)
+  // and is assigned WARD[[...]] (index 8).
   if (roomId === 'capstone-gauntlet') return 8
+  if (INTRO_ROOMS.includes(roomId)) return 0
   let hash = 0
   const str = String(roomId || '')
   for (let i = 0; i < str.length; i++) {
     hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0
   }
   let idx = Math.abs(hash) % FLAG_FORMATS.length
+  // Reserve index 8 exclusively for capstone-gauntlet
   if (idx === 8) idx = 1
   return idx
 }
 
 export function formatFor(roomId) {
-  if (roomId === 'capstone-gauntlet') return { ...FLAG_FORMATS[8], index: 8 }
+  if (roomId === 'capstone-gauntlet') {
+    return { ...FLAG_FORMATS[8], index: 8 }
+  }
   const index = getFormatIndex(roomId)
   return { ...FLAG_FORMATS[index], index }
 }
@@ -40,10 +50,12 @@ export function wrapFlag(inner, format) {
   return `${f.prefix}${f.open}${inner}${f.close}`
 }
 
+// Return `count` distinct formats from the pool excluding the room's assigned format
+// and ensuring capstone decoys never use index 0 (BK{}) or index 8 (WARD[[]]).
 export function getDecoyFormats(roomId, count = 3) {
   const assignedIndex = getFormatIndex(roomId)
   const available = FLAG_FORMATS.map((fmt, index) => ({ ...fmt, index })).filter(
-    (fmt) => fmt.index !== assignedIndex
+    (fmt) => fmt.index !== assignedIndex && (roomId !== 'capstone-gauntlet' || fmt.index !== 0)
   )
   const decoys = []
   let seed = 42
@@ -57,12 +69,20 @@ export function getDecoyFormats(roomId, count = 3) {
   return decoys
 }
 
-export const ROOM = process.env.BK_ROOM || ''
-const roomFmt = formatFor(ROOM || 'web-recon')
-export const FLAG = process.env.BK_FLAG || wrapFlag('dev_web_flag_placeholder', roomFmt)
-
-export function reward(room) {
-  if (!ROOM || ROOM === room) return FLAG
-  const decoyFmt = getDecoyFormats(ROOM || 'web-recon', 1)[0] || { prefix: 'KEEP', open: '[', close: ']' }
-  return wrapFlag('wrong_room_keep_looking', decoyFmt)
+export function parseFlag(candidate) {
+  if (!candidate || typeof candidate !== 'string') return null
+  const trimmed = candidate.trim()
+  for (const fmt of FLAG_FORMATS) {
+    if (trimmed.startsWith(fmt.prefix + fmt.open) && trimmed.endsWith(fmt.close)) {
+      const start = fmt.prefix.length + fmt.open.length
+      const end = trimmed.length - fmt.close.length
+      if (end >= start) {
+        return {
+          inner: trimmed.slice(start, end),
+          format: fmt,
+        }
+      }
+    }
+  }
+  return null
 }
