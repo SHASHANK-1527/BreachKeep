@@ -27,12 +27,22 @@ const NONCE = crypto.randomBytes(6).toString('hex')  // embedded in pages; the
 // (without rendering the page) is not the intended path.
 const guestbook = []              // stored comments (rendered unescaped)
 
-// Room 1 — recon: robots discloses paths that should have stayed quiet
+// Room 1 — recon: robots and sitemap disclose site navigation structure
 app.get('/robots.txt', (_req, res) =>
-  res.type('text/plain').send('User-agent: *\nDisallow: /portal-8f2c/\nDisallow: /keep-backup/\nDisallow: /keep-admin/'))
+  res.type('text/plain').send('User-agent: *\nDisallow: /portal-8f2c/\nDisallow: /keep-backup/\nDisallow: /keep-admin/\n\nSitemap: /sitemap.xml\n'))
+
+app.get('/sitemap.xml', (_req, res) =>
+  res.type('application/xml').send(`<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>/</loc></url>
+  <url><loc>/account</loc></url>
+  <url><loc>/vault</loc></url>
+  <url><loc>/search</loc></url>
+  <url><loc>/guestbook</loc></url>
+</urlset>`))
 
 app.get('/', (_req, res) => res.send(
-  `<!-- hint: try /robots.txt --><h1>Trading Post</h1><p>Welcome. Nothing to see on the front page.</p>`))
+  `<!-- hint: check /robots.txt and /sitemap.xml --><h1>Trading Post</h1><p>Welcome to the Trading Post. Check our <a href="/sitemap.xml">sitemap.xml</a> for our public directory index.</p>`))
 
 // Room: recon — the "hidden" path from robots.txt
 app.get('/keep-backup', (_req, res) =>
