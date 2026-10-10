@@ -59,7 +59,7 @@ export async function openLab(req, res) {
     const url = token ? `${r.url}?token=${token}` : r.url
     // r.url is /labs/<name>; the same container's web app (web rooms) is at /app/<name>.
     const name = String(r.url || '').replace(/^\/labs\//, '')
-    const appUrl = name ? (token ? `/app/${name}?token=${token}` : `/app/${name}`) : null
+    const appUrl = name ? (token ? `/app/${name}/?token=${token}` : `/app/${name}/`) : null
     // name + token let the secure-coding editor call the room's grader at
     // /app/<name>/files and /app/<name>/save with the per-session token.
     return res.json({ url, appUrl, name, token })

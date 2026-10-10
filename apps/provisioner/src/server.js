@@ -78,6 +78,11 @@ app.use((req, res, next) => {
   registry.touchByName(name)
   if (route.strip) {
     const p = `/${route.prefix}/${name}`
+    req.headers['x-forwarded-prefix'] = p
+    if (req.path === p) {
+      const q = req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : ''
+      return res.redirect(302, `${p}/${q}`)
+    }
     if (req.url.startsWith(p)) req.url = req.url.slice(p.length) || '/'
   }
   proxy.web(req, res, { target: `http://${name}:${route.port}` })

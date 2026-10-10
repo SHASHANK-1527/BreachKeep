@@ -22,14 +22,73 @@ const guestbook = [
   'Watch your coin pouches around the lower bailey. — Scout Dylan'
 ]
 
+function getPrefix(req) {
+  if (!req) return ''
+  // 1. From X-Forwarded-Prefix header set by provisioner proxy
+  const xfp = req.headers && req.headers['x-forwarded-prefix']
+  if (xfp) return xfp.replace(/\/+$/, '')
+
+  // 2. From Referer header (e.g. https://.../app/bk_xyz/...)
+  const referer = req.headers && req.headers['referer']
+  if (referer) {
+    try {
+      const u = new URL(referer)
+      const m = u.pathname.match(/^(\/app\/[A-Za-z0-9_]+)/)
+      if (m) return m[1]
+    } catch {}
+  }
+
+  // 3. From bk_ cookie set by provisioner
+  if (req.cookies) {
+    const bkCookie = Object.keys(req.cookies).find(k => k.startsWith('bk_'))
+    if (bkCookie) {
+      const name = bkCookie.replace(/^bk_/, '')
+      return `/app/${name}`
+    }
+  }
+
+  return ''
+}
+
+// Request-scoped storage so page(...) always knows the current request prefix
+let currentReq = null
+
+app.use((req, res, next) => {
+  currentReq = req
+  const prefix = getPrefix(req)
+  res.locals.prefix = prefix
+  const origRedirect = res.redirect.bind(res)
+  res.redirect = (url) => {
+    if (prefix && typeof url === 'string' && url.startsWith('/') && !url.startsWith('//') && !url.startsWith(prefix)) {
+      return origRedirect(`${prefix}${url}`)
+    }
+    return origRedirect(url)
+  }
+  next()
+})
+
 // HTML Page Wrapper with medieval / cyber theme
-function page(title, bodyContent) {
+function page(title, bodyContent, req = null) {
+  const prefix = getPrefix(req || currentReq)
+  let transformedContent = bodyContent
+
+  if (prefix) {
+    // Rewrite root-relative actions, links, and fetch calls to preserve proxy prefix
+    transformedContent = transformedContent
+      .replace(/action="\/(?!\/)/g, `action="${prefix}/`)
+      .replace(/href="\/(?!\/)/g, `href="${prefix}/`)
+      .replace(/fetch\('\/(?!\/)/g, `fetch('${prefix}/`)
+      .replace(/fetch\("\/(?!\/)/g, `fetch("${prefix}/`)
+  }
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${title} | The Citadel Trading Post</title>
+  <base href="${prefix ? prefix + '/' : '/'}">
+  <script>window.BASE_PATH = "${prefix}";</script>
   <!-- hint: check /robots.txt and /sitemap.xml -->
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -184,32 +243,32 @@ function page(title, bodyContent) {
 </head>
 <body>
   <nav class="tp-navbar">
-    <a href="/" class="tp-brand">⚔️ The Trading Post</a>
+    <a href="${prefix}/" class="tp-brand">⚔️ The Trading Post</a>
     <div class="tp-nav-links">
-      <a href="/">🏪 Catalog</a>
-      <a href="/account">👤 Account</a>
-      <a href="/vault">🏛️ Vault</a>
-      <a href="/orders">📦 Order Lookup</a>
-      <a href="/guestbook">📜 Guestbook</a>
-      <a href="/portal-8f2c/login">🔐 Portal</a>
+      <a href="${prefix}/">🏪 Catalog</a>
+      <a href="${prefix}/account">👤 Account</a>
+      <a href="${prefix}/vault">🏛️ Vault</a>
+      <a href="${prefix}/orders">📦 Order Lookup</a>
+      <a href="${prefix}/guestbook">📜 Guestbook</a>
+      <a href="${prefix}/portal-8f2c/login">🔐 Portal</a>
     </div>
-    <form action="/search" method="GET" class="tp-search-form">
+    <form action="${prefix}/search" method="GET" class="tp-search-form">
       <input type="text" name="q" class="tp-input" placeholder="Search catalog..." />
       <button type="submit" class="tp-btn">Search</button>
     </form>
   </nav>
 
   <main class="tp-container">
-    ${bodyContent}
+    ${transformedContent}
   </main>
 
   <footer class="tp-footer">
     <p>Citadel Trading Post v2.4 &middot; Port 8080</p>
     <p style="margin-top: 0.5rem;">
-      <a href="/sitemap.xml">Sitemap (XML)</a> &bull;
-      <a href="/robots.txt">Robots.txt</a> &bull;
-      <a href="/account">Account Headers</a> &bull;
-      <a href="/orders">Orders</a>
+      <a href="${prefix}/sitemap.xml">Sitemap (XML)</a> &bull;
+      <a href="${prefix}/robots.txt">Robots.txt</a> &bull;
+      <a href="${prefix}/account">Account Headers</a> &bull;
+      <a href="${prefix}/orders">Orders</a>
     </p>
   </footer>
 </body>
@@ -217,19 +276,23 @@ function page(title, bodyContent) {
 }
 
 // Room 1 — recon: robots and sitemap disclose site navigation structure
-app.get('/robots.txt', (_req, res) =>
-  res.type('text/plain').send('User-agent: *\nDisallow: /portal-8f2c/\nDisallow: /keep-backup/\nDisallow: /keep-admin/\n\nSitemap: /sitemap.xml\n'))
+app.get('/robots.txt', (req, res) => {
+  const p = getPrefix(req)
+  res.type('text/plain').send(`User-agent: *\nDisallow: ${p}/portal-8f2c/\nDisallow: ${p}/keep-backup/\nDisallow: ${p}/keep-admin/\n\nSitemap: ${p}/sitemap.xml\n`)
+})
 
-app.get('/sitemap.xml', (_req, res) =>
+app.get('/sitemap.xml', (req, res) => {
+  const p = getPrefix(req)
   res.type('application/xml').send(`<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>/</loc></url>
-  <url><loc>/account</loc></url>
-  <url><loc>/vault</loc></url>
-  <url><loc>/orders</loc></url>
-  <url><loc>/search</loc></url>
-  <url><loc>/guestbook</loc></url>
-</urlset>`))
+  <url><loc>${p}/</loc></url>
+  <url><loc>${p}/account</loc></url>
+  <url><loc>${p}/vault</loc></url>
+  <url><loc>${p}/orders</loc></url>
+  <url><loc>${p}/search</loc></url>
+  <url><loc>${p}/guestbook</loc></url>
+</urlset>`)
+})
 
 // Room: recon — the storefront catalog (Room 4 checkout source + Room 1 discovery anchor)
 app.get('/', (_req, res) => {
