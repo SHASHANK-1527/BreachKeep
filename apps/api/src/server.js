@@ -136,9 +136,15 @@ async function start() {
 
   // Auto-verify any existing accounts that were blocked by dynamic DNS email delivery issues
   try {
-    const updated = await User.updateMany({ verified: { $ne: true } }, { $set: { verified: true } })
+    const updated = await User.updateMany({ verified: false }, { $set: { verified: true } })
     if (updated.modifiedCount > 0) {
       console.log(`[auth] Auto-verified ${updated.modifiedCount} unverified accounts in database`)
+    }
+    const cfg = await AccessConfig.get()
+    if (cfg.dailyCodeEnabled !== false) {
+      cfg.dailyCodeEnabled = false
+      await cfg.save()
+      console.log('[auth] Set AccessConfig dailyCodeEnabled to false')
     }
   } catch (err) {
     console.warn('[auth] Auto-verify check skipped:', err.message)
