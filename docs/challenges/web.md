@@ -187,13 +187,20 @@ The application relies on the client to calculate and submit item pricing.
 - Principles of server-side data validation.
 
 ### 5.3 Intended Path of Solving
-1. Submit a checkout request with a tampered non-positive price:
-   ```bash
-   curl -X POST -d "price=0" http://localhost:8080/checkout
-   # OR
-   curl -X POST -d "price=-10" http://localhost:8080/checkout
-   ```
-2. Server responds: `Free order accepted. BK{cl13nt_s1d3_byp4ss_...}`.
+1. **Storefront Inspection Method (Browser)**:
+   - Navigate to the storefront catalog at `http://localhost:8080/`.
+   - Attempting to purchase the *Grand Citadel Flag Key* (9,999 Gold) fails with insufficient funds.
+   - Inspect the purchase button (DevTools Elements tab) to find `<input type="hidden" name="price" value="9999">`.
+   - Modify `value="0"` directly in the DOM and click "Purchase" to complete the transaction and reveal the flag.
+2. **Terminal / Proxy Method (curl / Burp)**:
+   - Observe the checkout request sent to `/checkout`.
+   - Replay with a non-positive price:
+     ```bash
+     curl -X POST -d "price=0" -d "item=Grand Citadel Flag Key" http://localhost:8080/checkout
+     # OR
+     curl -X POST -d "price=0" http://localhost:8080/checkout
+     ```
+   - Server responds: `Free order accepted. BK{cl13nt_s1d3_byp4ss_...}`.
 3. Submit the flag.
 
 ---
