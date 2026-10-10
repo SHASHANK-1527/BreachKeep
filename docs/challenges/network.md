@@ -54,7 +54,7 @@ All containers in this dungeon start with `NET_CAPS = ['CHOWN', 'DAC_OVERRIDE', 
 - **Source Files**: [`labs/network/Dockerfile.network-scan`](file:///c:/Users/KIIT/cyber-classes/BreachKeep/labs/network/Dockerfile.network-scan), [`labs/network/scan.sh`](file:///c:/Users/KIIT/cyber-classes/BreachKeep/labs/network/scan.sh)
 
 ### 2.1 Environment Construction & Challenge Creation
-- **Target Topology**: Target host runs on isolated network namespace at `target.keep` (`10.200.1.2`).
+- **Target Topology**: Target host runs at `target.keep` (`127.0.0.2`).
 - **Target Services**:
   - Vault Port (`KEEP`, between 6000 and 8999): Responds with `keep-vault: BK{...}\n`.
   - Noise Ports: Port A (echo-service), Port B (time-service), Port C (quote-service).
@@ -66,18 +66,20 @@ All containers in this dungeon start with `NET_CAPS = ['CHOWN', 'DAC_OVERRIDE', 
 - Using unprivileged TCP connect scans (`nmap -sT`).
 
 ### 2.3 Flag Location & Mechanics
-- **Location**: Listening on `target.keep:<KEEP>` (`10.200.1.2:<KEEP>`).
+- **Location**: Listening on `target.keep:<KEEP>` (`127.0.0.2:<KEEP>`).
 
 ### 2.4 Intended Path of Solving
 1. Scan the remote target across the extended port range:
    ```bash
-   nmap -sT -p 1-10000 target.keep
+   nmap -sT -p 1-10000 127.0.0.2
    # OR
-   nmap -sT -p 1-10000 10.200.1.2
+   nmap -sT -p 1-10000 target.keep
    ```
    *(Reveals open ports, e.g., 1420, 2850, 4710, 7842)*
 2. Connect to the open ports with `nc` to identify the services:
    ```bash
+   nc 127.0.0.2 7842
+   # OR
    nc target.keep 7842
    ```
    *(Returns: `keep-vault: BK{nm4p_sw33p_m4st3r_...}`)*

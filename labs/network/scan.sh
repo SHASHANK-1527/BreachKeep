@@ -10,18 +10,7 @@ mkdir -p /opt/net; cp /usr/local/lib/bk/netlib.py /opt/net/netlib.py 2>/dev/null
 KEEP=$(( (RANDOM % 3000) + 6000 ))
 A=$(( (RANDOM % 500) + 1200 )); B=$(( (RANDOM % 500) + 2500 )); C=$(( (RANDOM % 500) + 4500 ))
 
-TARGET_IP="10.200.1.2"
-USE_NETNS=0
-if ip netns add target 2>/dev/null; then
-  USE_NETNS=1
-  ip link add veth0 type veth peer name veth1
-  ip link set veth1 netns target
-  ip addr add 10.200.1.1/24 dev veth0
-  ip link set veth0 up
-  ip netns exec target ip addr add 10.200.1.2/24 dev veth1
-  ip netns exec target ip link set veth1 up
-  ip netns exec target ip link set lo up
-fi
+TARGET_IP="127.0.0.2"
 echo "$TARGET_IP target.keep" >> /etc/hosts
 
 cat > /opt/net/server.py <<PY
@@ -35,20 +24,15 @@ start('$TARGET_IP', $C, lambda d: "quote-service: stay curious\n")
 hold()
 PY
 
-if [ "$USE_NETNS" -eq 1 ]; then
-  ip netns exec target python3 /opt/net/server.py &
-else
-  ip addr add "$TARGET_IP/32" dev lo 2>/dev/null || true
-  python3 /opt/net/server.py &
-fi
+python3 /opt/net/server.py &
 
 cat > "$S/README.txt" <<'TXT'
 === Remote Host Reconnaissance ===
-A remote target host is active on the lab network at target.keep (10.200.1.2).
+A target host is active on the lab network at target.keep (127.0.0.2).
 Multiple non-standard ports are bound to various services, one of which
 houses the vault service.
 
-Scan the target host across port range 1-10000 (e.g. nmap -sT -p 1-10000 target.keep),
+Scan the target host across port range 1-10000 (e.g. nmap -sT -p 1-10000 target.keep or 127.0.0.2),
 inspect responding services, and recover the flag from the vault service.
 TXT
 chown root:root "$S/README.txt"
