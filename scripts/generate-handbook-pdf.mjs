@@ -2,6 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import { execSync } from 'child_process'
 import { fileURLToPath } from 'url'
+import { solutions } from './handbook-solutions.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const rootDir = path.resolve(__dirname, '..')
@@ -1638,6 +1639,74 @@ function buildHtml() {
   }
   .question-box strong { color: #6d28d9; }
 
+  /* Solution Callouts */
+  .solution-box {
+    background: #f0fdf4;
+    border-left: 4px solid #16a34a;
+    color: #14532d;
+    margin-top: 1.5rem;
+    padding: 1.25rem 1.4rem;
+  }
+  .solution-box strong { color: #15803d; }
+  .solution-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.8rem;
+    border-bottom: 1px solid #bbf7d0;
+    padding-bottom: 0.5rem;
+  }
+  .solution-badge {
+    background: #16a34a;
+    color: #ffffff;
+    font-size: 7.5pt;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    padding: 2px 7px;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+  .solution-box h5 {
+    margin: 1.1rem 0 0.4rem 0;
+    color: #166534;
+    font-size: 10pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .solution-box ol {
+    margin: 0.4rem 0 0.8rem 1.2rem;
+    padding-left: 0;
+  }
+  .solution-box ol li {
+    margin-bottom: 0.45rem;
+    line-height: 1.5;
+  }
+  .cmd-breakdown {
+    background: #ffffff;
+    border: 1px solid #bbf7d0;
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    margin-top: 0.4rem;
+    margin-bottom: 0.9rem;
+    color: #1e293b;
+    font-size: 9pt;
+  }
+  .cmd-breakdown strong {
+    color: #0f766e;
+    display: block;
+    margin-bottom: 0.4rem;
+    font-size: 9pt;
+  }
+  .cmd-breakdown ul {
+    margin: 0;
+    padding-left: 1.2rem;
+  }
+  .cmd-breakdown li {
+    margin-bottom: 0.35rem;
+    line-height: 1.45;
+  }
+
   /* Code Formatting */
   pre, code {
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -1834,6 +1903,39 @@ ${ch.introduction}
 
   <h4>The Investigator's Playbook: How to Explore & Verify</h4>
   <div>${challenge.playbook}</div>
+${(() => {
+  const sol = solutions[challenge.id] || solutions[challenge.slug]
+  if (!sol) return ''
+  const cmdsHtml = sol.commands.map(c => `
+    <pre><code>${c.code}</code></pre>
+    <div class="cmd-breakdown">
+      <strong>Command & Parameter Breakdown:</strong>
+      <ul>
+        ${c.flags.map(f => `<li><code>${f.flag}</code>: ${f.explanation}</li>`).join('')}
+      </ul>
+    </div>
+  `).join('')
+  return `
+  <div class="callout solution-box">
+    <div class="solution-header">
+      <span class="solution-badge">OFFICIAL LAB SOLUTION</span>
+      <strong>Step-by-Step Solution & Flag Capture Walkthrough</strong>
+    </div>
+    <p><strong>Mission Objective:</strong> ${sol.objective}</p>
+
+    <h5>1. Step-by-Step Procedure:</h5>
+    <ol>
+      ${sol.steps.map(s => `<li>${s}</li>`).join('')}
+    </ol>
+
+    <h5>2. Commands to Execute & Flags Breakdown:</h5>
+    ${cmdsHtml}
+
+    <h5>3. Expected Output & Flag Verification:</h5>
+    <pre><code>${sol.output}</code></pre>
+    <p><strong>Flag Submission:</strong> ${sol.flagNote}</p>
+  </div>`
+})()}
 
   <div class="callout defense-rule">
     <strong>Defensive Engineering & Root-Cause Remediation:</strong><br>
@@ -1869,9 +1971,8 @@ console.log('Comprehensive HTML handbook generated at:', htmlPath)
 
 console.log('Rendering high-resolution PDF via Microsoft Edge headless...')
 const edgePath = "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe"
-
 try {
-  execSync(`"${edgePath}" --headless --disable-gpu --run-all-compositor-stages-before-draw --print-to-pdf="${pdfPath}" "${htmlPath}"`)
+  execSync(`"${edgePath}" --headless --disable-gpu --no-pdf-header-footer --print-to-pdf="${pdfPath}" "${htmlPath}"`, { timeout: 180000 })
   if (fs.existsSync(pdfPath)) {
     const stats = fs.statSync(pdfPath)
     console.log(`SUCCESS! High-resolution PDF compiled at ${pdfPath} (${stats.size} bytes)`)
@@ -1879,7 +1980,7 @@ try {
     console.error('PDF file was not created.')
   }
 } catch (e) {
-  console.error('Error rendering PDF with Edge:', e)
+  console.error('Error rendering PDF with Edge:', e.message || e)
 }
 
 // Update the ZIP archive bundle automatically
@@ -1893,6 +1994,7 @@ fs.copyFileSync(htmlPath, path.join(stagingDir, 'BreachKeep_Student_Handbook.htm
 const scriptsStaging = path.join(stagingDir, 'scripts')
 fs.mkdirSync(scriptsStaging, { recursive: true })
 fs.copyFileSync(path.join(rootDir, 'scripts', 'generate-handbook-pdf.mjs'), path.join(scriptsStaging, 'generate-handbook-pdf.mjs'))
+fs.copyFileSync(path.join(rootDir, 'scripts', 'handbook-solutions.mjs'), path.join(scriptsStaging, 'handbook-solutions.mjs'))
 
 const readmeContent = `# The Defender's Compass: BreachKeep Student Cybersecurity Teaching Handbook
 
