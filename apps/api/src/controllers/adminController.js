@@ -58,7 +58,7 @@ export async function adminState(req, res) {
 
   return res.json({
     commonCodeEnabled: cfg.commonCodeEnabled,
-    dailyCodeEnabled: cfg.dailyCodeEnabled !== false,
+    dailyCodeEnabled: !!cfg.dailyCodeEnabled,
     rosterGateEnabled: cfg.rosterGateEnabled,
     maintenance: !!cfg.maintenance,
     capstoneArmed: !!cfg.capstoneArmed,

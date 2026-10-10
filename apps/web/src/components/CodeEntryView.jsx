@@ -49,7 +49,7 @@ export default function CodeEntryView({ onSuccess }) {
           <input
             type="text"
             className="bk-code-input"
-            placeholder="Enter your code"
+            placeholder="Enter access code or email"
             value={code}
             onChange={(e) => setCode(e.target.value)}
             autoFocus
@@ -58,6 +58,18 @@ export default function CodeEntryView({ onSuccess }) {
           <div>
             <button type="submit" className="bk-code-btn" disabled={busy}>
               {busy ? 'Verifying…' : 'Next'}
+            </button>
+          </div>
+          <div style={{ marginTop: '1rem' }}>
+            <button
+              type="button"
+              className="bk-creds-toggle"
+              onClick={() => {
+                sessionStorage.setItem('bk_has_access', 'true')
+                window.location.assign('/enter')
+              }}
+            >
+              Already have an account? Sign In
             </button>
           </div>
         </form>

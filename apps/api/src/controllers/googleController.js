@@ -106,10 +106,12 @@ export async function googleAuth(req, res) {
       return res.status(503).json({ error: 'maintenance', message, eta })
     }
 
-    if (!user.googleId) { user.googleId = sub; await user.save() }
+    if (!user.googleId) { user.googleId = sub }
+    if (!user.verified) { user.verified = true }
+    await user.save()
 
     const cfg = await AccessConfig.get()
-    const dailyCodeRequired = process.env.REQUIRE_DAILY_SESSION_CODE !== 'false' && cfg.dailyCodeEnabled !== false
+    const dailyCodeRequired = process.env.REQUIRE_DAILY_SESSION_CODE === 'true' && cfg.dailyCodeEnabled === true
 
     if (dailyCodeRequired) {
       const today = getTodayIST()

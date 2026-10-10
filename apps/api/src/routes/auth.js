@@ -17,7 +17,7 @@ r.post('/verify-access-code', authLimiter, verifyAccessCode)
 r.post('/signup', requireGate('register'), authLimiter, signup)
 r.post('/verify', requireGate('register'), authLimiter, verify)
 r.post('/login', authLimiter, login)
-r.post('/google', requireGate(), authLimiter, googleAuth) // mode checked inside controller
+r.post('/google', authLimiter, googleAuth)
 
 r.get('/me', requireAuth, me)
 r.post('/logout', requireAuth, logout)

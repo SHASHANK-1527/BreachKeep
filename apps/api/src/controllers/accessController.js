@@ -29,10 +29,17 @@ export async function verifyAccessCode(req, res) {
     return res.json({ ok: true, next: '/enter' })
   }
 
-  // 3. a personal daily code -> session mode
+  // 3. if an existing student email is entered -> allow access to /enter
+  const existingUser = await User.findOne({ email: code.trim().toLowerCase() })
+  if (existingUser) {
+    setGate(res, { mode: 'session' })
+    return res.json({ ok: true, next: '/enter' })
+  }
+
+  // 4. a personal daily code -> session mode
   // mongoose.trusted(): server.js enables sanitizeFilter, which would otherwise
   // turn this operator into a literal match and silently break the query.
-  const user = await User.findOne({ sessionCode: code, sessionCodeExpires: mongoose.trusted({ $gt: new Date() }) })
+  const user = await User.findOne({ sessionCode: code.trim().toUpperCase(), sessionCodeExpires: mongoose.trusted({ $gt: new Date() }) })
   if (user) {
     setGate(res, { mode: 'session', code })
     return res.json({ ok: true, next: '/enter' })

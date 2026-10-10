@@ -133,6 +133,17 @@ async function start() {
   await mongoose.connect(process.env.MONGODB_URI)
   console.log('[db] connected')
   announceTestMode()
+
+  // Auto-verify any existing accounts that were blocked by dynamic DNS email delivery issues
+  try {
+    const updated = await User.updateMany({ verified: { $ne: true } }, { $set: { verified: true } })
+    if (updated.modifiedCount > 0) {
+      console.log(`[auth] Auto-verified ${updated.modifiedCount} unverified accounts in database`)
+    }
+  } catch (err) {
+    console.warn('[auth] Auto-verify check skipped:', err.message)
+  }
+
   startDailyCodeJob()
   app.listen(env.port, () => console.log(`[api] listening on :${env.port}`))
 }

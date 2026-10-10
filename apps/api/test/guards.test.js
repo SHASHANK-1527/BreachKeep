@@ -209,3 +209,22 @@ describe('test-mode dungeon isolation', () => {
   })
 })
 
+describe('daily session code and verification bypass', () => {
+  test('login does not block unverified accounts or require daily session code by default', async () => {
+    const src = await readFile(new URL('../src/controllers/authController.js', import.meta.url), 'utf8')
+    assert.ok(!src.includes("if (!user.verified) return res.status(403)"), 'login must not reject unverified users before password match')
+    assert.ok(src.includes("REQUIRE_DAILY_SESSION_CODE === 'true'"), 'daily code requirement must be opt-in, disabled by default')
+  })
+
+  test('googleAuth does not require daily session code by default and auto-verifies', async () => {
+    const src = await readFile(new URL('../src/controllers/googleController.js', import.meta.url), 'utf8')
+    assert.ok(src.includes("REQUIRE_DAILY_SESSION_CODE === 'true'"), 'googleAuth daily code requirement must be opt-in, disabled by default')
+    assert.ok(src.includes("if (!user.verified) { user.verified = true }"), 'googleAuth must auto-verify existing accounts')
+  })
+
+  test('access gate accepts existing student email directly', async () => {
+    const src = await readFile(new URL('../src/controllers/accessController.js', import.meta.url), 'utf8')
+    assert.ok(src.includes("User.findOne({ email: code.trim().toLowerCase() })"), 'access gate must recognize existing student emails')
+  })
+})
+

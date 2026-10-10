@@ -133,9 +133,13 @@ export default function Enter() {
   const doSignup = async () => {
     setErr(''); setBusy(true)
     try {
-      await api.post('/auth/signup', form)
-      setShowCreds(true)
-      setStage('verify')
+      const res = await api.post('/auth/signup', form)
+      if (res?.user) {
+        handleAuthResponse(res, '/onboarding')
+      } else {
+        setShowCreds(true)
+        setStage('verify')
+      }
     } catch (e) {
       setErr(describeError(e))
     } finally {

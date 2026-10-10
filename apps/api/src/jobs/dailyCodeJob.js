@@ -1,5 +1,6 @@
 import cron from 'node-cron'
 import User from '../models/User.js'
+import AccessConfig from '../models/AccessConfig.js'
 import { getTodayIST, getMidnightISTExpiry, generateSessionCode } from '../utils/auth.js'
 import { sendSessionCodeEmail } from '../utils/email.js'
 
@@ -10,6 +11,13 @@ export function startDailyCodeJob() {
 }
 
 export async function runDailyCodes() {
+  const cfg = await AccessConfig.get()
+  const enabled = process.env.REQUIRE_DAILY_SESSION_CODE === 'true' && cfg.dailyCodeEnabled === true
+  if (!enabled) {
+    console.log('[cron] daily code generation disabled, skipping')
+    return { sent: 0, failed: 0 }
+  }
+
   const users = await User.find({ verified: true }).select('email sessionCode sessionCodeExpires lastSessionDate')
   const today = getTodayIST()
   const expiry = getMidnightISTExpiry()

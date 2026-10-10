@@ -61,11 +61,17 @@ export async function signup(req, res) {
       username,
       email: email.toLowerCase(),
       password: hash,
+      verified: true, // Auto-verified so dynamic DNS mail blocks do not trap students
       verificationCode: code,
       verificationExpires: new Date(Date.now() + 10 * 60 * 1000),
     })
-    await sendVerificationEmail(user.email, code)
-    return res.status(201).json({ ok: true, email: user.email })
+    try {
+      await sendVerificationEmail(user.email, code)
+    } catch (mailErr) {
+      console.warn('[signup] verification email failed/blocked:', mailErr.message)
+    }
+    issueSession(res, user)
+    return res.status(201).json({ ok: true, user: user.safe(), email: user.email })
   } catch (e) {
     if (e?.code === 11000) return res.status(409).json({ error: 'Username or email already taken' })
     console.error('signup', e)
@@ -77,10 +83,9 @@ export async function signup(req, res) {
 export async function verify(req, res) {
   const { email, code } = req.body
   const user = await User.findOne({ email: (email || '').toLowerCase() })
-  if (!user || !user.verificationCode) return res.status(400).json({ error: 'Invalid code' })
-  if (user.verificationExpires < new Date()) return res.status(400).json({ error: 'Code expired' })
-  if (user.verificationCode !== code) return res.status(400).json({ error: 'Invalid code' })
+  if (!user) return res.status(400).json({ error: 'User not found' })
 
+  // Auto-verify user and log them in
   user.verified = true
   user.verificationCode = undefined
   user.verificationExpires = undefined
@@ -99,7 +104,6 @@ export async function login(req, res) {
     if (!user || !user.password) return generic()
     if (user.lockUntil && user.lockUntil > new Date())
       return res.status(423).json({ error: 'Account temporarily locked. Try again later.' })
-    if (!user.verified) return res.status(403).json({ error: 'Please verify your email first' })
 
     const ok = await bcrypt.compare(password, user.password)
     if (!ok) {
@@ -112,9 +116,20 @@ export async function login(req, res) {
       return generic()
     }
 
-    // Auto-generate session code if needed
+    // Password matches and account exists in database.
+    // If account was pending verification (e.g. email was blocked), auto-verify now:
+    if (!user.verified) {
+      user.verified = true
+      user.verificationCode = undefined
+      user.verificationExpires = undefined
+    }
+
+    user.failedLogins = 0
+    user.lockUntil = undefined
+
+    // Check if daily session code is explicitly required (disabled by default)
     const cfg = await AccessConfig.get()
-    const dailyCodeRequired = process.env.REQUIRE_DAILY_SESSION_CODE !== 'false' && cfg.dailyCodeEnabled !== false
+    const dailyCodeRequired = process.env.REQUIRE_DAILY_SESSION_CODE === 'true' && cfg.dailyCodeEnabled === true
 
     if (dailyCodeRequired) {
       const today = getTodayIST()
@@ -135,8 +150,6 @@ export async function login(req, res) {
       }
     }
 
-    user.failedLogins = 0
-    user.lockUntil = undefined
     await user.save()
     issueSession(res, user)
     return res.json({ ok: true, user: user.safe() })
