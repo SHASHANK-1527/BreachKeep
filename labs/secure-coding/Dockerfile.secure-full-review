@@ -5,7 +5,7 @@ FROM node:20-slim
 # flag from the grader's environment. No student shell.
 ENV DEBIAN_FRONTEND=noninteractive
 WORKDIR /app
-RUN apt-get update && apt-get install -y --no-install-recommends util-linux \
+RUN apt-get update && apt-get install -y --no-install-recommends util-linux python3 make g++ \
     && rm -rf /var/lib/apt/lists/*
 COPY app/package.json ./
 RUN npm install --omit=dev
