@@ -295,7 +295,7 @@ export default function AdminPanel() {
         {tab === 'dungeons' && (
           <>
             <h1 style={s.h1}>Dungeons</h1>
-            <p style={s.sub}>At most 2 may be live at once (enforced server-side).</p>
+            <p style={s.sub}>Toggle which dungeons are live and accessible to students.</p>
             <div style={s.card}>
               {DUNGEONS.map((d) => (
                 <Toggle

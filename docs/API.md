@@ -72,7 +72,7 @@ Everything below sits behind `bk_admin` and answers 404 without it.
 | GET | `/api/admin/roster` | |
 | POST | `/api/admin/roster` | `{emails[], mode: 'replace'\|'append'}` |
 | POST | `/api/admin/roster-remove` | `{emails[]}` |
-| POST | `/api/admin/dungeons` | `{dungeonId, live}`. At most 2 live; calls the provisioner |
+| POST | `/api/admin/dungeons` | `{dungeonId, live}`. Calls the provisioner |
 | GET | `/api/admin/students` | `?q=` searches username and email |
 | GET | `/api/admin/students/:id` | student plus their solve history |
 | POST | `/api/admin/students/:id/house` | `{house}`. Also marks the intro complete |

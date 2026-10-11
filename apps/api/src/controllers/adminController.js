@@ -12,8 +12,6 @@ import { cookieOpts } from '../config/env.js'
 import { invalidateMaintenanceCache } from '../middleware/maintenance.js'
 import { INTRO_ROOMS } from './introController.js'
 
-const MAX_LIVE = 2
-
 // POST /api/admin/login  { password }
 export async function adminLogin(req, res) {
   const { password } = req.body
@@ -283,12 +281,6 @@ export async function setRoster(req, res) {
 export async function setDungeon(req, res) {
   const { dungeonId, live } = req.body
   if (!dungeonId) return res.status(400).json({ error: 'dungeonId required' })
-
-  if (live) {
-    const liveCount = await DungeonState.countDocuments({ live: true, dungeonId: mongoose.trusted({ $ne: dungeonId }) })
-    if (liveCount >= MAX_LIVE)
-      return res.status(400).json({ error: `At most ${MAX_LIVE} dungeons can be live at once` })
-  }
 
   await DungeonState.updateOne(
     { dungeonId },
