@@ -12,7 +12,9 @@ import { spawn } from 'child_process'
 import crypto from 'crypto'
 import path from 'path'
 
-const DIR = process.env.APP_DIR || (process.platform === 'win32' || !process.env.DOCKER ? path.resolve('labs/secure-coding/app') : '/app')
+import { existsSync } from 'fs'
+
+const DIR = process.env.APP_DIR || (existsSync('/app/server.js') ? '/app' : path.resolve('labs/secure-coding/app'))
 const ROOM = process.env.BK_ROOM || ''
 const FLAG = process.env.BK_FLAG || 'BK{dev-secure}'
 

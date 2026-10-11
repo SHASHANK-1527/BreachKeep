@@ -4,6 +4,7 @@ FROM node:20-slim
 # as the unprivileged 'runner' uid (setpriv) so that code can never read the
 # flag from the grader's environment. No student shell.
 ENV DEBIAN_FRONTEND=noninteractive
+ENV DOCKER=1
 WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends util-linux python3 make g++ \
     && rm -rf /var/lib/apt/lists/*
